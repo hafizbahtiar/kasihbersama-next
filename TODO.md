@@ -167,3 +167,56 @@ domain penghantar disahkan di Resend.
   bermakna belum.
 - [ ] `smoke:auth` melangkau langkah verify (lihat header skripnya). Ia tak boleh lengkap
   sehingga endpoint resend wujud.
+
+---
+
+## Audit aliran UX (2026-09-09)
+
+Diukur dari kod, bukan diandaikan. Borang itu sendiri elok — tarikh/masa memang
+diisi lalai dengan masa sekarang, dan borang vital adaptif (sistolik/diastolik
+hanya untuk tekanan darah, unit auto-set dari jenis). Geserannya **antara**
+borang: cara pengguna tiba, dan apa berlaku selepas simpan.
+
+### Menyekat pada telefon
+
+- [ ] **Switcher profil desktop sahaja, tapi semua borang bergantung padanya.**
+  `app-header.tsx:55` ialah satu-satunya `ProfileSwitcher` dalam kod, dan ia
+  `hidden sm:flex`. Sidebar tak menunjukkan profil terpilih. Jadi pada telefon
+  kelima-lima borang render penuh, butang hantar `isDisabled` senyap, dan teks
+  bantuannya berkata "Pilih profil jagaan di header dahulu" — kawalan yang tiada
+  pada saiz skrin itu. Ini aplikasi yang digunakan di sisi katil.
+  Perlu: switcher dalam sidebar (ada pada semua saiz), dan borang patut tunjuk
+  `Empty` + "Pilih profil" daripada merender medan yang tak boleh dihantar.
+
+### Dashboard tak boleh diklik
+
+- [ ] **Sifar elemen interaktif.** `grep -cE "href=|onPress=|Button"` pada
+  `dashboard-page.tsx` = 0. Jubin statistik dan dua carta, tiada satu pautan.
+  `buildDashboardStats` mengira `openTaskCount` dan `upcomingAppointmentCount` —
+  tepat perkara yang pengguna mahu klik terus.
+  Perlu: setiap jubin jadi pautan ke senarainya. Perubahan paling murah di sini.
+
+### Tindakan paling kerap, tiga lapis dalam
+
+- [ ] **Menanda dos hanya ada di satu tempat**, `medication-detail-page.tsx:183`.
+  Laluannya: Laman utama → Ubat → buka ubat → cari baris dos → tanda. Tiga
+  navigasi, beberapa kali sehari, untuk tindakan paling kerap dalam aplikasi
+  penjejak ubat. Dan `buildDashboardStats` tak mengira dos tertunggak sama sekali.
+  Perlu: senarai "Dos hari ini" pada dashboard dengan tindakan tanda di situ.
+  Kesan paling besar antara keempat ini.
+
+### Satu borang, satu rekod
+
+- [ ] **Tiada "Simpan dan tambah lagi".** Borang ubat ialah contoh terbaik dalam
+  projek ini — ia cipta ubat *dan* jadual pertamanya dalam satu hantar, kemudian
+  mendarat di halaman butiran (`medication-detail-page.tsx:558`). Tiada borang lain
+  berkelakuan begitu; log, vital, tugasan, temujanji semuanya kembali ke senarai,
+  jadi "rekod dua bacaan" ialah dua perjalanan penuh.
+  Perlu: satu prop pada `CareFormShell`, memberi manfaat kepada ketujuh borang.
+
+### Had audit ini
+
+- [ ] Semuanya dibaca dari kod. Tiada pelayar dalam sesi itu, jadi susunan kesan di
+  atas belum disahkan terhadap penggunaan sebenar. Cuba pada telefon sebenar untuk
+  mengesahkan atau menolaknya.
+

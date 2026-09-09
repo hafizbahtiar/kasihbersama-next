@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { SelectProfileEmpty } from "@/components/care/select-profile-empty"
 import { IconBell, IconHeadset, IconSettings } from "@tabler/icons-react"
 
 import { AsyncStateBanner } from "@/components/care/async-state"
@@ -44,8 +45,7 @@ export function NotificationsPage() {
       <div className="space-y-1">
         <h1 className="font-heading text-2xl tracking-tight">Notifikasi</h1>
         <p className="text-sm text-muted-foreground">
-          Backend belum expose peti masuk notifikasi — halaman ini fokus pada
-          keutamaan penghantaran.
+          Pilih peringatan mana anda mahu terima.
         </p>
       </div>
 
@@ -91,9 +91,7 @@ export function NotificationsPage() {
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  Pilih profil jagaan di header untuk melihat keutamaan.
-                </p>
+                <SelectProfileEmpty />
               )}
 
               {accountErrorMessage(prefs.error) ? null : (

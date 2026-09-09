@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { IconLogout } from "@tabler/icons-react"
 
 import { LogoMark } from "@/components/brand/logo-mark"
+import { ProfileSwitcher } from "@/components/care/profile-switcher"
 import { useCareData } from "@/components/care/care-data-provider"
 import { useLogout } from "@/components/logout-provider"
 import { usePlatform } from "@/components/platform/platform-provider"
@@ -81,6 +82,16 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+
+        {/*
+          The only other ProfileSwitcher is in the header at `hidden sm:flex`,
+          so on a phone there was no way to choose or even see the active
+          profile - while every care form depends on one and told the user to
+          "pilih profil jagaan di header". The sidebar exists at every width.
+        */}
+        <div className="px-1 pt-1 group-data-[collapsible=icon]:hidden">
+          <ProfileSwitcher className="w-full" />
+        </div>
       </SidebarHeader>
 
       <SidebarContent>

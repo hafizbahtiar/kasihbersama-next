@@ -151,8 +151,7 @@ export function CareLogsPage() {
           <div className="space-y-1">
             <h1 className="font-heading text-2xl tracking-tight">Log jagaan</h1>
             <p className="text-sm text-muted-foreground">
-              Catatan berstruktur: jenis, masa kejadian, dan siapa yang boleh
-              melihat.
+              Catatan harian. Yang terbaru di atas.
             </p>
           </div>
         }

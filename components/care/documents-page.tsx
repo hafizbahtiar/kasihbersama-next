@@ -203,8 +203,7 @@ export function DocumentsPage() {
           <div className="space-y-1">
             <h1 className="font-heading text-2xl tracking-tight">Dokumen</h1>
             <p className="text-sm text-muted-foreground">
-              Metadata, kemajuan muat naik, muat turun, dan padam. Had saiz:{" "}
-              {limits.maxUploadMb} MB.
+              Fail penting profil ini. Had {limits.maxUploadMb} MB setiap satu.
             </p>
           </div>
         }

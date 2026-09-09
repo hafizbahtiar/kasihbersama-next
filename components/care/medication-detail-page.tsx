@@ -9,6 +9,7 @@ import { BackButton } from "@/components/back-button"
 import { ApiFieldGapNotice } from "@/components/care/api-field-gap-notice"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { CareFormShell } from "@/components/care/care-form-shell"
+import { SelectProfileEmpty } from "@/components/care/select-profile-empty"
 import { EventStatusBadge } from "@/components/care/status-badges"
 import { MedicationStatusBadge } from "@/components/care/status-badges"
 import { useCareData } from "@/components/care/care-data-provider"
@@ -578,9 +579,7 @@ export function MedicationCreatePage() {
       }}
     >
       {!selectedProfile ? (
-        <p className="text-sm text-muted-foreground">
-          Pilih profil jagaan di header dahulu.
-        </p>
+        <SelectProfileEmpty />
       ) : (
         <FieldGroup>
           {apiMode ? (

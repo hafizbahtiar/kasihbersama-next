@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { CareFormShell } from "@/components/care/care-form-shell"
+import { SelectProfileEmpty } from "@/components/care/select-profile-empty"
 import { useCareData } from "@/components/care/care-data-provider"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { DateTimePicker } from "@/components/ui/date-picker"
@@ -34,6 +35,7 @@ export function TaskFormPage() {
   return (
     <CareFormShell
       title="Tugasan baharu"
+      description="Apa perlu dibuat, bila, dan oleh siapa."
       backHref="/tasks"
       dirty={dirty}
       isDisabled={!selectedProfile}
@@ -54,9 +56,7 @@ export function TaskFormPage() {
       }}
     >
       {!selectedProfile ? (
-        <p className="text-sm text-muted-foreground">
-          Pilih profil jagaan di header dahulu.
-        </p>
+        <SelectProfileEmpty />
       ) : (
         <FieldGroup>
           <Field>

@@ -103,7 +103,7 @@ export function VitalsPage() {
       <div className="space-y-1">
         <h1 className="font-heading text-2xl tracking-tight">Bacaan vital</h1>
         <p className="text-sm text-muted-foreground">
-          Nilai nombor atau teks, unit, sistolik/diastolik, dan carta trend.
+          Bacaan kesihatan. Lihat trend dalam tab Carta.
         </p>
       </div>
 

@@ -126,7 +126,7 @@ export function MedicationsPage() {
 
       <PageHeader
         title="Ubat"
-        description="Dos, prescriber, jadual, dan tindakan diambil / langkau / tunda."
+        description="Ubat dan jadualnya. Tanda bila sudah diambil."
       />
       <DataTable
         columns={columns}

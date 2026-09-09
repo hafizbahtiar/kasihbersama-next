@@ -160,7 +160,7 @@ export function TasksPage() {
           <div className="space-y-1">
             <h1 className="font-heading text-2xl tracking-tight">Tugasan</h1>
             <p className="text-sm text-muted-foreground">
-              Huraian, tugasan kepada ahli, masa akhir, dan alur selesai.
+              Apa perlu dibuat. Tanda selesai bila siap.
             </p>
           </div>
         }

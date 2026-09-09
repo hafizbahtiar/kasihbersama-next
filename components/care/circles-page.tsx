@@ -95,8 +95,7 @@ export function CirclesPage() {
             Kumpulan jagaan
           </h1>
           <p className="text-sm text-muted-foreground">
-            Kumpulan menghubungkan beberapa profil, contohnya satu rumah atau
-            satu keluarga.
+            Kumpulkan beberapa profil, contohnya satu rumah.
           </p>
         </div>
       }

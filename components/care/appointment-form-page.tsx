@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { CareFormShell } from "@/components/care/care-form-shell"
+import { SelectProfileEmpty } from "@/components/care/select-profile-empty"
 import { useCareData } from "@/components/care/care-data-provider"
 import {
   Field,
@@ -35,6 +36,7 @@ export function AppointmentFormPage() {
   return (
     <CareFormShell
       title="Temujanji baharu"
+      description="Doktor, tarikh, dan masa. Nota kalau perlu."
       backHref="/appointments"
       dirty={dirty}
       isDisabled={!selectedProfile}
@@ -75,9 +77,7 @@ export function AppointmentFormPage() {
       }}
     >
       {!selectedProfile ? (
-        <p className="text-sm text-muted-foreground">
-          Pilih profil jagaan di header dahulu.
-        </p>
+        <SelectProfileEmpty />
       ) : (
         <FieldGroup>
           <Field data-invalid={Boolean(errors.title)}>

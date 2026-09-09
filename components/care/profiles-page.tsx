@@ -112,8 +112,7 @@ export function ProfilesPage() {
             Profil jagaan
           </h1>
           <p className="text-sm text-muted-foreground">
-            Ahli yang anda jaga. Setiap rekod ubat, temujanji dan dokumen
-            terikat kepada satu profil.
+            Orang yang anda jaga. Pilih satu untuk mula.
           </p>
         </div>
       }

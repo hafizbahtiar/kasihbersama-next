@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
+import Link from "next/link"
 import {
   IconCalendarEvent,
   IconHeartbeat,
@@ -10,6 +11,7 @@ import {
 } from "@tabler/icons-react"
 
 import { useCareData } from "@/components/care/care-data-provider"
+import { TodayDosesCard } from "@/components/care/today-doses-card"
 import {
   numericChartConfig,
   pressureChartConfig,
@@ -59,12 +61,14 @@ export function DashboardPage() {
   const cards = [
     {
       title: "Profil jagaan",
+      href: "/care-profiles",
       value: String(stats.profileCount),
       hint: `Had percuma: ${limits.maxProfilesFree} profil`,
       icon: IconUsers,
     },
     {
       title: "Ubat aktif",
+      href: "/medications",
       value: String(stats.activeMedicationCount),
       hint: selectedProfile
         ? `Untuk ${selectedProfile.displayName}`
@@ -73,18 +77,21 @@ export function DashboardPage() {
     },
     {
       title: "Temujanji",
+      href: "/appointments",
       value: String(stats.upcomingAppointmentCount),
       hint: "Belum selesai",
       icon: IconCalendarEvent,
     },
     {
       title: "Tugasan terbuka",
+      href: "/tasks",
       value: String(stats.openTaskCount),
       hint: "Perlu tindakan",
       icon: IconListCheck,
     },
     {
       title: "Bacaan vital",
+      href: "/vitals",
       value: stats.latestVital,
       hint: selectedProfile
         ? `Tekanan darah ${selectedProfile.displayName}`
@@ -114,22 +121,30 @@ export function DashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
         {cards.map((item) => (
-          <Card key={item.title}>
-            <CardHeader>
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <CardDescription>{item.title}</CardDescription>
-                  <CardTitle className="font-heading text-2xl">
-                    {item.value}
-                  </CardTitle>
+          <Link
+            key={item.title}
+            href={item.href}
+            className="rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            <Card className="h-full transition-colors hover:border-ring/40 hover:bg-muted/40">
+              <CardHeader>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <CardDescription>{item.title}</CardDescription>
+                    <CardTitle className="font-heading text-2xl">
+                      {item.value}
+                    </CardTitle>
+                  </div>
+                  <item.icon className="size-5 text-muted-foreground" />
                 </div>
-                <item.icon className="size-5 text-muted-foreground" />
-              </div>
-              <CardDescription>{item.hint}</CardDescription>
-            </CardHeader>
-          </Card>
+                <CardDescription>{item.hint}</CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
         ))}
       </div>
+
+      <TodayDosesCard />
 
       <div className="grid gap-4 xl:grid-cols-2">
         <VitalChartWidget

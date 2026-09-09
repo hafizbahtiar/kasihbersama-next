@@ -97,9 +97,7 @@ export function AcceptTokenPage({
         <CardHeader>
           <CardTitle className="font-heading text-xl">{title}</CardTitle>
           <CardDescription>
-            Token dihantar melalui e-mel. Backend menerima token dalam badan
-            POST (bukan URL). Pautan e-mel patut guna format{" "}
-            <code className="text-xs">/accept/{kind}#token=…</code>.
+            Tampal token dari e-mel anda. Biasanya pautan mengisinya sendiri.
           </CardDescription>
         </CardHeader>
         <CardContent>

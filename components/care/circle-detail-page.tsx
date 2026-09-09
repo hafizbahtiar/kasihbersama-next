@@ -92,7 +92,10 @@ export function CircleDetailPage({ circleId }: { circleId: string }) {
       <BackButton href="/circles" />
       <PageHeader
         title={circle.name}
-        description={circle.description}
+        description={
+          circle.description ||
+          "Profil jagaan yang dikumpulkan bersama dalam kumpulan ini."
+        }
         actions={
           circle.archived ? (
             <Button

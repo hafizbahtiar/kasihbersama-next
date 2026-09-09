@@ -8,7 +8,6 @@ import {
   IconArchive,
   IconInbox,
   IconPlus,
-  IconUsers,
 } from "@tabler/icons-react"
 
 import { BackButton } from "@/components/back-button"
@@ -403,12 +402,17 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
       <BackButton href="/care-profiles" />
       <PageHeader
         title={profile.displayName}
-        description={
-          apiMode || !profile.relation
-            ? ROLE_LABELS[profile.role]
-            : `${profile.relation} · ${ROLE_LABELS[profile.role]}`
+        description="Ubat, temujanji, log dan dokumen untuk orang ini."
+        meta={
+          <>
+            <ProfileStatusBadge value={profile.status} />
+            <span className="text-sm text-muted-foreground">
+              {apiMode || !profile.relation
+                ? ROLE_LABELS[profile.role]
+                : `${profile.relation} · ${ROLE_LABELS[profile.role]}`}
+            </span>
+          </>
         }
-        meta={<ProfileStatusBadge value={profile.status} />}
         actions={
           <>
             <LinkButton
@@ -444,6 +448,7 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
           <TabsList>
             <TabsTrigger id="overview">Ringkasan</TabsTrigger>
             <TabsTrigger id="access">Ahli & akses</TabsTrigger>
+            <TabsTrigger id="claims">Tuntutan</TabsTrigger>
             <TabsTrigger id="timeline">Timeline</TabsTrigger>
           </TabsList>
         </div>
@@ -518,26 +523,9 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
         </TabsContent>
 
         <TabsContent id="access" className="flex flex-col gap-6">
-          <Alert>
-            <IconUsers />
-            <AlertTitle>Dua cara berbeza untuk memberi akses</AlertTitle>
-            <AlertDescription>
-              <span className="block">
-                <strong>Jemputan</strong> memberi orang lain akses untuk
-                membantu menjaga profil ini, pada peranan yang anda pilih. Anda
-                boleh tukar peranan atau keluarkan mereka bila-bila masa.
-              </span>
-              <span className="mt-2 block">
-                <strong>Tuntutan</strong> menyerahkan profil ini kepada orang
-                yang dijaga sendiri. Ia bukan jemputan biasa &mdash; lihat
-                amaran di bahagian tuntutan sebelum menghantar.
-              </span>
-            </AlertDescription>
-          </Alert>
-
           <Section
             title="Ahli"
-            description="Siapa yang ada akses kepada profil ini sekarang. Tukar peranan, laraskan keizinan, atau keluarkan ahli."
+            description="Siapa boleh lihat dan bantu profil ini."
           >
             <DataTable
               columns={memberColumns}
@@ -572,7 +560,7 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
 
           <Section
             title="Jemputan"
-            description="Hantar jemputan melalui e-mel, dan jejak yang masih menunggu di bawah."
+            description="Beri akses melalui e-mel. Boleh tarik balik bila-bila."
           >
             <div className="grid gap-4 lg:grid-cols-2">
               <Card>
@@ -659,25 +647,23 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
               emptyDescription="Hantar jemputan untuk menambah ahli."
             />
           </Section>
+        </TabsContent>
 
+        <TabsContent id="claims" className="flex flex-col gap-4">
           <PermissionGate
             feature="profile_claim"
             permission="can_invite_members"
           >
-            <Separator />
-
             <Section
               title="Tuntutan profil"
-              description="Serahkan profil ini kepada orang yang dijaga, supaya mereka memilikinya sendiri."
+              description="Serahkan profil ini kepada orang yang dijaga."
             >
               <Alert variant="destructive">
                 <IconAlertTriangle />
-                <AlertTitle>Tuntutan tidak boleh dibatalkan</AlertTitle>
+                <AlertTitle>Tidak boleh dibatalkan</AlertTitle>
                 <AlertDescription>
-                  Apabila tuntutan diterima, akaun itu menjadi pemilik subjek
-                  profil ini. Peranan tersebut tidak boleh ditukar atau
-                  dikeluarkan selepas itu, walaupun oleh anda. Pastikan e-mel
-                  betul sebelum menghantar.
+                  Bukan jemputan. Mereka jadi pemilik profil ini. Anda tidak
+                  boleh tukar atau keluarkan mereka selepas itu.
                 </AlertDescription>
               </Alert>
               <div className="grid gap-4 lg:grid-cols-2">
@@ -689,7 +675,7 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
                     <CardHeader>
                       <CardTitle>Tuntutan profil</CardTitle>
                       <CardDescription>
-                        Hantar permintaan supaya subjek menuntut profil ini.
+                        Semak e-mel dua kali sebelum hantar.
                       </CardDescription>
                     </CardHeader>
                     <CardContent>

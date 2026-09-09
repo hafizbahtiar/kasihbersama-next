@@ -55,7 +55,7 @@ export function AppointmentsPage() {
 
       <PageHeader
         title="Temujanji"
-        description="Doktor, masa, nota, dan status dijadualkan / selesai / batal / terlepas."
+        description="Temujanji akan datang dan yang sudah lepas."
       />
       <AppointmentCalendar
         appointments={appointments}

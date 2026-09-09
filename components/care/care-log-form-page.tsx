@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 
 import { useAuth } from "@/components/auth/auth-provider"
 import { CareFormShell } from "@/components/care/care-form-shell"
+import { SelectProfileEmpty } from "@/components/care/select-profile-empty"
 import { useCareData } from "@/components/care/care-data-provider"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { DateTimePicker } from "@/components/ui/date-picker"
@@ -37,34 +38,46 @@ export function CareLogFormPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const dirty = Boolean(title || body)
 
+  function save(after: "leave" | "stay") {
+    if (!selectedProfile || !title.trim()) {
+      return
+    }
+    setIsSubmitting(true)
+    void addCareLog({
+      profileId: selectedProfile.id,
+      logType,
+      title: title.trim(),
+      body: body.trim(),
+      visibility,
+      occurredAt: new Date(occurredAt).toISOString(),
+      createdBy: user?.displayName ?? "Penjaga",
+    })
+      .then(() => {
+        if (after === "leave") {
+          router.push("/care-logs")
+          return
+        }
+        // Keep type, visibility and profile - what stays the same across a
+        // run of entries - and clear only what does not.
+        setTitle("")
+        setBody("")
+        setOccurredAt(toDateTimeLocalValue())
+      })
+      .finally(() => setIsSubmitting(false))
+  }
+
   return (
     <CareFormShell
       title="Log jagaan baharu"
+      description="Catat apa yang berlaku. Pilih siapa boleh lihat."
       backHref="/care-logs"
       dirty={dirty}
       isDisabled={!selectedProfile || isSubmitting}
-      onSubmit={() => {
-        if (!selectedProfile || !title.trim()) {
-          return
-        }
-        setIsSubmitting(true)
-        void addCareLog({
-          profileId: selectedProfile.id,
-          logType,
-          title: title.trim(),
-          body: body.trim(),
-          visibility,
-          occurredAt: new Date(occurredAt).toISOString(),
-          createdBy: user?.displayName ?? "Penjaga",
-        })
-          .then(() => router.push("/care-logs"))
-          .finally(() => setIsSubmitting(false))
-      }}
+      onSubmit={() => save("leave")}
+      onSubmitAndContinue={() => save("stay")}
     >
       {!selectedProfile ? (
-        <p className="text-sm text-muted-foreground">
-          Pilih profil jagaan di header dahulu.
-        </p>
+        <SelectProfileEmpty />
       ) : (
         <FieldGroup>
           <Field>

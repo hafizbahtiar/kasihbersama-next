@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { EmailVerifiedGate } from "@/components/auth/email-verified-gate"
 import { CareFormShell } from "@/components/care/care-form-shell"
+import { SelectProfileEmpty } from "@/components/care/select-profile-empty"
 import { useCareData } from "@/components/care/care-data-provider"
 import { usePlatform } from "@/components/platform/platform-provider"
 import {
@@ -61,6 +62,7 @@ export function DocumentFormPage() {
     <EmailVerifiedGate>
       <CareFormShell
         title="Muat naik dokumen"
+        description="Muat naik fail penting. PDF atau gambar."
         backHref="/documents"
         dirty={dirty}
         submitLabel="Muat naik"
@@ -149,9 +151,7 @@ export function DocumentFormPage() {
         }}
       >
         {!selectedProfile ? (
-          <p className="text-sm text-muted-foreground">
-            Pilih profil jagaan di header dahulu.
-          </p>
+          <SelectProfileEmpty />
         ) : (
           <FieldGroup>
             <Field data-invalid={Boolean(errors.title)}>

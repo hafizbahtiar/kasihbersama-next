@@ -54,6 +54,7 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
       title={
         existing ? `Sunting ${existing.displayName}` : "Tambah profil jagaan"
       }
+      description="Orang yang anda jaga."
       backHref={backHref}
       dirty={dirty}
       submitLabel={existing ? "Simpan" : "Cipta"}

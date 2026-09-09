@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { CareFormShell } from "@/components/care/care-form-shell"
+import { SelectProfileEmpty } from "@/components/care/select-profile-empty"
 import { useCareData } from "@/components/care/care-data-provider"
 import {
   Field,
@@ -46,80 +47,93 @@ export function VitalFormPage() {
     valueNumeric || valueText || systolic || diastolic || note
   )
 
+  function save(after: "leave" | "stay") {
+    if (!selectedProfile) {
+      return
+    }
+
+    const nextErrors: Record<string, string> = {}
+    const measuredIso = parseDateTimeLocal(measuredAt)
+    if (!measuredIso) {
+      nextErrors.measuredAt = "Masa diukur tidak sah."
+    }
+
+    let systolicValue: number | undefined
+    let diastolicValue: number | undefined
+    let numericValue: number | undefined
+
+    if (readingType === "blood_pressure") {
+      const sys = parsePositiveNumber(systolic, "Sistolik")
+      const dia = parsePositiveNumber(diastolic, "Diastolik")
+      if ("error" in sys) {
+        nextErrors.systolic = sys.error
+      } else {
+        systolicValue = sys.value
+      }
+      if ("error" in dia) {
+        nextErrors.diastolic = dia.error
+      } else {
+        diastolicValue = dia.value
+      }
+    } else if (!valueNumeric.trim() && !valueText.trim()) {
+      nextErrors.valueNumeric = "Nilai nombor atau teks diperlukan."
+    } else if (valueNumeric.trim()) {
+      const parsed = parsePositiveNumber(valueNumeric, "Nilai")
+      if ("error" in parsed) {
+        nextErrors.valueNumeric = parsed.error
+      } else {
+        numericValue = parsed.value
+      }
+    }
+
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0 || !measuredIso) {
+      toast.error("Sila betulkan medan yang ditandakan.")
+      return
+    }
+
+    void addVital({
+      profileId: selectedProfile.id,
+      readingType,
+      unit,
+      measuredAt: measuredIso,
+      note: note || undefined,
+      valueNumeric: numericValue,
+      valueText: valueText || undefined,
+      systolic: systolicValue,
+      diastolic: diastolicValue,
+    })
+      .then(() => {
+        toast.success("Bacaan ditambah.")
+        if (after === "leave") {
+          router.push("/vitals")
+          return
+        }
+        // Keep the reading type, unit and profile - the things that repeat
+        // across a run of readings - and clear the values.
+        setSystolic("")
+        setDiastolic("")
+        setValueNumeric("")
+        setValueText("")
+        setNote("")
+        setMeasuredAt(toDateTimeLocalValue())
+      })
+      .catch(() => undefined)
+  }
+
   return (
     <CareFormShell
       title="Bacaan vital baharu"
+      description="Bacaan dan masa ia diambil."
       backHref="/vitals"
       dirty={dirty}
       isDisabled={!selectedProfile}
       submitLabel="Simpan bacaan"
-      onSubmit={() => {
-        if (!selectedProfile) {
-          return
-        }
-
-        const nextErrors: Record<string, string> = {}
-        const measuredIso = parseDateTimeLocal(measuredAt)
-        if (!measuredIso) {
-          nextErrors.measuredAt = "Masa diukur tidak sah."
-        }
-
-        let systolicValue: number | undefined
-        let diastolicValue: number | undefined
-        let numericValue: number | undefined
-
-        if (readingType === "blood_pressure") {
-          const sys = parsePositiveNumber(systolic, "Sistolik")
-          const dia = parsePositiveNumber(diastolic, "Diastolik")
-          if ("error" in sys) {
-            nextErrors.systolic = sys.error
-          } else {
-            systolicValue = sys.value
-          }
-          if ("error" in dia) {
-            nextErrors.diastolic = dia.error
-          } else {
-            diastolicValue = dia.value
-          }
-        } else if (!valueNumeric.trim() && !valueText.trim()) {
-          nextErrors.valueNumeric = "Nilai nombor atau teks diperlukan."
-        } else if (valueNumeric.trim()) {
-          const parsed = parsePositiveNumber(valueNumeric, "Nilai")
-          if ("error" in parsed) {
-            nextErrors.valueNumeric = parsed.error
-          } else {
-            numericValue = parsed.value
-          }
-        }
-
-        setErrors(nextErrors)
-        if (Object.keys(nextErrors).length > 0 || !measuredIso) {
-          toast.error("Sila betulkan medan yang ditandakan.")
-          return
-        }
-
-        void addVital({
-          profileId: selectedProfile.id,
-          readingType,
-          unit,
-          measuredAt: measuredIso,
-          note: note || undefined,
-          valueNumeric: numericValue,
-          valueText: valueText || undefined,
-          systolic: systolicValue,
-          diastolic: diastolicValue,
-        })
-          .then(() => {
-            toast.success("Bacaan ditambah.")
-            router.push("/vitals")
-          })
-          .catch(() => undefined)
-      }}
+      onSubmit={() => save("leave")}
+      onSubmitAndContinue={() => save("stay")}
     >
       {!selectedProfile ? (
-        <p className="text-sm text-muted-foreground">
-          Pilih profil jagaan di header dahulu.
-        </p>
+        <SelectProfileEmpty />
       ) : (
         <FieldGroup>
           <Field>

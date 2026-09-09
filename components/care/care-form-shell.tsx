@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -18,17 +19,27 @@ import { useUnsavedChangesGuard } from "@/hooks/use-unsaved-changes"
 
 export function CareFormShell({
   title,
+  description,
   backHref,
   dirty,
   submitLabel = "Cipta",
   onSubmit,
+  onSubmitAndContinue,
   isDisabled,
   children,
 }: {
   title: string
+  /** One short line saying what to fill in. Not a paragraph. */
+  description?: string
   backHref: string
   dirty: boolean
   submitLabel?: string
+  /**
+   * Optional second action that saves and stays, for the forms people fill
+   * repeatedly - two readings, three log entries. Without it, recording twice
+   * meant two full round trips out to the list page and back in.
+   */
+  onSubmitAndContinue?: () => void
   onSubmit: () => void
   isDisabled?: boolean
   children: ReactNode
@@ -47,10 +58,22 @@ export function CareFormShell({
       <Card>
         <CardHeader>
           <CardTitle className="font-heading text-xl">{title}</CardTitle>
+          {description ? (
+            <CardDescription>{description}</CardDescription>
+          ) : null}
         </CardHeader>
         <CardContent>{children}</CardContent>
-        <CardFooter className="justify-end gap-2">
+        <CardFooter className="flex-wrap justify-end gap-2">
           <BackButton appearance="action" onPress={goBack} />
+          {onSubmitAndContinue ? (
+            <Button
+              variant="outline"
+              isDisabled={isDisabled}
+              onPress={onSubmitAndContinue}
+            >
+              Simpan dan tambah lagi
+            </Button>
+          ) : null}
           <Button isDisabled={isDisabled} onPress={onSubmit}>
             {submitLabel}
           </Button>
