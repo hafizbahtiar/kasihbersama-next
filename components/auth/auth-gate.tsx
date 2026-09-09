@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 
 import { useAuth } from "@/components/auth/auth-provider"
-import { PageLoadingState } from "@/components/care/page-loading-state"
+import { FullPageLoadingState } from "@/components/full-page-loading-state"
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const { status } = useAuth()
@@ -23,11 +23,11 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   }, [pathname, router, status])
 
   if (status === "loading") {
-    return <PageLoadingState label="Memuatkan sesi…" />
+    return <FullPageLoadingState label="Memuatkan sesi…" />
   }
 
   if (status === "unauthenticated") {
-    return <PageLoadingState label="Mengalihkan ke log masuk…" />
+    return <FullPageLoadingState label="Mengalihkan ke log masuk…" />
   }
 
   return children
