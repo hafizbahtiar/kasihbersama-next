@@ -76,12 +76,11 @@ export function MedicationsPage() {
       helper.accessor("name", { header: "Nama" }),
       helper.accessor("dosage", { header: "Dos" }),
     ] as const
-    const mockOnly = apiMode
-      ? []
-      : [
-          helper.accessor("prescribedBy", { header: "Prescriber" }),
-          helper.accessor("startDate", { header: "Mula" }),
-        ]
+    // Returned by the API since 2026-09-09; these were mock-only columns.
+    const prescription = [
+      helper.accessor("prescribedBy", { header: "Prescriber" }),
+      helper.accessor("startDate", { header: "Mula" }),
+    ]
     const tail = [
       helper.accessor("beforeAfterMeal", { header: "Makanan" }),
       helper.accessor("pendingCount", { header: "Dos menunggu" }),
@@ -110,7 +109,7 @@ export function MedicationsPage() {
         ),
       }),
     ] as const
-    return helper.columns([...base, ...mockOnly, ...tail])
+    return helper.columns([...base, ...prescription, ...tail])
   }, [apiMode, router])
 
   return (

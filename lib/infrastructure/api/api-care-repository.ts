@@ -86,6 +86,19 @@ function medicationEventWindow() {
   }
 }
 
+/**
+ * Emits `{ [key]: value }` only when there is a date to send.
+ *
+ * Every one of these columns is COALESCE-patched server-side: an absent key
+ * leaves it alone, a present one overwrites. Forms hold an empty string for
+ * "not filled in", so sending it unconditionally would blank a date that is
+ * already stored the next time anyone saves the form for another reason.
+ */
+function optionalDate(key: string, value: string | undefined) {
+  const trimmed = value?.trim()
+  return trimmed ? { [key]: trimmed } : {}
+}
+
 function profilePath(profileId: string) {
   return `/care-profiles/${profileId}`
 }
@@ -304,10 +317,16 @@ export class ApiCareRepository implements CareRepository {
     }
   }
 
-  async createProfile(input: { displayName: string }) {
+  async createProfile(input: { displayName: string; dateOfBirth?: string }) {
     const response = await this.client.request<ApiProfile>("/care-profiles", {
       method: "POST",
-      body: JSON.stringify({ display_name: input.displayName }),
+      body: JSON.stringify({
+        display_name: input.displayName,
+        // Omitted rather than sent empty: the backend treats an absent key as
+        // "leave alone" and a present one as a value, so "" would write a
+        // blank over a date somebody entered.
+        ...optionalDate("date_of_birth", input.dateOfBirth),
+      }),
     })
     return mapProfile(response)
   }
@@ -319,6 +338,7 @@ export class ApiCareRepository implements CareRepository {
         method: "PATCH",
         body: JSON.stringify({
           display_name: patch.displayName,
+          ...optionalDate("date_of_birth", patch.dateOfBirth),
         }),
       }
     )
@@ -543,6 +563,9 @@ export class ApiCareRepository implements CareRepository {
           dosage: input.dosage,
           instructions: input.instructions,
           before_after_meal: input.beforeAfterMeal,
+          prescribed_by: input.prescribedBy,
+          ...optionalDate("start_date", input.startDate),
+          ...optionalDate("end_date", input.endDate),
         }),
       }
     )
@@ -564,6 +587,9 @@ export class ApiCareRepository implements CareRepository {
           instructions: patch.instructions,
           before_after_meal: patch.beforeAfterMeal,
           status: patch.status,
+          prescribed_by: patch.prescribedBy,
+          ...optionalDate("start_date", patch.startDate),
+          ...optionalDate("end_date", patch.endDate),
         }),
       }
     )

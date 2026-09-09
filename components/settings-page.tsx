@@ -4,6 +4,7 @@ import { useState } from "react"
 import {
   IconBell,
   IconDeviceMobile,
+  IconLock,
   IconLogout,
   IconUser,
 } from "@tabler/icons-react"
@@ -16,6 +17,11 @@ import { useCareProfile } from "@/components/care/care-data-provider"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useLogout } from "@/components/logout-provider"
 import { PushPermissionHint } from "@/components/notifications/push-onboarding"
+import {
+  ChangeEmailCard,
+  ChangePasswordCard,
+} from "@/components/settings/security-section"
+import { SessionsCard } from "@/components/settings/sessions-section"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button, LinkButton } from "@/components/ui/button"
@@ -63,6 +69,7 @@ import { cn } from "@/lib/utils"
 
 const settingsNav = [
   { id: "account", label: "Akaun", icon: IconUser },
+  { id: "security", label: "Keselamatan", icon: IconLock },
   { id: "notifications", label: "Pemberitahuan", icon: IconBell },
   { id: "devices", label: "Peranti", icon: IconDeviceMobile },
   { id: "session", label: "Sesi", icon: IconLogout },
@@ -244,7 +251,7 @@ export function SettingsPage() {
                         className="h-11 bg-muted"
                       />
                       <FieldDescription>
-                        E-mel tidak boleh diubah melalui API pada masa ini.
+                        Tukar e-mel di bahagian Keselamatan.
                       </FieldDescription>
                     </Field>
                   </FieldGroup>
@@ -260,6 +267,13 @@ export function SettingsPage() {
                   </Button>
                 </CardFooter>
               </Card>
+            </div>
+          ) : null}
+
+          {section === "security" ? (
+            <div className="flex flex-col gap-4">
+              <ChangePasswordCard />
+              <ChangeEmailCard />
             </div>
           ) : null}
 
@@ -416,26 +430,31 @@ export function SettingsPage() {
           ) : null}
 
           {section === "session" ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Sesi</CardTitle>
-                <CardDescription>
-                  Keluar dari peranti ini atau tamatkan semua sesi aktif.
-                </CardDescription>
-              </CardHeader>
-              <CardFooter className="justify-end gap-2">
-                <Button variant="outline" onPress={requestLogout}>
-                  <IconLogout />
-                  Log keluar
-                </Button>
-                <Button
-                  variant="destructive"
-                  onPress={() => setLogoutAllOpen(true)}
-                >
-                  Log keluar semua peranti
-                </Button>
-              </CardFooter>
-            </Card>
+            <div className="flex flex-col gap-4">
+              <SessionsCard />
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Log keluar</CardTitle>
+                  <CardDescription>
+                    Keluar dari peranti ini, atau tamatkan semua sesi sekali
+                    gus.
+                  </CardDescription>
+                </CardHeader>
+                <CardFooter className="flex-wrap justify-end gap-2">
+                  <Button variant="outline" onPress={requestLogout}>
+                    <IconLogout />
+                    Log keluar
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onPress={() => setLogoutAllOpen(true)}
+                  >
+                    Log keluar semua peranti
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
           ) : null}
         </section>
       </div>

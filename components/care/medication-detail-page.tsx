@@ -6,7 +6,6 @@ import { IconInbox } from "@tabler/icons-react"
 import { toast } from "sonner"
 
 import { BackButton } from "@/components/back-button"
-import { ApiFieldGapNotice } from "@/components/care/api-field-gap-notice"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { CareFormShell } from "@/components/care/care-form-shell"
 import { SelectProfileEmpty } from "@/components/care/select-profile-empty"
@@ -48,7 +47,6 @@ import {
   validateDosage,
   validateTime,
 } from "@/lib/application/form-validation"
-import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import {
   BEFORE_AFTER_MEAL_OPTIONS,
   EVENT_STATUS_LABELS,
@@ -67,7 +65,6 @@ export function MedicationDetailPage({
 }: {
   medicationId: string
 }) {
-  const apiMode = !isMockDataEnabled()
   const {
     snapshot,
     updateMedication,
@@ -259,12 +256,6 @@ export function MedicationDetailPage({
         </CardHeader>
         <CardContent>
           <FieldGroup>
-            {apiMode ? (
-              <ApiFieldGapNotice>
-                Prescriber dan tarikh mula/tamat belum disokong oleh DTO ubat
-                backend. Jadual dan tindakan dos disambung melalui API.
-              </ApiFieldGapNotice>
-            ) : null}
             <Field>
               <FieldLabel>Arahan</FieldLabel>
               <Textarea
@@ -274,16 +265,14 @@ export function MedicationDetailPage({
               />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
-              {!apiMode ? (
-                <Field>
-                  <FieldLabel>Prescriber</FieldLabel>
-                  <Input
-                    className="h-11 bg-background"
-                    value={prescribedBy}
-                    onChange={(event) => setPrescribedBy(fieldValue(event))}
-                  />
-                </Field>
-              ) : null}
+              <Field>
+                <FieldLabel>Prescriber</FieldLabel>
+                <Input
+                  className="h-11 bg-background"
+                  value={prescribedBy}
+                  onChange={(event) => setPrescribedBy(fieldValue(event))}
+                />
+              </Field>
               <Field>
                 <FieldLabel>Sebelum/selepas makan</FieldLabel>
                 <Select
@@ -306,26 +295,22 @@ export function MedicationDetailPage({
                   </SelectContent>
                 </Select>
               </Field>
-              {!apiMode ? (
-                <>
-                  <Field>
-                    <FieldLabel>Mula</FieldLabel>
-                    <DatePicker
-                      value={startDate}
-                      onChange={setStartDate}
-                      className="bg-background"
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel>Tamat</FieldLabel>
-                    <DatePicker
-                      value={endDate}
-                      onChange={setEndDate}
-                      className="bg-background"
-                    />
-                  </Field>
-                </>
-              ) : null}
+              <Field>
+                <FieldLabel>Mula</FieldLabel>
+                <DatePicker
+                  value={startDate}
+                  onChange={setStartDate}
+                  className="bg-background"
+                />
+              </Field>
+              <Field>
+                <FieldLabel>Tamat</FieldLabel>
+                <DatePicker
+                  value={endDate}
+                  onChange={setEndDate}
+                  className="bg-background"
+                />
+              </Field>
               <Field>
                 <FieldLabel>Status</FieldLabel>
                 <Select
@@ -357,25 +342,21 @@ export function MedicationDetailPage({
         <CardFooter className="justify-end">
           <Button
             onPress={() => {
-              if (!apiMode) {
-                const rangeError = validateDateRange(startDate, endDate)
-                if (rangeError) {
-                  toast.error(rangeError)
-                  return
-                }
+              // The date range is checked in both modes: PATCH accepts
+              // start_date/end_date since 2026-09-09, so a backwards range is
+              // now something the user can actually save.
+              const rangeError = validateDateRange(startDate, endDate)
+              if (rangeError) {
+                toast.error(rangeError)
+                return
               }
-              void updateMedication(
-                medication.id,
-                apiMode
-                  ? { instructions, beforeAfterMeal }
-                  : {
-                      instructions,
-                      prescribedBy,
-                      beforeAfterMeal,
-                      startDate,
-                      endDate: endDate || undefined,
-                    }
-              ).catch(() => undefined)
+              void updateMedication(medication.id, {
+                instructions,
+                prescribedBy,
+                beforeAfterMeal,
+                startDate,
+                endDate: endDate || undefined,
+              }).catch(() => undefined)
             }}
           >
             Simpan butiran
@@ -524,7 +505,6 @@ export function MedicationDetailPage({
 
 export function MedicationCreatePage() {
   const router = useRouter()
-  const apiMode = !isMockDataEnabled()
   const { selectedProfile, addMedication, addSchedule } = useCareData()
   const [name, setName] = useState("")
   const [dosage, setDosage] = useState("")
@@ -533,9 +513,7 @@ export function MedicationCreatePage() {
   const [prescribedBy, setPrescribedBy] = useState("")
   const [startDate, setStartDate] = useState(() => todayKey())
   const [timeOfDay, setTimeOfDay] = useState("08:00")
-  const dirty = apiMode
-    ? Boolean(name || dosage || instructions)
-    : Boolean(name || dosage || instructions || prescribedBy)
+  const dirty = Boolean(name || dosage || instructions || prescribedBy)
 
   return (
     <CareFormShell
@@ -562,8 +540,8 @@ export function MedicationCreatePage() {
           dosage,
           instructions,
           beforeAfterMeal,
-          prescribedBy: apiMode ? "" : prescribedBy,
-          startDate: apiMode ? "" : startDate,
+          prescribedBy,
+          startDate,
           status: "active",
         })
           .then((created) => {
@@ -582,12 +560,6 @@ export function MedicationCreatePage() {
         <SelectProfileEmpty />
       ) : (
         <FieldGroup>
-          {apiMode ? (
-            <ApiFieldGapNotice>
-              Hanya nama, dos, arahan, dan masa makan dihantar ke API.
-              Prescriber dan tarikh mula tersedia dalam mod mock.
-            </ApiFieldGapNotice>
-          ) : null}
           <Field>
             <FieldLabel>Nama</FieldLabel>
             <Input
@@ -612,26 +584,22 @@ export function MedicationCreatePage() {
               onChange={(event) => setInstructions(fieldValue(event))}
             />
           </Field>
-          {!apiMode ? (
-            <>
-              <Field>
-                <FieldLabel>Prescriber</FieldLabel>
-                <Input
-                  className="h-11 bg-background"
-                  value={prescribedBy}
-                  onChange={(event) => setPrescribedBy(fieldValue(event))}
-                />
-              </Field>
-              <Field>
-                <FieldLabel>Tarikh mula</FieldLabel>
-                <DatePicker
-                  value={startDate}
-                  onChange={setStartDate}
-                  className="bg-background"
-                />
-              </Field>
-            </>
-          ) : null}
+          <Field>
+            <FieldLabel>Prescriber</FieldLabel>
+            <Input
+              className="h-11 bg-background"
+              value={prescribedBy}
+              onChange={(event) => setPrescribedBy(fieldValue(event))}
+            />
+          </Field>
+          <Field>
+            <FieldLabel>Tarikh mula</FieldLabel>
+            <DatePicker
+              value={startDate}
+              onChange={setStartDate}
+              className="bg-background"
+            />
+          </Field>
           <Field>
             <FieldLabel>Sebelum/selepas makan</FieldLabel>
             <Select

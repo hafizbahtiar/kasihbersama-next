@@ -276,6 +276,7 @@ export function CareDataProvider({
         const profile = await runMutation(() =>
           repository.createProfile({
             displayName: input.displayName,
+            dateOfBirth: input.dateOfBirth,
           })
         )
         setSelectedProfileId(profile.id)
@@ -292,6 +293,9 @@ export function CareDataProvider({
         }
         if (patch.status !== undefined) {
           apiPatch.status = patch.status
+        }
+        if (patch.dateOfBirth !== undefined) {
+          apiPatch.dateOfBirth = patch.dateOfBirth
         }
         return voidMutation(
           () => repository.updateProfile(id, apiPatch),

@@ -31,6 +31,9 @@ const CODE_MESSAGES: Record<string, string> = {
   forbidden: "Anda tidak dibenarkan melakukan tindakan ini.",
   not_found: "Rekod tidak dijumpai.",
   conflict: "Rekod sudah wujud atau bercanggah.",
+  pending_invites:
+    "Ada jemputan yang belum dijawab ke e-mel semasa. Terima atau batalkan jemputan itu dahulu.",
+  email_taken: "E-mel ini sudah didaftarkan pada akaun lain.",
   already_claimed: "Profil sudah dituntut.",
   unprocessable: "Maklumat tidak sah. Semak semula borang.",
   invalid_argument: "Parameter permintaan tidak sah.",

@@ -8,6 +8,7 @@ import type {
   NotificationChannel,
   ProfileNotificationPref,
   ReminderType,
+  UserSession,
 } from "@/lib/domain/account"
 import {
   ApiError,
@@ -184,6 +185,49 @@ export function useDeviceTokens() {
   const revoke = useCallback(
     async (tokenId: string) => {
       await getAccountRepository().revokeDeviceToken(tokenId)
+      await load()
+    },
+    [load]
+  )
+
+  return { ...state, reload: load, revoke }
+}
+
+export function useSessions() {
+  const [state, setState] = useState<AsyncState<UserSession[]>>({
+    data: [],
+    isLoading: true,
+    error: null,
+  })
+
+  const load = useCallback(async () => {
+    setState((current) => ({ ...current, isLoading: true, error: null }))
+    try {
+      const data = await getAccountRepository().listSessions()
+      setState({ data, isLoading: false, error: null })
+    } catch (cause) {
+      const error = isApiError(cause)
+        ? cause
+        : new ApiError("Gagal memuatkan sesi.", {
+            code: "internal",
+            status: 500,
+          })
+      setState({ data: [], isLoading: false, error })
+    }
+  }, [])
+
+  useEffect(() => {
+    // Load-on-mount: the loader flips isLoading synchronously before its first
+    // await, which the compiler rule flags. Safe here - it is one extra render
+    // on mount, and the alternative (deferring the flip) would show a stale
+    // "loaded" frame first.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load()
+  }, [load])
+
+  const revoke = useCallback(
+    async (sessionId: string) => {
+      await getAccountRepository().revokeSession(sessionId)
       await load()
     },
     [load]

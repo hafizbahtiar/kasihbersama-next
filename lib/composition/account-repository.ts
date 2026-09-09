@@ -3,9 +3,11 @@ import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import type { AccountRepository } from "@/lib/domain/account-repository"
 import { ApiAccountRepository } from "@/lib/infrastructure/api/api-account-repository"
 import {
+  seedAccountPassword,
   seedAccountUser,
   seedDeviceTokens,
   seedNotificationPrefs,
+  seedSessions,
 } from "@/lib/infrastructure/mock/account"
 import { InMemoryAccountRepository } from "@/lib/infrastructure/mock/in-memory-account-repository"
 
@@ -18,6 +20,8 @@ export function getAccountRepository(): AccountRepository {
           user: seedAccountUser,
           prefs: seedNotificationPrefs,
           devices: seedDeviceTokens,
+          sessions: seedSessions,
+          password: seedAccountPassword,
         })
       : new ApiAccountRepository(ensureApiClient())
   }

@@ -130,12 +130,42 @@ domain penghantar disahkan di Resend.
   peranan, tapi tiada route HTTP — profil boleh dipaut ke circle, orang tidak boleh)_
 - [ ] Circle: kemas kini circle _(`PATCH /care-circles/{id}` tak didaftarkan; hanya
   create/read/delete)_
-- [ ] Medan profil `relation`, `dateOfBirth`, `notes` masih disembunyikan dalam mod API
-  _(`care-profile-field-gaps.ts` — DTO backend belum ada medan ini)_
-- [ ] Medan ubat `prescribedBy`, `startDate`, `endDate` — sama
+- [ ] Medan profil `relation` dan `notes` masih disembunyikan dalam mod API
+  _(tiada lajur langsung dalam `care_profiles` — perlu migrasi dahulu, bukan sekadar DTO)_
 
 ### Selesai sesi ini (2026-09-09)
 
+- [x] **Medan yang backend pulangkan tetapi frontend buang, kini disambung.**
+  `date_of_birth` (profil) dan `start_date`/`end_date`/`prescribed_by` (ubat) ditambah ke
+  DTO backend awal sesi ini, tetapi mapper frontend masih menulis `""` ke atasnya dan
+  borang masih dipagar `!apiMode`. Borang mengumpul data yang ia buang.
+  - Tarikh kosong dihantar sebagai **kunci tiada**, bukan `""` — lajur ini di-COALESCE,
+    jadi rentetan kosong akan memadam nilai tersimpan.
+  - Backend: `createMedicationReq.start_date` dahulunya RFC3339 sedangkan responsnya
+    `YYYY-MM-DD`. Borang yang membaca ubat dan menyimpannya semula ditolak atas datanya
+    sendiri. Kini ISO dua-dua arah, dengan ujian round-trip.
+- [x] **Sampul ralat 429 kini JSON.** `ratelimit` tak boleh import lapisan transport (kitaran
+  import), jadi ia guna `http.Error` dan menjawab text/plain sedangkan semua ralat lain JSON.
+  Klien gagal parse → jatuh ke "Ralat pelayan. Cuba lagi." — nasihat yang betul-betul
+  bertentangan dengan apa yang had kadar itu minta. Sampul dipindah ke `internal/apierr`
+  (pakej daun), kod `rate_limited` kini benar-benar dihantar.
+- [x] **Keselamatan akaun (Modul 2 backend) kini ada UI.** Tab baharu "Keselamatan" dalam
+  Tetapan: tukar kata laluan dan tukar e-mel, kedua-duanya berpagar kata laluan semasa.
+  Tab "Sesi" kini menyenaraikan peranti yang log masuk (`GET /me/sessions`) dengan lencana
+  "Peranti ini" dan butang tamatkan bagi yang lain.
+  - 401 pada dua borang ini **tidak** boleh guna teks kongsi "Sila log masuk semula" — sesi
+    pengguna elok, kata laluan dalam borang yang salah. Ia dipetakan ke ralat medan.
+  - Backend memisahkan dua sebab 409 kepada kod `pending_invites` dan `email_taken`;
+    satu kod `conflict` tak boleh diterjemah tepat.
+  - Sesi semasa tiada butang "Tamatkan" — ia kelihatan seperti tindakan keselamatan
+    sedangkan hasilnya cuma log keluar dari peranti di depan mata. Itu kerja butang
+    "Log keluar" di bawahnya.
+  - Repositori mock menguatkuasakan kata laluan seednya (`katalaluanlama`), jadi keadaan
+    gagal boleh dilihat dalam mod demo.
+  - `skipRefresh: true` pada dua borang ini: 401 di sini bermakna kata laluan dalam borang
+    salah, bukan sesi luput. Tanpanya klien membelanjakan satu putaran refresh token pada
+    setiap salah taip, dan pengguna yang refreshnya gagal dilog keluar kerana tersalah
+    taip kata laluan sendiri.
 - [x] Snapshot jagaan mati sepenuhnya apabila satu endpoint gagal — `Promise.all` dalam
   `loadProfileData` membuang sepuluh respons berjaya kerana satu 400. Setiap seksyen kini
   merosot sendiri-sendiri; 401 kekal fatal supaya sesi luput tak dipaparkan sebagai
@@ -219,4 +249,50 @@ borang: cara pengguna tiba, dan apa berlaku selepas simpan.
 - [ ] Semuanya dibaca dari kod. Tiada pelayar dalam sesi itu, jadi susunan kesan di
   atas belum disahkan terhadap penggunaan sebenar. Cuba pada telefon sebenar untuk
   mengesahkan atau menolaknya.
+
+---
+
+## Info kesihatan dan profil diri (2026-09-09)
+
+Disemak terhadap skema DB sebenar, bukan terhadap `care-profile-field-gaps.ts`.
+
+### `care-profile-field-gaps.ts` salah, bukan sekadar tidak lengkap
+
+- [ ] Ia menyenaraikan jurang sebagai `relation`, `dateOfBirth`, `notes`. Dua daripada
+  tiga nama itu **tiada dalam jadual** `care_profiles`. Yang sebenarnya ada, sudah
+  dimigrasi dan sudah dimuat pada setiap bacaan backend:
+
+      legal_name, date_of_birth, gender, blood_type, allergy_summary,
+      condition_summary, primary_clinic, primary_doctor, emergency_note
+
+  Sembilan lajur, dan `ProfileView` backend tak memulangkan satu pun. Fail ini perlu
+  dibetulkan supaya ia menamakan medan yang wujud — kalau tidak ia menyembunyikan
+  medan yang salah dan memberi gambaran jurang itu kecil.
+
+### Borang profil menunggu satu perubahan DTO
+
+- [ ] Borang cipta/sunting profil hanya menghantar `display_name`, sebab itu sahaja yang
+  `updateProfileReq` terima. Sebaik backend mendedahkan sembilan medan itu (perubahan
+  DTO, bukan migrasi — data sudah dalam memori), borang ini boleh mengumpul tarikh
+  lahir, jenis darah, alahan, keadaan, klinik dan doktor.
+  Bergantung pada entri "DTO gaps" dalam TODO backend.
+
+### Kad kecemasan: UI ada, data ada, endpoint tiada
+
+- [ ] `can_view_emergency_card` sudah ditapis dalam `platform-features-section.tsx` dan
+  `lib/domain/care.ts`, dan lajur `emergency_note` sudah dimigrasi — tetapi tiada
+  endpoint menghubungkannya. Bahagian frontend sudah sedia; ia menunggu backend.
+
+### Tiada modul kesihatan diri sendiri
+
+- [ ] Tiada halaman untuk maklumat kesihatan pengguna sendiri (jenis darah, tarikh lahir,
+  tinggi). `/me` memulangkan empat medan sahaja — id, e-mel, nama paparan, status
+  pengesahan — dan `PATCH /me` menerima satu. Settings menunjukkan tepat apa yang ada.
+
+  Keputusan reka bentuk ada di sebelah backend: sama ada "kesihatan saya" ialah profil
+  jagaan yang subjeknya diri sendiri (guna semula segalanya yang sedia ada), atau medan
+  baharu pada `users` (menduakan model). Kalau pilihan pertama menang, kerja frontendnya
+  kecil — halaman itu ialah halaman profil jagaan sedia ada.
+
+  Nota: `tinggi` tiada dalam mana-mana jadual, jadi ia perlu migrasi walau apa pun.
 

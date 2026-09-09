@@ -5,6 +5,7 @@ import type {
   NotificationChannel,
   ProfileNotificationPref,
   ReminderType,
+  UserSession,
 } from "@/lib/domain/account"
 import type { ApiClient } from "@/lib/infrastructure/api/client"
 import type { MeResponse } from "@/lib/infrastructure/api/types"
@@ -15,6 +16,19 @@ type ApiNotificationPref = {
   reminder_type: string
   enabled: boolean
   created_at: string
+}
+
+type ApiSession = {
+  id: string
+  user_agent?: string
+  ip_address?: string
+  current: boolean
+  created_at: string
+  expires_at: string
+}
+
+type ApiSessionsResponse = {
+  sessions: ApiSession[]
 }
 
 type ApiDeviceToken = {
@@ -43,6 +57,17 @@ function mapNotificationPref(
     reminderType: api.reminder_type as ReminderType,
     enabled: api.enabled,
     createdAt: api.created_at,
+  }
+}
+
+function mapSession(api: ApiSession): UserSession {
+  return {
+    id: api.id,
+    userAgent: api.user_agent,
+    ipAddress: api.ip_address,
+    current: api.current,
+    createdAt: api.created_at,
+    expiresAt: api.expires_at,
   }
 }
 
@@ -105,6 +130,48 @@ export class ApiAccountRepository implements AccountRepository {
 
   revokeDeviceToken(tokenId: string) {
     return this.client.request<void>(`/me/device-tokens/${tokenId}`, {
+      method: "DELETE",
+    })
+  }
+
+  changePassword(input: { currentPassword: string; newPassword: string }) {
+    return this.client.request<void>("/me/password", {
+      method: "POST",
+      // skipRefresh: a 401 here means the password in the body is wrong, never
+      // that the session expired. Without this the client treats it as an
+      // expired token, spends a refresh rotation on every typo, and a user
+      // whose refresh happens to fail is signed out for mistyping their own
+      // password.
+      skipRefresh: true,
+      body: JSON.stringify({
+        current_password: input.currentPassword,
+        new_password: input.newPassword,
+      }),
+    })
+  }
+
+  changeEmail(input: { currentPassword: string; newEmail: string }) {
+    return this.client
+      .request<MeResponse>("/me/email", {
+        method: "POST",
+        // See changePassword: 401 is about the body, not the session.
+        skipRefresh: true,
+        body: JSON.stringify({
+          current_password: input.currentPassword,
+          new_email: input.newEmail,
+        }),
+      })
+      .then(mapMe)
+  }
+
+  listSessions() {
+    return this.client
+      .request<ApiSessionsResponse>("/me/sessions")
+      .then((body) => body.sessions.map(mapSession))
+  }
+
+  revokeSession(sessionId: string) {
+    return this.client.request<void>(`/me/sessions/${sessionId}`, {
       method: "DELETE",
     })
   }

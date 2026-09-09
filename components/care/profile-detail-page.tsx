@@ -462,19 +462,15 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
+              <Detail label="Tarikh lahir" value={profile.dateOfBirth || "—"} />
               {apiMode ? (
                 <div className="sm:col-span-2">
                   <ApiFieldGapNotice>
-                    Hubungan, tarikh lahir, dan nota belum disediakan oleh API
-                    profil jagaan.
+                    Hubungan dan nota belum disediakan oleh API profil jagaan.
                   </ApiFieldGapNotice>
                 </div>
               ) : (
                 <>
-                  <Detail
-                    label="Tarikh lahir"
-                    value={profile.dateOfBirth || "—"}
-                  />
                   <Detail label="Nota" value={profile.notes || "—"} />
                 </>
               )}

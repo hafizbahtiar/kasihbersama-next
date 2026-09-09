@@ -44,3 +44,30 @@ export const PLATFORM_LABELS: Record<DeviceToken["platform"], string> = {
   ios: "iOS",
   android: "Android",
 }
+
+/**
+ * One live login on the account.
+ *
+ * Carries no token or hash - the backend deliberately omits them - only what a
+ * person needs to recognise a device and decide whether it is theirs.
+ */
+export type UserSession = {
+  id: string
+  userAgent?: string
+  ipAddress?: string
+  /** The session making the current request. Never offer to end this one. */
+  current: boolean
+  createdAt: string
+  expiresAt: string
+}
+
+/**
+ * Shortest password the backend will accept (`auth.MinPasswordLen`).
+ *
+ * Only the floor is mirrored here. The full rule - common passwords, keyboard
+ * walks, repeats - stays server-side on purpose: a second copy would drift,
+ * and the client cannot be the authority on a check that protects the server.
+ * A password that clears this length can still be refused with 422, and the
+ * form shows that message.
+ */
+export const MIN_PASSWORD_LENGTH = 10

@@ -101,18 +101,30 @@ Helpers: `lib/application/deep-links.ts`
 
 ## Care profile DTO gaps
 
-Backend `profileResp` fields: `id`, `display_name`, `subject_user_id`, `role`, `permissions`, `status`.
+Backend `profileResp` fields: `id`, `display_name`, `subject_user_id`, `role`,
+`permissions`, `status`, plus the health columns added 2026-09-09 —
+`legal_name`, `date_of_birth`, `gender`, `blood_type`, `allergy_summary`,
+`condition_summary`, `primary_clinic`, `primary_doctor`, `emergency_note`.
+All are optional and omitted when unknown.
 
-UI fields **not** persisted in API mode yet (see `lib/application/care-profile-field-gaps.ts`):
+UI fields **not** persisted in API mode (see `lib/application/care-profile-field-gaps.ts`):
 
 | UI field | Status |
 |----------|--------|
-| `relation` | Mock / local only |
-| `dateOfBirth` | Mock / local only |
-| `notes` | Mock / local only |
+| `relation` | Mock / local only — no column anywhere; needs a migration first |
+| `notes` | Mock / local only — same |
 | `circleId` | Derived from `GET /care-circles` membership, not on profile DTO |
 
-Medication UI gaps (`prescribedBy`, `startDate`, `endDate`) — backend medication DTO currently exposes `name`, `dosage`, `instructions`, `before_after_meal`, `status` only.
+`dateOfBirth` left this table on 2026-09-09: it is read from `date_of_birth`
+and sent on create and PATCH.
+
+Medications now expose `start_date`, `end_date` and `prescribed_by` in both
+directions. Dates are ISO `YYYY-MM-DD` on the **request as well as** the
+response — the request took RFC3339 until 2026-09-09, so a form that read a
+medication and wrote it back was rejected on its own data.
+
+An empty date is sent as an **absent key**, never `""`: every one of these
+columns is COALESCE-patched, so a blank string would overwrite a stored value.
 
 ## References
 

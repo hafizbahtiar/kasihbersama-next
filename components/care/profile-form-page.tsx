@@ -67,7 +67,9 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
         if (!apiMode && !relation) {
           nextErrors.relation = "Hubungan diperlukan."
         }
-        if (!apiMode && dateOfBirth && !parseDate(dateOfBirth)) {
+        // date_of_birth is persisted in both modes since 2026-09-09, so the
+        // check is no longer mock-only.
+        if (dateOfBirth && !parseDate(dateOfBirth)) {
           nextErrors.dateOfBirth = "Tarikh lahir tidak sah."
         }
         setErrors(nextErrors)
@@ -80,7 +82,7 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
           void updateProfile(
             existing.id,
             apiMode
-              ? { displayName: displayName.trim() }
+              ? { displayName: displayName.trim(), dateOfBirth }
               : {
                   displayName: displayName.trim(),
                   relation,
@@ -100,7 +102,7 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
 
         void createProfile(
           apiMode
-            ? { displayName: displayName.trim() }
+            ? { displayName: displayName.trim(), dateOfBirth }
             : {
                 displayName: displayName.trim(),
                 relation,
@@ -123,8 +125,8 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
       <FieldGroup>
         {apiMode ? (
           <ApiFieldGapNotice>
-            Backend hanya menyimpan nama paparan buat masa ini. Hubungan, tarikh
-            lahir, nota, dan pilihan kumpulan kekal dalam mod mock.
+            Hubungan, nota, dan pilihan kumpulan kekal dalam mod mock. Nama dan
+            tarikh lahir disimpan.
           </ApiFieldGapNotice>
         ) : null}
         <Field data-invalid={Boolean(errors.displayName)}>

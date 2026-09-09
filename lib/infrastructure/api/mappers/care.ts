@@ -29,6 +29,8 @@ type ApiProfile = {
   role?: string
   permissions?: Record<string, boolean>
   status: string
+  /** ISO "YYYY-MM-DD". Omitted when unknown, never blank. */
+  date_of_birth?: string
 }
 
 type ApiCircle = {
@@ -59,6 +61,10 @@ type ApiMedication = {
   instructions?: string
   before_after_meal?: string
   status: string
+  /** ISO "YYYY-MM-DD" - the same shape the write endpoints accept. */
+  start_date?: string
+  end_date?: string
+  prescribed_by?: string
 }
 
 type ApiMedicationSchedule = {
@@ -164,13 +170,14 @@ export function mapPermissions(
 }
 
 export function mapProfile(api: ApiProfile): CareProfile {
-  // relation, dateOfBirth, notes: not in backend profileResp yet — see
-  // lib/application/care-profile-field-gaps.ts
+  // relation and notes are still absent from profileResp — see
+  // lib/application/care-profile-field-gaps.ts. date_of_birth landed
+  // 2026-09-09 and is read here.
   return {
     id: api.id,
     displayName: api.display_name,
     relation: "",
-    dateOfBirth: "",
+    dateOfBirth: api.date_of_birth ?? "",
     status: asEnum(api.status, ["active", "archived"] as const, "active"),
     role: asEnum(
       api.role ?? "family_viewer",
@@ -242,8 +249,9 @@ export function mapMedication(
     dosage: api.dosage ?? "",
     instructions: api.instructions ?? "",
     beforeAfterMeal: api.before_after_meal ?? "",
-    prescribedBy: "",
-    startDate: "",
+    prescribedBy: api.prescribed_by ?? "",
+    startDate: api.start_date ?? "",
+    endDate: api.end_date,
     status: asEnum(
       api.status,
       ["active", "paused", "ended"] as const,
