@@ -133,7 +133,7 @@ export function AppointmentCalendar({
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
-                size="icon-sm"
+                size="icon"
                 aria-label={
                   view === "week" ? "Minggu sebelumnya" : "Hari sebelumnya"
                 }
@@ -148,7 +148,7 @@ export function AppointmentCalendar({
               </p>
               <Button
                 variant="ghost"
-                size="icon-sm"
+                size="icon"
                 aria-label={
                   view === "week" ? "Minggu seterusnya" : "Hari seterusnya"
                 }

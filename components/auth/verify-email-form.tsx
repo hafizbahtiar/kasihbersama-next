@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
+import { IconAlertTriangle, IconMailCheck } from "@tabler/icons-react"
 
 import { useClearAuthErrorOnMount } from "@/hooks/use-clear-auth-error-on-mount"
 import { AuthErrorBanner } from "@/components/care/async-state"
@@ -9,6 +10,7 @@ import { useAuth } from "@/components/auth/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { ResendVerificationButton } from "@/components/auth/resend-verification-button"
 
 export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
@@ -78,14 +80,15 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
   if (verifiedAnotherAccount) {
     return (
       <div className="mt-8 space-y-4">
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
-          <p className="font-medium">Token itu milik akaun lain</p>
-          <p className="mt-1 text-muted-foreground">
+        <Alert>
+          <IconAlertTriangle />
+          <AlertTitle>Token itu milik akaun lain</AlertTitle>
+          <AlertDescription>
             Pautan tersebut mengesahkan akaun berbeza daripada yang sedang log
             masuk ({user.email}). Minta pautan baharu untuk akaun ini.
-          </p>
-        </div>
-        <ResendVerificationButton />
+          </AlertDescription>
+        </Alert>
+        <ResendVerificationButton size="xl" />
       </div>
     )
   }
@@ -93,11 +96,15 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
   if (user?.emailVerified || submitted) {
     return (
       <div className="mt-8 space-y-4">
-        <div className="rounded-xl border bg-card p-4 text-sm text-muted-foreground">
-          {user
-            ? "E-mel anda telah disahkan. Anda boleh teruskan ke ruang jagaan."
-            : "E-mel telah disahkan. Log masuk untuk teruskan."}
-        </div>
+        <Alert>
+          <IconMailCheck />
+          <AlertTitle>E-mel disahkan</AlertTitle>
+          <AlertDescription>
+            {user
+              ? "Anda boleh teruskan ke ruang jagaan."
+              : "Log masuk untuk teruskan."}
+          </AlertDescription>
+        </Alert>
         <Button
           size="xl"
           className="w-full"
@@ -144,7 +151,7 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
           <p className="mb-3 text-sm text-muted-foreground">
             Tiada e-mel, atau pautan sudah tamat tempoh?
           </p>
-          <ResendVerificationButton />
+          <ResendVerificationButton size="xl" />
         </div>
       ) : null}
     </form>
