@@ -86,11 +86,11 @@ export function SettingsPage() {
   const current = settingsNav.find((item) => item.id === section)
   const medicationPushEnabled = selectedProfile
     ? prefEnabled(
-        notificationPrefs.data,
-        selectedProfile.id,
-        "push",
-        "medication"
-      )
+      notificationPrefs.data,
+      selectedProfile.id,
+      "push",
+      "medication"
+    )
     : true
 
   async function saveAccount() {
@@ -177,11 +177,18 @@ export function SettingsPage() {
                       <p className="font-heading text-lg leading-tight">
                         {user?.displayName ?? "Pengguna"}
                       </p>
-                      {user?.emailVerified ? (
-                        <Badge variant="secondary">E-mel disahkan</Badge>
-                      ) : (
-                        <Badge variant="outline">E-mel belum disahkan</Badge>
-                      )}
+                      {/* A user that has not loaded yet is unknown, not
+                          unverified - rendering the negative badge for null
+                          states a fact we do not have. */}
+                      {user ? (
+                        <Badge
+                          variant={user.emailVerified ? "secondary" : "outline"}
+                        >
+                          {user.emailVerified
+                            ? "E-mel disahkan"
+                            : "E-mel belum disahkan"}
+                        </Badge>
+                      ) : null}
                     </div>
                     <p className="truncate text-sm text-muted-foreground">
                       {user?.email ?? "—"}
@@ -190,7 +197,7 @@ export function SettingsPage() {
                 </CardContent>
               </Card>
 
-              {!user?.emailVerified ? (
+              {user && !user.emailVerified ? (
                 <Card>
                   <CardHeader>
                     <CardTitle>Sahkan e-mel</CardTitle>

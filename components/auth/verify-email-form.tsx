@@ -17,7 +17,7 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
   useClearAuthErrorOnMount()
   const [token, setToken] = useState(initialToken ?? "")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [verified, setVerified] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const autoSubmitted = useRef(false)
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
       !trimmed ||
       autoSubmitted.current ||
       user?.emailVerified ||
-      verified ||
+      submitted ||
       isSubmitting
     ) {
       return
@@ -37,7 +37,7 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
     void verifyEmail(trimmed)
       .then((ok) => {
         if (ok) {
-          setVerified(true)
+          setSubmitted(true)
         }
       })
       .finally(() => setIsSubmitting(false))
@@ -46,7 +46,7 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
     initialToken,
     isSubmitting,
     user?.emailVerified,
-    verified,
+    submitted,
     verifyEmail,
   ])
 
@@ -60,21 +60,49 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
     try {
       const ok = await verifyEmail(token.trim())
       if (ok) {
-        setVerified(true)
+        setSubmitted(true)
       }
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  if (user?.emailVerified || verified) {
+  // POST /auth/verify-email is token-based and unauthenticated: it verifies
+  // whoever the token belongs to, which is not necessarily whoever is signed
+  // in. Reporting success on the call alone claimed "your email is verified"
+  // for a token issued to another account, while settings read /me and
+  // correctly said otherwise. Trust /me, not the 204.
+  const verifiedAnotherAccount =
+    submitted && user != null && !user.emailVerified
+
+  if (verifiedAnotherAccount) {
+    return (
+      <div className="mt-8 space-y-4">
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
+          <p className="font-medium">Token itu milik akaun lain</p>
+          <p className="mt-1 text-muted-foreground">
+            Pautan tersebut mengesahkan akaun berbeza daripada yang sedang log
+            masuk ({user.email}). Minta pautan baharu untuk akaun ini.
+          </p>
+        </div>
+        <ResendVerificationButton />
+      </div>
+    )
+  }
+
+  if (user?.emailVerified || submitted) {
     return (
       <div className="mt-8 space-y-4">
         <div className="rounded-xl border bg-card p-4 text-sm text-muted-foreground">
-          E-mel anda telah disahkan. Anda boleh teruskan ke ruang jagaan.
+          {user
+            ? "E-mel anda telah disahkan. Anda boleh teruskan ke ruang jagaan."
+            : "E-mel telah disahkan. Log masuk untuk teruskan."}
         </div>
-        <Button className="h-11 w-full" onPress={() => router.push("/home")}>
-          Pergi ke laman utama
+        <Button
+          className="h-11 w-full"
+          onPress={() => router.push(user ? "/home" : "/")}
+        >
+          {user ? "Pergi ke laman utama" : "Log masuk"}
         </Button>
       </div>
     )
