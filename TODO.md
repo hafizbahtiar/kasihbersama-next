@@ -109,14 +109,19 @@
 Route backend dibaca terus dari `internal/transport/http/server.go` dan dibandingkan
 dengan `docs/06-api-contract.md`.
 
-### Menyekat — pengesahan e-mel jalan mati
+### Pengesahan e-mel berfungsi; pemulihan selepas terlepas tempoh tidak
+
+Dibetulkan 2026-09-09 selepas diuji, bukan sekadar dibaca. Nota terdahulu di sini
+mendakwa e-mel pengesahan tak pernah dibina. Ia dibina dan ia sampai — pendaftaran
+ujian terhadap staging menghasilkan rekod Resend "Verify your KasihBersama email"
+dengan `last_event: delivered`. Akaun yang tak menerimanya didaftarkan 11 jam sebelum
+domain penghantar disahkan di Resend.
 
 - [ ] **Tiada UI "hantar semula e-mel pengesahan"**, kerana backend tiada endpointnya.
-  E-mel dihantar sekali sahaja semasa signup dan luput dalam 24 jam. Halaman
-  `/verify-email` hanya menerima token yang sudah ada di tangan — ia tak boleh meminta
-  yang baharu. Akaun yang terlepas tempoh itu kekal tak sah selama-lamanya, dan
-  `EmailVerifiedGate` menyekat jemputan serta tuntutan untuk akaun sedemikian.
-  Bergantung pada `POST /auth/resend-verification` di backend; bina butang pada
+  Itu gap sebenar: token hidup 24 jam, dan selepas luput tiada jalan mendapat yang
+  baharu. Halaman `/verify-email` hanya menerima token yang sudah ada di tangan.
+  `EmailVerifiedGate` kemudian menyekat jemputan dan tuntutan untuk akaun sedemikian.
+  Bergantung pada `POST /auth/resend-verification`; bina butang pada
   `verify-email-form.tsx` sebaik ia wujud.
 
 ### Belum siap kerana backend belum ada surface
