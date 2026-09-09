@@ -156,7 +156,7 @@ export function DeleteAccountCard() {
             Nama, e-mel dan kata laluan anda dibuang. Profil jagaan yang anda
             sahaja ahlinya turut dipadam, termasuk dokumen yang dimuat naik ke
             dalamnya. Log jagaan yang anda tulis untuk keluarga lain kekal,
-            tanpa nama anda — itu rekod mereka, bukan milik anda untuk dipadam.
+            tanpa nama anda - itu rekod mereka, bukan milik anda untuk dipadam.
           </AlertDescription>
         </Alert>
 

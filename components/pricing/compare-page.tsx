@@ -33,9 +33,9 @@ import { cn } from "@/lib/utils"
 /**
  * The free column is read from the server wherever the row says to.
  *
- * The same promise the pricing page makes: the Free figures are the limits
- * being enforced on this account right now, not numbers typed into a table
- * that can quietly fall out of date with the deployment.
+ * Those figures are the free-plan catalogue (`limits` on bootstrap), not
+ * this account's live caps. A family-plan account still sees "1 profil"
+ * in the Percuma column if that is what the env currently advertises.
  */
 function cellValue(
   row: ComparisonRow,

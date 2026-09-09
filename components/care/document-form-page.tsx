@@ -46,7 +46,7 @@ const allowedTypes = [
 export function DocumentFormPage() {
   const router = useRouter()
   const apiMode = !isMockDataEnabled()
-  const { limits } = usePlatform()
+  const { accountLimits } = usePlatform()
   const { selectedProfile, uploadDocument, addDocument, updateDocument } =
     useCareData()
   const [title, setTitle] = useState("")
@@ -80,7 +80,7 @@ export function DocumentFormPage() {
           if (!allowedTypes.includes(file.type)) {
             nextErrors.file = "Jenis fail tidak dibenarkan. Guna PDF atau imej."
           }
-          const sizeError = validateUploadSize(file.size, limits.maxUploadMb)
+          const sizeError = validateUploadSize(file.size, accountLimits.maxUploadMb)
           if (sizeError) {
             nextErrors.file = sizeError
           }
@@ -191,7 +191,7 @@ export function DocumentFormPage() {
                 value={file}
                 onChange={setFile}
                 accept=".pdf,image/jpeg,image/png,image/webp"
-                hint={`PDF atau imej, maksimum ${limits.maxUploadMb} MB`}
+                hint={`PDF atau imej, maksimum ${accountLimits.maxUploadMb} MB`}
                 isInvalid={Boolean(errors.file)}
               />
               {errors.file ? <FieldError>{errors.file}</FieldError> : null}

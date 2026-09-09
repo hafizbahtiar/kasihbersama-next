@@ -82,7 +82,7 @@
 - [x] Timeline profil dari `GET /care-profiles/{id}/timeline` (gantikan agregasi snapshot tempatan) _(API = log jagaan sahaja; mock kekal agregasi penuh)_
 - [x] Ahli & akses: `GET /care-profiles/{id}/members` (access review), kemas kini peranan melalui API
 - [x] Ubat: schedules & events dari API; `prescribedBy` / `startDate` / `endDate` kini benar-benar disimpan _(DTO backend menerima dan memulangkan ketiga-tiganya sejak 2026-09-09; pagar `!apiMode` dibuang)_
-- [x] Profil jagaan: tarikh lahir kini disimpan melalui API _(`relation` dan `notes` kekal mock — tiada lajur dalam DB; lapan medan kesihatan lain boleh disimpan tetapi borang belum mengumpulnya, lihat bawah)_
+- [x] Profil jagaan: tarikh lahir kini disimpan melalui API _(`relation` dan `notes` kekal mock - tiada lajur dalam DB; lapan medan kesihatan lain boleh disimpan tetapi borang belum mengumpulnya, lihat bawah)_
 - [x] Platform: doctor summary dan audit disambung 2026-09-09 _(kad platform kini memaut ke halaman sebenar)_
 - [x] Platform: **kad kecemasan** disambung 2026-09-09 (`/emergency-card`)
 - [x] **PDF ringkasan: cetak dari pelayar, bukan endpoint backend** (2026-09-09).
@@ -92,7 +92,7 @@
   - Halaman, bukan sheet: sheet ialah portal atas keseluruhan dokumen, jadi mencetaknya
     mencetak aplikasi di belakangnya. Ia juga memberi ringkasan alamat yang boleh dibuka
     semula dan dikongsi.
-  - `SummarySections` dikongsi supaya paparan skrin dan cetakan tak boleh menyimpang —
+  - `SummarySections` dikongsi supaya paparan skrin dan cetakan tak boleh menyimpang -
     yang menyimpang sentiasa yang tiada siapa lihat sampai doktor memegangnya.
   - Pemilih cetak disemak terhadap `app/(app)/layout.tsx`: header berada **dalam**
     `sidebar-inset`, bukan di sebelahnya. Tekaan pertama aku salah.
@@ -135,7 +135,7 @@ domain penghantar disahkan di Resend.
   `POST /auth/resend-verification` dibina di backend dan
   `components/auth/resend-verification-button.tsx` memanggilnya dari `/verify-email` dan
   dari Tetapan. Backend sengaja **tidak** membatalkan token terdahulu, jadi tekan kali
-  kedua tak membunuh pautan yang sudah ada dalam peti masuk seseorang — itu pepijat
+  kedua tak membunuh pautan yang sudah ada dalam peti masuk seseorang - itu pepijat
   sebenar yang berlaku sekali dalam sesi ini.
 
 ### Belum siap kerana backend belum ada surface
@@ -153,7 +153,7 @@ domain penghantar disahkan di Resend.
   sebenarnya menyebabkan data hilang: **`mapProfile` tak memetakan satu pun daripada
   sembilan medan kesihatan.** Suntingan aku yang sepatutnya menambahnya gagal senyap
   (`str.replace` tanpa padanan ialah no-op), dan **setiap medan itu opsyenal pada
-  `CareProfile`, jadi menjatuhkan kesembilan-sembilannya adalah TypeScript yang sah** —
+  `CareProfile`, jadi menjatuhkan kesembilan-sembilannya adalah TypeScript yang sah** -
   tiada ralat, tiada amaran. Tulisan sampai ke DB; bacaan membuangnya.
   - Ia juga menjelaskan lencana "Saya" yang tak pernah muncul: `subjectUserId` hilang
     daripada mapper yang sama, jadi `isOwnHealthProfile()` selalu `false`.
@@ -170,23 +170,23 @@ domain penghantar disahkan di Resend.
     medan dalam badan**. Klien yang belum memuatkan rekod menghantar POST dan bukan PATCH,
     jadi tulisan itu hilang di belakang 200. Kini ia menulis medan yang dihantar.
   - **Frontend:** borang menetapkan semula dirinya daripada `profile` pada **setiap**
-    perubahan, jadi respons yang tak membawa medan itu mengosongkannya di skrin — dan
+    perubahan, jadi respons yang tak membawa medan itu mengosongkannya di skrin - dan
     apa-apa yang ditaip semasa muat semula latar belakang dibuang di tengah suntingan.
     Kini ia diseed sekali setiap rekod (`seededFor`), dan Simpan dilumpuhkan sehingga
     bacaan pertama mendarat supaya ia tak menghantar permintaan yang salah.
 - [x] **Halaman `/pricing/compare` gagal dimuat di staging.** `ui/table` ialah **Table
-  react-aria — komponen koleksi**, sama seperti `Menu`. Aku membungkus baris dalam
+  react-aria - komponen koleksi**, sama seperti `Menu`. Aku membungkus baris dalam
   `<Fragment>` dan menggunakan `colSpan` untuk tajuk kumpulan; RAC tiada `colSpan`
-  langsung, dan pembalut sembarangan dalam koleksi menghentikan render — halaman gagal,
+  langsung, dan pembalut sembarangan dalam koleksi menghentikan render - halaman gagal,
   bukan merosot. **Kesilapan kelas yang sama seperti `<div>` dalam menu akaun**, dan aku
   tak menyemaknya walaupun sudah terkena sekali.
-  - Kini satu jadual setiap kumpulan, tiada `colSpan`, tiada pembalut — mengikut corak
+  - Kini satu jadual setiap kumpulan, tiada `colSpan`, tiada pembalut - mengikut corak
     yang `data-table.tsx` sudah buktikan berfungsi dalam app ini.
   - Pelajaran yang dicatat: dalam projek ini, primitif shadcn selalunya koleksi
     react-aria. Semak sebelum menganggap ia `<table>`/`<div>` biasa.
 - [x] **Nilai berkod jadi konvensyen, bukan pembetulan sekali.** `RELATION_OPTIONS`
   ("Ibu", "Bapa") dan `BEFORE_AFTER_MEAL_OPTIONS` ("Sebelum makan") menyimpan kapsyen
-  Melayu sebagai nilai — dan yang kedua **dihantar ke backend**. Kini snake_case dengan
+  Melayu sebagai nilai - dan yang kedua **dihantar ke backend**. Kini snake_case dengan
   label dikenakan semasa render, sama seperti jantina. `TIMEZONE_OPTIONS` dibiarkan: id
   IANA memang pengecam standard.
   - Migrasi backend 00017 menormalkan baris `before_after_meal` sedia ada.
@@ -198,7 +198,7 @@ domain penghantar disahkan di Resend.
   "O+": `+` ialah ruang dalam query string, jadi hari ia jadi penapis ia rosak senyap.
 - [x] **Kad menunjukkan contoh untuk setiap medan kosong, bukan hanya kad kosong penuh.**
   Kad dengan tiga nilai sebenar dan empat jurang dahulunya merender jurang itu sebagai
-  **tiada apa-apa**, yang terbaca sebagai rosak — pengguna tak dapat bezakan medan kosong
+  **tiada apa-apa**, yang terbaca sebagai rosak - pengguna tak dapat bezakan medan kosong
   daripada medan yang kad ini tak ada. Setiap slot kosong kini menunjukkan contohnya
   dalam kelabu condong.
   - Aku tarik balik keputusan terdahulu aku ("kelabukan seluruh muka, bukan medan demi
@@ -211,7 +211,7 @@ domain penghantar disahkan di Resend.
   meletakkan bahasa UI ke dalam lajur perubatan. Rujukan pertumbuhan WHO khusus jantina,
   jadi medan itu kunci carian dan bukan kapsyen.
 - [x] **Kad kecemasan: blok alahan dikecilkan, keadaan kosong menunjukkan contoh.**
-  - Blok alahan dahulunya panel berisi yang mengambil **satu pertiga kad 85.6×54 mm** —
+  - Blok alahan dahulunya panel berisi yang mengambil **satu pertiga kad 85.6×54 mm** -
     itu poster, bukan kad. Kini garis merah nipis di kiri dengan satu baris teks. Alahan
     masih mendahului; merah itu aksen, bukan luas.
   - **Kad kosong kini menunjukkan data contoh yang dikelabukan**, bukan berkata "belum
@@ -219,21 +219,21 @@ domain penghantar disahkan di Resend.
     ada ciri itu rosak, datanya gagal dimuat, atau apa yang mereka dapat kalau mengisinya.
     Nilai contoh menjawab ketiga-tiganya sekali pandang.
   - Nilai contoh sengaja **biasa dan Melayu** ("Penisilin, kacang", "Klinik Kesihatan
-    Bandar Baru") dan bukan "Contoh 1" — tujuannya menunjukkan rupa kad sebenar, dan
+    Bandar Baru") dan bukan "Contoh 1" - tujuannya menunjukkan rupa kad sebenar, dan
     placeholder yang kelihatan seperti placeholder menunjukkan rupa borang.
   - **Seluruh muka** dikelabukan, bukan medan demi medan: kad dengan sebahagian baris
-    kelabu dan sebahagian hitam terbaca sebagai separa diisi — satu-satunya perkara yang
+    kelabu dan sebahagian hitam terbaca sebagai separa diisi - satu-satunya perkara yang
     ia tak boleh katakan. Lencana jenis darah turut ditukar ke `secondary`.
   - `Alert` shadcn di atas kad menjelaskan ia contoh dan akan bertukar apabila diisi.
 - [x] **Halaman harga jadi interaktif + halaman banding penuh (`/pricing/compare`).**
   - **Pemilih pelan**: peluncur "Saya menjaga N orang" yang menjawab soalan tajuk halaman
     itu sendiri. Pelan berbeza pada satu nombor, jadi biar penjaga tetapkan nombor itu dan
-    lihat jawapannya berubah — bukannya membaca tiga senarai ciri untuk menemui perkara
+    lihat jawapannya berubah - bukannya membaca tiga senarai ciri untuk menemui perkara
     yang sama. Diseed daripada bilangan profil sebenar akaun.
   - Cincin sorotan dan lencana kini **mengikut pemilih itu**, bukan "Paling popular" yang
     ditulis keras. Lencana berbunyi "Cukup untuk N orang".
   - Halaman banding: jadual shadcn, baris hanya untuk perkara yang **benar-benar
-    berbeza** — jadual yang dipadatkan dengan baris yang semua pelan kongsi ialah helah
+    berbeza** - jadual yang dipadatkan dengan baris yang semua pelan kongsi ialah helah
     lama untuk memanjangkan lajur berbayar, dan penjaga yang membacanya tak belajar apa-apa.
   - Lajur Percuma dalam jadual itu juga dibaca daripada `/bootstrap`, sama seperti kad
     harga.
@@ -243,16 +243,16 @@ domain penghantar disahkan di Resend.
   - Satu perkara yang kuat sahaja: **blok alahan merah**. Segala yang lain sengaja rata
     supaya merah itu satu-satunya yang menjerit.
   - **Kilauan mengikut penunjuk**, dan ia berada **di luar** elemen yang berputar. Di
-    dalamnya ia berputar bersama kad dan berakhir di belakang muka belakang — cahaya tak
+    dalamnya ia berputar bersama kad dan berakhir di belakang muka belakang - cahaya tak
     dicetak pada satu sisi. Aku tulis versi pertama dengan salah dan menangkapnya.
   - **Keadaan kosong dilayan:** kad yang berbunyi "Tiada direkodkan" lima kali lebih teruk
     daripada satu yang mengaku ia kosong. Kad itu berkata maklumat belum diisi, dan untuk
     rekod kau sendiri ia menawarkan butang ke `/my-health`. Untuk profil orang lain tiada
-    butang — borang profil belum mengumpul lapan medan itu, jadi butang itu akan jadi
+    butang - borang profil belum mengumpul lapan medan itu, jadi butang itu akan jadi
     jalan buntu.
 - [x] **Kad kecemasan kini objek 3D yang boleh diselak** (`emergency-card-view.tsx`).
   Muka depan membawa dua fakta yang mengubah tindakan klinisian: jenis darah dan alahan.
-  Belakang membawa keadaan kesihatan, klinik/doktor, nota — dan **ruang untuk pautan NFC**
+  Belakang membawa keadaan kesihatan, klinik/doktor, nota - dan **ruang untuk pautan NFC**
   yang dilukis sekarang supaya susun atur tak perlu berubah bila tag itu wujud. Ia
   menyatakan ia belum tersedia dan bukan menunjukkan kod palsu.
   - **CSS transform, bukan three.js.** Kad ialah dua muka rata dan satu putaran; konteks
@@ -265,21 +265,21 @@ domain penghantar disahkan di Resend.
     dan hanya satu muka boleh dicetak. Orang yang mencetak ini sedang membuat salinan
     untuk beg tangan, jadi ia mesti lengkap.
 - [x] **Pepijat: "kad kecemasan saya" menunjukkan kad saudara.** Butang itu menetapkan
-  profil dipilih lalu menavigasi — kelihatan betul, bukan. `selectedProfileId` **menolak
+  profil dipilih lalu menavigasi - kelihatan betul, bukan. `selectedProfileId` **menolak
   id yang tiada dalam snapshot yang dimuatkan dan jatuh balik ke profil lalai**, senyap.
   Kad kini menerima `profileId` secara eksplisit (`/emergency-card?profile=<id>`), jadi
   pratonton seseorang menamakan orang itu dan bukan bertanya keadaan global siapa yang
   sedang dipilih.
-- [x] **Halaman Pelan (`/pricing`).** Dikaji daripada `aymanch-03/shadcn-pricing-page` —
+- [x] **Halaman Pelan (`/pricing`).** Dikaji daripada `aymanch-03/shadcn-pricing-page` -
   togol bulanan/tahunan dan peralihan harga `@number-flow/react` diambil daripadanya.
   Selebihnya dilabuhkan pada projek ini:
-  - Pelan berbeza pada **had yang backend benar-benar kuatkuasakan** —
-    `MAX_PROFILES_FREE`, `MAX_MEMBERS_FREE`, `MAX_UPLOAD_MB` — bukan matriks ciri rekaan.
+  - Pelan berbeza pada **had yang backend benar-benar kuatkuasakan** -
+    `MAX_PROFILES_FREE`, `MAX_MEMBERS_FREE`, `MAX_UPLOAD_MB` - bukan matriks ciri rekaan.
     Yang berskala dalam produk ini bukan seat atau storan; ia berapa ramai yang kau jaga.
   - Lajur **Percuma dibaca daripada `/bootstrap` pada masa render**, bukan ditulis keras.
     Halaman harga yang bercanggah dengan had yang sebenarnya dikuatkuasakan pada akaun
     kau lebih teruk daripada tiada halaman harga.
-  - Kad penggunaan menunjukkan profil kau berbanding had itu — perkara yang halaman harga
+  - Kad penggunaan menunjukkan profil kau berbanding had itu - perkara yang halaman harga
     biasanya tak boleh katakan, sebab ia menerangkan akaun hipotesis.
   - Tajuknya bertanya "Berapa ramai yang anda jaga?" dan bukan "Harga mudah dan telus",
     sebab itulah keputusan yang sebenarnya dibuat.
@@ -288,9 +288,9 @@ domain penghantar disahkan di Resend.
     dijual.
 - [x] **`quota_exceeded` akhirnya dipetakan.** Backend memulangkannya sejak tier percuma
   dihantar dan tiada apa mengendalikannya, jadi mencapai had profil terbaca sebagai
-  "Rekod bercanggah." — mesej yang tak menamakan sebab mahupun penyelesaian.
+  "Rekod bercanggah." - mesej yang tak menamakan sebab mahupun penyelesaian.
 - [x] **Medan fail guna `ui/attachment`, bukan `<input type="file">` bergaya.**
-  Komponen itu **sudah ada dalam projek** dan tak pernah digunakan di mana-mana — aku
+  Komponen itu **sudah ada dalam projek** dan tak pernah digunakan di mana-mana - aku
   menggayakan input asli sedangkan ia duduk di situ.
   - Input asli kekal, tersembunyi: ia satu-satunya benda yang boleh membuka dialog fail.
     Semua yang kelihatan ialah komponen shadcn di atasnya.
@@ -304,37 +304,37 @@ domain penghantar disahkan di Resend.
 - [x] **Rekod sendiri kini boleh dikenali dan dicapai.** Dua kecacatan yang ditinggalkan
   bila rekod kesihatan sendiri dibina sebagai profil jagaan:
   - Penukar profil menyenaraikannya di bawah nama kau sendiri, **tak dapat dibezakan**
-    daripada orang yang kau jaga. Kini berlencana "Saya" — menggunakan pembantu
+    daripada orang yang kau jaga. Kini berlencana "Saya" - menggunakan pembantu
     `isOwnHealthProfile` yang aku tambah dan tak pernah guna.
   - Tiada jalan daripada `/my-health` ke kad kecemasan sendiri: kau terpaksa cari diri
     sendiri dalam penukar itu dan tahu entri mana kau. Kini ada butang yang memilih
     profil itu dan terus ke kad.
 - [x] **Kad kecemasan (`/emergency-card`).** Disusun untuk dibaca dalam tekanan, bukan
-  dilayari: **alahan** dahulu dan paling besar dalam blok merah — ia satu-satunya medan
-  yang mengubah tindakan klinisian dalam minit berikutnya — kemudian jenis darah dan
+  dilayari: **alahan** dahulu dan paling besar dalam blok merah - ia satu-satunya medan
+  yang mengubah tindakan klinisian dalam minit berikutnya - kemudian jenis darah dan
   tarikh lahir, semuanya satu skrin tanpa tab. Boleh dicetak dengan stylesheet yang sama.
   - Halaman **memberitahu pembaca bahawa bacaannya direkodkan**. Seseorang yang diberi
     akses kecemasan patut tahu penontonannya kelihatan kepada keluarga; backend mencatat
     `emergency_card_viewed` pada setiap bacaan.
 - [x] **Teks pemadaman kini menyebut fail.** Sapuan storan objek backend (`worker.RunPurge`,
-  2026-09-09) tiada permukaan UI — tiada respons API berubah — tetapi dua tempat teks
+  2026-09-09) tiada permukaan UI - tiada respons API berubah - tetapi dua tempat teks
   sebelum ini senyap tentang apa yang berlaku kepada fail:
   - Padam dokumen: "Fail akan dibuang daripada profil ini" → menyatakan ia juga dipadam
     dari storan dan tindakan itu kekal.
   - Padam akaun: kini menyatakan dokumen dalam profil yang dipadam turut hilang, dan
-    **mengapa** log jagaan untuk keluarga lain kekal — itu rekod mereka, bukan milik
+    **mengapa** log jagaan untuk keluarga lain kekal - itu rekod mereka, bukan milik
     pengguna untuk dipadam. Teks lama membiarkan pengguna meneka.
 - [x] **Tiga endpoint backend baharu kini ada UI.**
   - **Ringkasan doktor** (`/summaries`): pilih tempoh, ringkasan disediakan, dilihat dalam
     sheet bersekhen (ubat semasa, julat vital, temujanji, log). Lencana "Dijana AI" hanya
-    muncul untuk `generator === "ai"` — ringkasan `assembled` tak mencipta apa-apa, jadi
+    muncul untuk `generator === "ai"` - ringkasan `assembled` tak mencipta apa-apa, jadi
     melabelnya akan membayangkan kaveat yang tak wujud. Mapper menganggap generator yang
     tak dikenali sebagai `ai`: lalai selamat ialah yang menunjukkan penafian.
   - **Sejarah** (tab baharu dalam profil jagaan): dipagar `can_change_roles` sama seperti
-    endpointnya, dengan fallback yang **berkata** hanya pentadbir boleh lihat — panel kosong
+    endpointnya, dengan fallback yang **berkata** hanya pentadbir boleh lihat - panel kosong
     akan terbaca sebagai "tiada apa berlaku".
   - **Data & akaun** (tab baharu dalam Tetapan): muat turun data sendiri, dan padam akaun.
-    Padam memerlukan kata laluan **dan** menaip PADAM — ini satu-satunya tindakan tanpa
+    Padam memerlukan kata laluan **dan** menaip PADAM - ini satu-satunya tindakan tanpa
     undo, dan medan kata laluan sahaja ialah gerak isyarat yang sama seperti menukar nama.
     409 `deletion_blocked` dipaparkan sebagai senarai profil dengan tindakan pembetulan
     setiap satu; sebab yang berbeza perlukan langkah yang berbeza.
@@ -343,19 +343,19 @@ domain penghantar disahkan di Resend.
   - Repositori mock **menyusun** ringkasan daripada data mocknya sendiri, bukan pulang objek
     tin. Seluruh maksud ciri ini ialah ringkasan itu rekod kau sendiri disusun semula.
 - [x] **Tinggi kawalan borang ialah satu skala, bukan 51 salinan.** `Input` asasnya 32px,
-  jadi setiap borang menulis `h-11` sendiri dalam `className` — **51 tempat**. Kawalan yang
+  jadi setiap borang menulis `h-11` sendiri dalam `className` - **51 tempat**. Kawalan yang
   *dikarang* dan bukan digaya terus tak dapat mesej itu: kesemua **13** `DatePicker` dalam
   app ialah medan 32px + butang kalendar 32px berdiri di sebelah kotak teks 44px.
   `components/ui/control-size.ts` kini memiliki skala itu (`default` 32px untuk krom padat,
   `xl` 44px untuk borang), dan `Input`, `SelectTrigger`, `InputGroup`, `DateField`,
   `TimeField`, `DateTimeField`, `DatePicker` dan `DateTimePicker` semuanya mengambilnya.
   Preseden yang sama sudah ditetapkan untuk `Button` (`size="xl"`) atas sebab yang sama.
-  - `DatePicker` kini menyaiz butang kalendarnya daripada saiz medannya — itu yang
+  - `DatePicker` kini menyaiz butang kalendarnya daripada saiz medannya - itu yang
     memutuskan pasangan tak sepadan.
   - `InputGroupInput` kini `h-full`: dalam kumpulan, pembalut yang memiliki tinggi.
   - Sifar `h-11` tinggal di luar skala itu sendiri.
 - [x] **Halaman "Kesihatan saya" (`/my-health`).** Jenis darah, tarikh lahir, alahan,
-  keadaan kesihatan, klinik/doktor utama, nota kecemasan — untuk diri sendiri. Backend
+  keadaan kesihatan, klinik/doktor utama, nota kecemasan - untuk diri sendiri. Backend
   memodelkannya sebagai profil jagaan yang subjeknya diri sendiri, jadi frontend
   membandingkan `subject_user_id` dengan pengguna yang log masuk (`isOwnHealthProfile`).
   Boleh dicapai dari sidebar (Akaun → Kesihatan saya) dan menu akaun.
@@ -433,7 +433,7 @@ domain penghantar disahkan di Resend.
   Semak DevTools → Network: satu fetch `?_rsc=` bermakna berjaya; permintaan dokumen penuh
   bermakna belum.
 - [ ] `smoke:auth` masih melangkau langkah verify (lihat header skripnya). **Tidak lagi
-  tersekat** — `POST /auth/resend-verification` wujud sejak 2026-09-09, jadi skrip itu
+  tersekat** - `POST /auth/resend-verification` wujud sejak 2026-09-09, jadi skrip itu
   kini boleh dilengkapkan.
 - [ ] Saiz medan borang belum disahkan dengan mata. Setiap kawalan kini mengambil
   tingginya daripada `components/ui/control-size.ts`, tetapi itu disahkan pada tahap
@@ -451,9 +451,9 @@ dicatat ialah kerja frontend dan perkara yang UI mesti jangan buat.
 
 Rujukan reka bentuknya ialah **Buku Rekod Kesihatan Bayi dan Kanak-kanak KKM** yang ibu
 bapa sudah bawa ke klinik. App ini patut boleh dikenali sebagai buku itu, bukan penjejak
-generik — itu yang menjadikannya berguna pada hari pertama dan bukan satu lagi borang.
+generik - itu yang menjadikannya berguna pada hari pertama dan bukan satu lagi borang.
 
-- [ ] **Carta pertumbuhan** — berat-ikut-umur, panjang/tinggi-ikut-umur, lilitan kepala,
+- [ ] **Carta pertumbuhan** - berat-ikut-umur, panjang/tinggi-ikut-umur, lilitan kepala,
   BMI-ikut-umur, dengan pita rujukan WHO di belakang titik kanak-kanak itu. `chart.tsx`
   sudah ada dalam `components/ui` dan carta trend vital sudah menggunakannya.
 - [ ] **Ukuran ialah bacaan vital, bukan jadual baharu.** `weight` sudah wujud dalam
@@ -463,24 +463,24 @@ generik — itu yang menjadikannya berguna pada hari pertama dan bukan satu lagi
   "tinggi" sahaja menghilangkan perbezaan itu.
 - [ ] **Jangan beri diagnosis.** Skor-z di bawah −2 SD ada nama klinikal dalam dokumen
   WHO, dan meletakkan perkataan itu di sebelah bayi seseorang ialah diagnosis yang produk
-  ini tak boleh buat — sekatan yang sama sudah dikenakan pada ringkasan AI. Plot titik
+  ini tak boleh buat - sekatan yang sama sudah dikenakan pada ringkasan AI. Plot titik
   terhadap pita dan biarkan pita bercakap. Apa-apa ayat lebih kuat daripada "di bawah
-  julat rujukan — bincang dengan klinik" perlukan kelulusan klinisian.
+  julat rujukan - bincang dengan klinik" perlukan kelulusan klinisian.
 - [ ] **Dua medan sedia ada jadi wajib, dan kedua-duanya belum sedia:**
-  - **Tarikh lahir** — paksi-x carta ialah umur, jadi profil tanpa tarikh lahir tak boleh
+  - **Tarikh lahir** - paksi-x carta ialah umur, jadi profil tanpa tarikh lahir tak boleh
     ada carta. UI mesti meminta dan menerangkannya, bukan merender carta kosong.
-  - **Jantina** — rujukan WHO khusus jantina, jadi medan ini bertukar daripada label
+  - **Jantina** - rujukan WHO khusus jantina, jadi medan ini bertukar daripada label
     kepada kunci carian. `GENDER_OPTIONS` menyimpan rentetan paparan Melayu
     ("Lelaki"/"Perempuan"); ia perlu nilai berkod (`male`/`female`) dengan label
     dikenakan semasa render. Inilah kos gandingan yang ditandakan semasa select itu
     ditambah.
-- [ ] **Umur terkoreksi untuk bayi pramatang** — bayi lahir 32 minggu diplot pada umur
+- [ ] **Umur terkoreksi untuk bayi pramatang** - bayi lahir 32 minggu diplot pada umur
   terkoreksi sehingga lebih kurang 2 tahun. Perlukan umur kandungan semasa lahir, yang
   tiada dalam mana-mana jadual lagi.
-- [ ] **Jadual imunisasi kebangsaan** — dos, umur patut, tarikh diberi. Bentuknya dekat
+- [ ] **Jadual imunisasi kebangsaan** - dos, umur patut, tarikh diberi. Bentuknya dekat
   dengan ubat + peristiwa dos yang sudah ada.
 - [ ] **Senarai semak perkembangan** ikut julat umur. Bahaya diagnosis sama seperti
-  pertumbuhan, malah lebih tajam — "belum" pada satu pencapaian jauh lebih kerap variasi
+  pertumbuhan, malah lebih tajam - "belum" pada satu pencapaian jauh lebih kerap variasi
   normal daripada penemuan.
 
 ### Pelan dan penggunaan
@@ -490,8 +490,8 @@ mengiranya daripada senarai yang kebetulan dipegang oleh provider. Itu berjaya u
 nombor dan takkan bertahan untuk yang kedua.
 
 - [ ] Guna `GET /me/usage` sebaik ia wujud, dan buang pengiraan tempatan itu.
-- [ ] **Amaran "hampir sampai had"** di tempat tindakan berlaku — butang cipta profil,
-  borang jemput ahli — bukan hanya pada halaman harga. Pengguna yang melanggar had
+- [ ] **Amaran "hampir sampai had"** di tempat tindakan berlaku - butang cipta profil,
+  borang jemput ahli - bukan hanya pada halaman harga. Pengguna yang melanggar had
   mendapati perkara itu pada saat mereka menekan simpan.
 - [ ] Bila had berbeza mengikut akaun, lajur Percuma pada `/pricing` mesti terus membaca
   had **akaun ini**, bukan lalai pelan. Itu janji halaman itu.
@@ -552,7 +552,7 @@ borang: cara pengguna tiba, dan apa berlaku selepas simpan.
 
 Disemak terhadap skema DB sebenar, bukan terhadap `care-profile-field-gaps.ts`.
 
-### `care-profile-field-gaps.ts` — DIBETULKAN 2026-09-09
+### `care-profile-field-gaps.ts` - DIBETULKAN 2026-09-09
 
 - [x] Fail itu menyenaraikan jurang sebagai `relation`, `dateOfBirth`, `notes`. **Dua
   daripada tiga nama itu tiada dalam jadual** `care_profiles`, jadi ia menyembunyikan
@@ -560,23 +560,23 @@ Disemak terhadap skema DB sebenar, bukan terhadap `care-profile-field-gaps.ts`.
   ada (`legal_name`, `date_of_birth`, `gender`, `blood_type`, `allergy_summary`,
   `condition_summary`, `primary_clinic`, `primary_doctor`, `emergency_note`) kini
   didedahkan oleh backend dan dibaca oleh mapper. Senarai jurang tinggal `relation` dan
-  `notes` — dua-duanya **tiada lajur di mana-mana**, jadi ia perlu migrasi, bukan
+  `notes` - dua-duanya **tiada lajur di mana-mana**, jadi ia perlu migrasi, bukan
   perubahan DTO.
 
 ### Borang profil jagaan: lapan medan kesihatan masih belum dikumpul
 
-Sekatan DTO sudah hilang — `createProfileReq`/`updateProfileReq` menerima kesembilan-sembilan
+Sekatan DTO sudah hilang - `createProfileReq`/`updateProfileReq` menerima kesembilan-sembilan
 medan sejak 2026-09-09, dan borang sudah menghantar `date_of_birth`.
 
 - [ ] Borang cipta/sunting **profil jagaan** masih hanya mengumpul nama dan tarikh lahir.
   Lapan lagi (`legal_name`, `gender`, `blood_type`, `allergy_summary`,
   `condition_summary`, `primary_clinic`, `primary_doctor`, `emergency_note`) sudah boleh
   disimpan tetapi tiada medan untuk mengisinya. Halaman `/my-health` sudah mengumpul
-  kesemuanya untuk rekod sendiri — bahagian itu boleh diguna semula sebagai rujukan,
+  kesemuanya untuk rekod sendiri - bahagian itu boleh diguna semula sebagai rujukan,
   atau dikongsi sebagai satu komponen.
-  Nota: hantar medan kosong sebagai **kunci tiada**, bukan `""` — lajur ini di-COALESCE.
+  Nota: hantar medan kosong sebagai **kunci tiada**, bukan `""` - lajur ini di-COALESCE.
 
-### Kad kecemasan — SELESAI 2026-09-09
+### Kad kecemasan - SELESAI 2026-09-09
 
 - [x] `GET /care-profiles/{id}/emergency-card` dibina, dan halaman `/emergency-card`
   menyambungnya. Keputusan bentuk yang tertangguh itu rupanya **sudah ditentukan oleh
@@ -584,17 +584,17 @@ medan sejak 2026-09-09, dan borang sudah menghantar `date_of_birth`.
   ada `can_view_emergency_card`, jadi "paparan atas DTO profil" mustahil tanpa
   melonggarkan bacaan profil untuk peranan paling sempit dalam sistem.
 
-### Modul kesihatan diri sendiri — SELESAI 2026-09-09
+### Modul kesihatan diri sendiri - SELESAI 2026-09-09
 
 Dibina sebagai profil jagaan yang subjeknya diri sendiri (pilihan pertama di bawah
 menang): `GET/POST /me/health-profile` + halaman `/my-health`.
 
 Keputusan yang diambil: rekod sendiri ialah profil jagaan yang subjeknya diri sendiri,
-bukan lajur baharu pada `users` — jadi ubat, vital, dokumen dan model keizinan berfungsi
+bukan lajur baharu pada `users` - jadi ubat, vital, dokumen dan model keizinan berfungsi
 padanya tanpa kerja tambahan. `/me` kekal empat medan (id, e-mel, nama paparan, status
 pengesahan); ia identiti log masuk, bukan rekod klinikal.
 
-- [ ] **`tinggi` (dan berat) masih tiada** dalam mana-mana jadual — satu-satunya medan
+- [ ] **`tinggi` (dan berat) masih tiada** dalam mana-mana jadual - satu-satunya medan
   dalam nota asal yang masih perlukan migrasi. Putuskan kedua-duanya sekali gus supaya
   tidak bermigrasi dua kali.
 

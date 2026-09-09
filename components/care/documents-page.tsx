@@ -41,7 +41,7 @@ import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
 export function DocumentsPage() {
   const router = useRouter()
   const apiMode = !isMockDataEnabled()
-  const { limits } = usePlatform()
+  const { accountLimits } = usePlatform()
   const { selectedProfile } = useCareProfile()
   const { snapshot, isRefreshing, removeDocument, getDocumentDownloadUrl } =
     useCareData()
@@ -203,7 +203,7 @@ export function DocumentsPage() {
           <div className="space-y-1">
             <h1 className="font-heading text-2xl tracking-tight">Dokumen</h1>
             <p className="text-sm text-muted-foreground">
-              Fail penting profil ini. Had {limits.maxUploadMb} MB setiap satu.
+              Fail penting profil ini. Had {accountLimits.maxUploadMb} MB setiap satu.
             </p>
           </div>
         }

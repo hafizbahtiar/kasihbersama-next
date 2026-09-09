@@ -1,3 +1,5 @@
+import type { PlanId } from "@/lib/domain/platform"
+
 export type NotificationChannel = "push" | "email"
 
 export type ReminderType = "medication" | "appointment" | "task"
@@ -98,4 +100,26 @@ export type DeleteAccountResult = {
   anonymizedAt: string
   /** Profiles removed along with the account. Never silent. */
   deletedCareProfileIds: string[]
+}
+
+/**
+ * Current counts against this account's live limits (`GET /me/usage`).
+ *
+ * Profile `used` excludes the own-health record. Storage is live R2 bytes,
+ * not Postgres care data, and has no cap yet.
+ */
+export type AccountUsage = {
+  plan: PlanId
+  limits: {
+    maxProfiles: number
+    maxMembers: number
+    maxUploadMb: number
+  }
+  profiles: { used: number }
+  storage: { usedBytes: number }
+  members: Array<{
+    careProfileId: string
+    displayName: string
+    used: number
+  }>
 }

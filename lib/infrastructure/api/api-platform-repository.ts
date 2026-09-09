@@ -3,7 +3,15 @@ import type {
   PlatformFeatures,
   PlatformLimits,
 } from "@/lib/domain/platform"
+import { parsePlanId } from "@/lib/domain/platform"
 import type { PlatformRepository } from "@/lib/domain/platform-repository"
+import { tokenStorage } from "@/lib/infrastructure/api/token-storage"
+
+type LimitBlock = {
+  max_upload_mb: number
+  max_profiles_free: number
+  max_members_free: number
+}
 
 type ApiBootstrapResponse = {
   api_version: string
@@ -12,11 +20,9 @@ type ApiBootstrapResponse = {
   latest_build: number
   force_update: boolean
   features: Record<string, boolean>
-  limits: {
-    max_upload_mb: number
-    max_profiles_free: number
-    max_members_free: number
-  }
+  limits: LimitBlock
+  account_limits?: LimitBlock
+  plan?: string
 }
 
 function mapFeatures(raw: Record<string, boolean>): PlatformFeatures {
@@ -28,7 +34,7 @@ function mapFeatures(raw: Record<string, boolean>): PlatformFeatures {
   }
 }
 
-function mapLimits(raw: ApiBootstrapResponse["limits"]): PlatformLimits {
+function mapLimits(raw: LimitBlock): PlatformLimits {
   return {
     maxUploadMb: raw.max_upload_mb,
     maxProfilesFree: raw.max_profiles_free,
@@ -45,6 +51,10 @@ function mapBootstrap(api: ApiBootstrapResponse): BootstrapConfig {
     forceUpdate: api.force_update,
     features: mapFeatures(api.features),
     limits: mapLimits(api.limits),
+    accountLimits: api.account_limits
+      ? mapLimits(api.account_limits)
+      : undefined,
+    plan: parsePlanId(api.plan),
   }
 }
 
@@ -53,11 +63,14 @@ export class ApiPlatformRepository implements PlatformRepository {
 
   async getBootstrap(appBuild: number): Promise<BootstrapConfig> {
     const url = `${this.baseUrl.replace(/\/$/, "")}/api/v1/bootstrap`
-    const response = await fetch(url, {
-      headers: {
-        "X-App-Build": String(appBuild),
-      },
-    })
+    const headers: Record<string, string> = {
+      "X-App-Build": String(appBuild),
+    }
+    const access = tokenStorage.readAccess()
+    if (access) {
+      headers.Authorization = `Bearer ${access}`
+    }
+    const response = await fetch(url, { headers })
     if (!response.ok) {
       throw new Error(`Bootstrap gagal (${response.status})`)
     }

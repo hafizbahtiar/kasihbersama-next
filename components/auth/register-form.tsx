@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useState, type FormEvent } from "react"
 
 import { useClearAuthErrorOnMount } from "@/hooks/use-clear-auth-error-on-mount"
@@ -101,7 +102,23 @@ export function RegisterForm() {
             htmlFor="terms"
             className="font-normal text-muted-foreground"
           >
-            Saya bersetuju dengan terma penggunaan dan dasar privasi.
+            Saya bersetuju dengan{" "}
+            <Link
+              href="/terms"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+              onClick={(event) => event.stopPropagation()}
+            >
+              terma penggunaan
+            </Link>{" "}
+            dan{" "}
+            <Link
+              href="/privacy"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+              onClick={(event) => event.stopPropagation()}
+            >
+              dasar privasi
+            </Link>
+            .
           </FieldLabel>
         </Field>
 

@@ -1,5 +1,6 @@
 import type { AuthUser } from "@/lib/domain/auth"
 import type {
+  AccountUsage,
   DeleteAccountResult,
   DeviceToken,
   NotificationChannel,
@@ -52,4 +53,7 @@ export interface AccountRepository {
 
   /** The caller's own data, as a JSON string ready to save to a file. */
   exportAccount(): Promise<string>
+
+  /** Current counts against the limits this account is held to. */
+  getUsage(): Promise<AccountUsage>
 }

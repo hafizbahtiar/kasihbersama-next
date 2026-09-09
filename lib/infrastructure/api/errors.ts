@@ -35,7 +35,7 @@ const CODE_MESSAGES: Record<string, string> = {
   // mapped it, so hitting the profile cap read as "Rekod bercanggah." - a
   // message that names neither the cause nor the fix.
   quota_exceeded:
-    "Anda sudah mencapai had pelan Percuma. Lihat Pelan untuk butiran.",
+    "Anda sudah mencapai had pelan anda. Lihat Pelan untuk butiran.",
   deletion_blocked:
     "Selesaikan profil jagaan di bawah sebelum memadam akaun anda.",
   pending_invites:

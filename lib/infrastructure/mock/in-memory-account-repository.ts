@@ -1,6 +1,7 @@
 import type { AuthUser } from "@/lib/domain/auth"
 import {
   MIN_PASSWORD_LENGTH,
+  type AccountUsage,
   type DeviceToken,
   type NotificationChannel,
   type ProfileNotificationPref,
@@ -142,6 +143,16 @@ export class InMemoryAccountRepository implements AccountRepository {
       null,
       2
     )
+  }
+
+  async getUsage(): Promise<AccountUsage> {
+    return {
+      plan: "free",
+      limits: { maxProfiles: 3, maxMembers: 8, maxUploadMb: 25 },
+      profiles: { used: 0 },
+      storage: { usedBytes: 0 },
+      members: [],
+    }
   }
 
   private assertPassword(candidate: string) {

@@ -1,12 +1,14 @@
 import type { AuthUser } from "@/lib/domain/auth"
 import type { AccountRepository } from "@/lib/domain/account-repository"
 import type {
+  AccountUsage,
   DeviceToken,
   NotificationChannel,
   ProfileNotificationPref,
   ReminderType,
   UserSession,
 } from "@/lib/domain/account"
+import { parsePlanId } from "@/lib/domain/platform"
 import type { ApiClient } from "@/lib/infrastructure/api/client"
 import type {
   ApiDeleteAccountResponse,
@@ -81,6 +83,40 @@ function mapDeviceToken(api: ApiDeviceToken): DeviceToken {
     subscriptionId: api.subscription_id,
     appVersion: api.app_version,
     createdAt: api.created_at,
+  }
+}
+
+type ApiUsageResponse = {
+  plan: string
+  limits: {
+    max_profiles: number
+    max_members: number
+    max_upload_mb: number
+  }
+  profiles: { used: number }
+  storage: { used_bytes: number }
+  members: Array<{
+    care_profile_id: string
+    display_name: string
+    used: number
+  }>
+}
+
+function mapUsage(api: ApiUsageResponse): AccountUsage {
+  return {
+    plan: parsePlanId(api.plan) ?? "free",
+    limits: {
+      maxProfiles: api.limits.max_profiles,
+      maxMembers: api.limits.max_members,
+      maxUploadMb: api.limits.max_upload_mb,
+    },
+    profiles: { used: api.profiles.used },
+    storage: { usedBytes: api.storage.used_bytes },
+    members: (api.members ?? []).map((row) => ({
+      careProfileId: row.care_profile_id,
+      displayName: row.display_name,
+      used: row.used,
+    })),
   }
 }
 
@@ -189,6 +225,10 @@ export class ApiAccountRepository implements AccountRepository {
    */
   exportAccount() {
     return this.client.requestText("/me/export")
+  }
+
+  getUsage() {
+    return this.client.request<ApiUsageResponse>("/me/usage").then(mapUsage)
   }
 
   listSessions() {

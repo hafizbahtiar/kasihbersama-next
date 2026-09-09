@@ -25,6 +25,7 @@ import {
   PlatformQuotaBanner,
 } from "@/components/platform/platform-features-section"
 import { usePlatform } from "@/components/platform/platform-provider"
+import { useAccountUsage } from "@/hooks/use-account-usage"
 import {
   Card,
   CardDescription,
@@ -35,7 +36,8 @@ import { buildDashboardStats } from "@/lib/application/dashboard-stats"
 
 export function DashboardPage() {
   const { snapshot, selectedProfile, isRefreshing, loadError } = useCareData()
-  const { limits } = usePlatform()
+  const { accountLimits } = usePlatform()
+  const { usage } = useAccountUsage()
 
   const stats = useMemo(
     () => buildDashboardStats(snapshot, selectedProfile?.id),
@@ -48,22 +50,16 @@ export function DashboardPage() {
     [selectedProfile?.id, snapshot.vitals]
   )
 
-  const memberCount = useMemo(() => {
-    if (!selectedProfile) {
-      return undefined
-    }
-    return snapshot.members.filter(
-      (item) =>
-        item.profileId === selectedProfile.id && item.status === "active"
-    ).length
-  }, [selectedProfile, snapshot.members])
+  const profileUsageHint = usage
+    ? `${usage.profiles.used}/${usage.limits.maxProfiles} profil`
+    : `Had pelan: ${accountLimits.maxProfilesFree} profil`
 
   const cards = [
     {
       title: "Profil jagaan",
       href: "/care-profiles",
-      value: String(stats.profileCount),
-      hint: `Had percuma: ${limits.maxProfilesFree} profil`,
+      value: String(usage?.profiles.used ?? stats.profileCount),
+      hint: profileUsageHint,
       icon: IconUsers,
     },
     {
@@ -114,10 +110,7 @@ export function DashboardPage() {
       </div>
 
       <CaregiverModeBanner />
-      <PlatformQuotaBanner
-        profileCount={stats.profileCount}
-        memberCount={memberCount}
-      />
+      <PlatformQuotaBanner selectedProfileId={selectedProfile?.id} />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
         {cards.map((item) => (

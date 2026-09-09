@@ -11,6 +11,8 @@ import Link from "next/link"
 
 import { PermissionGate } from "@/components/care/permission-gate"
 import { usePlatform } from "@/components/platform/platform-provider"
+import { useAccountUsage } from "@/hooks/use-account-usage"
+import { planDisplayName } from "@/lib/domain/platform"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -149,17 +151,27 @@ export function CaregiverModeBanner() {
 }
 
 export function PlatformQuotaBanner({
-  profileCount,
-  memberCount,
+  selectedProfileId,
 }: {
-  profileCount: number
-  memberCount?: number
+  /** When set, member seats for this profile are read from /me/usage. */
+  selectedProfileId?: string
 }) {
-  const { limits } = usePlatform()
+  const { usage } = useAccountUsage()
+  const { plan } = usePlatform()
 
-  const profileNearLimit = profileCount >= limits.maxProfilesFree
+  if (!usage) {
+    return null
+  }
+
+  const memberUsed = selectedProfileId
+    ? usage.members.find((row) => row.careProfileId === selectedProfileId)
+        ?.used
+    : undefined
+
+  const profileNearLimit =
+    usage.profiles.used >= usage.limits.maxProfiles
   const memberNearLimit =
-    memberCount != null && memberCount >= limits.maxMembersFree
+    memberUsed != null && memberUsed >= usage.limits.maxMembers
 
   if (!profileNearLimit && !memberNearLimit) {
     return null
@@ -167,17 +179,17 @@ export function PlatformQuotaBanner({
 
   return (
     <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-4 text-sm">
-      <p className="font-medium">Had pelan percuma</p>
+      <p className="font-medium">Had pelan {planDisplayName(plan ?? usage.plan)}</p>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
         <li>
-          Profil jagaan: {profileCount}/{limits.maxProfilesFree}
+          Profil jagaan: {usage.profiles.used}/{usage.limits.maxProfiles}
         </li>
-        {memberCount != null ? (
+        {memberUsed != null ? (
           <li>
-            Ahli profil: {memberCount}/{limits.maxMembersFree}
+            Ahli profil: {memberUsed}/{usage.limits.maxMembers}
           </li>
         ) : null}
-        <li>Had muat naik fail: {limits.maxUploadMb} MB</li>
+        <li>Had muat naik fail: {usage.limits.maxUploadMb} MB setiap satu</li>
       </ul>
     </div>
   )

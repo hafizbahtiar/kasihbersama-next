@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/care/page-header"
 import { usePlatform } from "@/components/platform/platform-provider"
 import { PlanChooser } from "@/components/pricing/plan-chooser"
 import { UsageAgainstYourLimit } from "@/components/pricing/usage-against-your-limit"
+import { useAccountUsage } from "@/hooks/use-account-usage"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button, LinkButton } from "@/components/ui/button"
@@ -31,6 +32,7 @@ import { cn } from "@/lib/utils"
 
 export function PricingPage() {
   const { limits } = usePlatform()
+  const { usage } = useAccountUsage()
   const { snapshot } = useCareData()
   const [period, setPeriod] = useState<BillingPeriod>("yearly")
   // Seeded from what the account actually has, so the page opens on the
@@ -53,7 +55,7 @@ export function PricingPage() {
         description="Pelan berbeza pada satu perkara: berapa ramai orang anda jaga, dan berapa ramai keluarga berkongsi kerja itu."
       />
 
-      <UsageAgainstYourLimit limits={limits} profiles={snapshot.profiles} />
+      <UsageAgainstYourLimit usage={usage} />
 
       <PlanChooser count={count} onCountChange={setCount} />
 

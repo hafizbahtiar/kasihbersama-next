@@ -17,4 +17,10 @@ export const mockBootstrap: BootstrapConfig = {
     maxProfilesFree: 3,
     maxMembersFree: 8,
   },
+  accountLimits: {
+    maxUploadMb: 25,
+    maxProfilesFree: 3,
+    maxMembersFree: 8,
+  },
+  plan: "free",
 }

@@ -3,6 +3,8 @@ export type PlatformFeature =
 
 export type PlatformFeatures = Record<PlatformFeature, boolean>
 
+export type PlanId = "free" | "family" | "care_home"
+
 export type PlatformLimits = {
   maxUploadMb: number
   maxProfilesFree: number
@@ -16,7 +18,11 @@ export type BootstrapConfig = {
   latestBuild: number
   forceUpdate: boolean
   features: PlatformFeatures
+  /** Free-plan catalogue. Pricing page free column. */
   limits: PlatformLimits
+  /** This account's live caps. Absent when bootstrap had no usable token. */
+  accountLimits?: PlatformLimits
+  plan?: PlanId
 }
 
 export const DEFAULT_PLATFORM_FEATURES: PlatformFeatures = {
@@ -30,4 +36,21 @@ export const DEFAULT_PLATFORM_LIMITS: PlatformLimits = {
   maxUploadMb: 10,
   maxProfilesFree: 1,
   maxMembersFree: 3,
+}
+
+export function parsePlanId(value: string | undefined): PlanId | undefined {
+  if (value === "free" || value === "family" || value === "care_home") {
+    return value
+  }
+  return undefined
+}
+
+export function planDisplayName(plan?: PlanId): string {
+  if (plan === "family") {
+    return "Keluarga"
+  }
+  if (plan === "care_home") {
+    return "Rumah Jagaan"
+  }
+  return "Percuma"
 }

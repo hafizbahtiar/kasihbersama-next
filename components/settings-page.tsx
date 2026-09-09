@@ -287,6 +287,21 @@ export function SettingsPage() {
 
           {section === "data" ? (
             <div className="flex flex-col gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Dasar privasi</CardTitle>
+                  <CardDescription>
+                    Rekod jagaan hidup pada profil, bukan akaun anda. Baca
+                    bagaimana data disimpan, siapa yang boleh membacanya, dan
+                    apa yang berlaku bila anda padam akaun.
+                  </CardDescription>
+                </CardHeader>
+                <CardFooter className="justify-end">
+                  <LinkButton href="/privacy" variant="outline">
+                    Baca dasar privasi
+                  </LinkButton>
+                </CardFooter>
+              </Card>
               <ExportAccountCard />
               <DeleteAccountCard />
             </div>

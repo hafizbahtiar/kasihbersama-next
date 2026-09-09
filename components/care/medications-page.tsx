@@ -90,7 +90,7 @@ export function MedicationsPage() {
         header: "Makanan",
         // The column holds a code now; the label is applied here rather than
         // stored, so renaming it is never a data migration.
-        cell: ({ getValue }) => mealTimingLabel(getValue()) ?? "—",
+        cell: ({ getValue }) => mealTimingLabel(getValue()) ?? "-",
       }),
       helper.accessor("pendingCount", { header: "Dos menunggu" }),
       helper.accessor("status", {

@@ -16,6 +16,7 @@ import type {
   BootstrapConfig,
   PlatformFeature,
   PlatformLimits,
+  PlanId,
 } from "@/lib/domain/platform"
 import {
   DEFAULT_PLATFORM_FEATURES,
@@ -28,7 +29,11 @@ type PlatformContextValue = {
   loadError: string | null
   refresh: () => Promise<void>
   isFeatureEnabled: (feature: PlatformFeature) => boolean
+  /** Free-plan catalogue. Pricing matrix. */
   limits: PlatformLimits
+  /** Caps this account is held to. Falls back to `limits` when unknown. */
+  accountLimits: PlatformLimits
+  plan?: PlanId
   forceUpdate: boolean
   appBuild: number
 }
@@ -79,6 +84,11 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         )
       },
       limits: bootstrap?.limits ?? DEFAULT_PLATFORM_LIMITS,
+      accountLimits:
+        bootstrap?.accountLimits ??
+        bootstrap?.limits ??
+        DEFAULT_PLATFORM_LIMITS,
+      plan: bootstrap?.plan,
       forceUpdate: bootstrap?.forceUpdate ?? false,
       appBuild,
     }),
