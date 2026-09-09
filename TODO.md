@@ -135,6 +135,15 @@ domain penghantar disahkan di Resend.
 
 ### Selesai sesi ini (2026-09-09)
 
+- [x] **Footer sidebar ialah menu akaun, bukan butang log keluar.** Slot tempat setiap
+  pengguna cari "siapa aku / ubah maklumat aku" memaparkan `Penjaga` di atas `KB` yang
+  ditulis keras — dua-duanya bukan pengguna — dan menekannya melog keluar. Avatar header
+  sama: `KB` dan `Penjaga`. Aplikasi tak pernah menunjukkan siapa yang log masuk, pada
+  aplikasi di mana satu orang lazimnya pegang akaun untuk ibu bapa **dan** untuk diri
+  sendiri. Kini kedua-duanya guna `components/account-menu.tsx` yang sama.
+  - Footer tiada `tooltip`: ia membuatkan `SidebarMenuButton` membalut butang dengan
+    `TooltipTrigger`, dan menyarangkannya dalam trigger menu meletakkan dua penyedia
+    `ButtonContext` react-aria pada satu butang. Belum disahkan dalam pelayar.
 - [x] **Medan yang backend pulangkan tetapi frontend buang, kini disambung.**
   `date_of_birth` (profil) dan `start_date`/`end_date`/`prescribed_by` (ubat) ditambah ke
   DTO backend awal sesi ini, tetapi mapper frontend masih menulis `""` ke atasnya dan

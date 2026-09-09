@@ -2,16 +2,18 @@
 
 import { useMemo } from "react"
 import { usePathname } from "next/navigation"
-import { IconLogout } from "@tabler/icons-react"
+import { IconDotsVertical } from "@tabler/icons-react"
 
+import { AccountMenu, accountInitials } from "@/components/account-menu"
+import { useAuth } from "@/components/auth/auth-provider"
 import { LogoMark } from "@/components/brand/logo-mark"
 import { ProfileSwitcher } from "@/components/care/profile-switcher"
 import { useCareData } from "@/components/care/care-data-provider"
-import { useLogout } from "@/components/logout-provider"
 import { usePlatform } from "@/components/platform/platform-provider"
 import { useCarePermissions } from "@/hooks/use-care-permissions"
 import { primaryNav, secondaryNav } from "@/lib/app-nav"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   Sidebar,
   SidebarContent,
@@ -38,7 +40,7 @@ function isNavActive(pathname: string, href: string) {
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const { requestLogout } = useLogout()
+  const { user } = useAuth()
   const { state } = useSidebar()
   const collapsed = state === "collapsed"
   const { isFeatureEnabled } = usePlatform()
@@ -140,25 +142,50 @@ export function AppSidebar() {
 
       <SidebarSeparator className="group-data-[collapsible=icon]:mx-0" />
 
+      {/*
+        The footer is the account menu, not a logout button.
+
+        It used to be a single button wired straight to requestLogout, labelled
+        "Penjaga" over a hardcoded "KB" - so the one slot where every user
+        looks for "who am I / edit my details" showed neither, and pressing it
+        signed you out. Now it names the signed-in account and opens the same
+        menu as the header avatar.
+      */}
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip={collapsed ? "Log keluar" : "Penjaga"}
-              className="group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
-              onPress={requestLogout}
-            >
-              <Avatar size="sm" className="size-6">
-                <AvatarFallback>KB</AvatarFallback>
-              </Avatar>
-              <span className="flex min-w-0 flex-col leading-tight group-data-[collapsible=icon]:hidden">
-                <span className="truncate">Penjaga</span>
-                <span className="truncate text-xs text-muted-foreground">
-                  Log keluar
+            <DropdownMenuTrigger>
+              {/*
+                No `tooltip` here on purpose: it makes SidebarMenuButton render
+                a TooltipTrigger around the button, and nesting that inside the
+                menu trigger puts two react-aria ButtonContext providers on one
+                button. The collapsed rail shows the initials, and the menu
+                names the account when opened.
+              */}
+              <SidebarMenuButton
+                size="lg"
+                aria-label={`Menu akaun: ${user?.displayName ?? "Pengguna"}`}
+                className="group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
+              >
+                <Avatar size="sm" className="size-6">
+                  <AvatarFallback>
+                    {accountInitials(user?.displayName)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="flex min-w-0 flex-col leading-tight group-data-[collapsible=icon]:hidden">
+                  <span className="truncate">
+                    {user?.displayName ?? "Pengguna"}
+                  </span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {user?.email ?? "Akaun"}
+                  </span>
                 </span>
-              </span>
-              <IconLogout className="ml-auto group-data-[collapsible=icon]:hidden" />
-            </SidebarMenuButton>
+                <IconDotsVertical className="ml-auto group-data-[collapsible=icon]:hidden" />
+              </SidebarMenuButton>
+              <AccountMenu
+                placement={collapsed ? "right bottom" : "top start"}
+              />
+            </DropdownMenuTrigger>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

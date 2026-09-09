@@ -1,20 +1,13 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { useTheme } from "@/components/theme-provider"
-import {
-  IconLogout,
-  IconMoon,
-  IconRefresh,
-  IconSearch,
-  IconSun,
-  IconUser,
-} from "@tabler/icons-react"
+import { IconMoon, IconRefresh, IconSearch, IconSun } from "@tabler/icons-react"
 
+import { AccountMenu, accountInitials } from "@/components/account-menu"
 import { AppBreadcrumb } from "@/components/app-breadcrumb"
+import { useAuth } from "@/components/auth/auth-provider"
 import { useCareData } from "@/components/care/care-data-provider"
 import { ProfileSwitcher } from "@/components/care/profile-switcher"
-import { useLogout } from "@/components/logout-provider"
 import { NotificationPreview } from "@/components/notification-preview"
 import {
   GlobalSearchDialog,
@@ -22,13 +15,7 @@ import {
 } from "@/components/platform/global-search-dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   InputGroup,
   InputGroupAddon,
@@ -38,9 +25,8 @@ import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
 export function AppHeader() {
-  const router = useRouter()
   const { resolvedTheme, setTheme } = useTheme()
-  const { requestLogout } = useLogout()
+  const { user } = useAuth()
   const { isReady, isRefreshing, refresh } = useCareData()
   const { open, setOpen } = useGlobalSearch()
 
@@ -113,26 +99,18 @@ export function AppHeader() {
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label="Menu akaun"
+              aria-label={
+                user ? `Menu akaun: ${user.displayName}` : "Menu akaun"
+              }
               className="rounded-full"
             >
               <Avatar size="sm">
-                <AvatarFallback>KB</AvatarFallback>
+                <AvatarFallback>
+                  {accountInitials(user?.displayName)}
+                </AvatarFallback>
               </Avatar>
             </Button>
-            <DropdownMenu placement="bottom end">
-              <DropdownMenuLabel>Penjaga</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onAction={() => router.push("/settings")}>
-                <IconUser />
-                Profil & tetapan
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onAction={requestLogout}>
-                <IconLogout />
-                Log keluar
-              </DropdownMenuItem>
-            </DropdownMenu>
+            <AccountMenu />
           </DropdownMenuTrigger>
         </div>
       </header>
