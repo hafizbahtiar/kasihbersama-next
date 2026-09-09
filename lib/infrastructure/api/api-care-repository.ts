@@ -17,7 +17,7 @@ import { emptyCareSnapshot as createEmptySnapshot } from "@/lib/domain/care-snap
 import type { CareRepository } from "@/lib/domain/care-repository"
 import type { ListParams, PaginatedResult } from "@/lib/domain/pagination"
 import type { ApiClient } from "@/lib/infrastructure/api/client"
-import { ApiError } from "@/lib/infrastructure/api/errors"
+import { ApiError, isApiError } from "@/lib/infrastructure/api/errors"
 import {
   mapAppointment,
   mapCareLog,
@@ -91,7 +91,7 @@ function profilePath(profileId: string) {
 }
 
 export class ApiCareRepository implements CareRepository {
-  constructor(private readonly client: ApiClient) {}
+  constructor(private readonly client: ApiClient) { }
 
   async getSnapshot(profileId?: string): Promise<CareSnapshot> {
     const [profiles, circles] = await Promise.all([
@@ -122,8 +122,50 @@ export class ApiCareRepository implements CareRepository {
     }
   }
 
+  /**
+   * Runs one section of the snapshot, degrading to `fallback` if it fails.
+   *
+   * The sections below are content: profiles, circles, role and permissions
+   * all come from /care-profiles, which getSnapshot loads before this runs.
+   * So losing one section should cost that section's content and nothing
+   * else. It used not to - these were a bare Promise.all, so a single 400 on
+   * medication-events discarded ten successful responses, left the snapshot
+   * empty, and made every permission read false. The dashboard looked like a
+   * permissions problem when one query parameter was missing.
+   *
+   * 401 is deliberately not degraded: an expired session must surface so the
+   * client can refresh or sign out, never render an empty dashboard as if the
+   * account had no data.
+   */
+  private async section<T>(
+    label: string,
+    request: Promise<T>,
+    fallback: T,
+    degraded: string[]
+  ): Promise<T> {
+    try {
+      return await request
+    } catch (cause) {
+      if (isApiError(cause) && cause.status === 401) {
+        throw cause
+      }
+      degraded.push(label)
+      return fallback
+    }
+  }
+
   private async loadProfileData(profileId: string) {
     const base = profilePath(profileId)
+    const degraded: string[] = []
+    const emptyPage = <T>(): PaginatedResponse<T> => ({
+      data: [],
+      total: 0,
+      page: 1,
+      per_page: DEFAULT_PAGE_SIZE,
+      total_pages: 0,
+      has_more: false,
+    })
+
     const [
       membersResp,
       invites,
@@ -136,46 +178,114 @@ export class ApiCareRepository implements CareRepository {
       vitals,
       documents,
     ] = await Promise.all([
-      this.client.request<ApiAccessReview>(`${base}/members`),
-      this.client.request<ApiInvite[]>(`${base}/invites`),
-      this.client.request<ApiClaim[]>(`${base}/claim-requests`),
-      this.client.request<PaginatedResponse<ApiCareLog>>(
-        `${base}/care-logs${toListQuery({ perPage: DEFAULT_PAGE_SIZE })}`
+      this.section(
+        "members",
+        this.client.request<ApiAccessReview>(`${base}/members`),
+        { members: [] } as unknown as ApiAccessReview,
+        degraded
       ),
-      this.client.request<PaginatedResponse<ApiMedication>>(
-        `${base}/medications${toListQuery({ perPage: DEFAULT_PAGE_SIZE })}`
+      this.section(
+        "invites",
+        this.client.request<ApiInvite[]>(`${base}/invites`),
+        [] as ApiInvite[],
+        degraded
       ),
-      this.client.request<PaginatedResponse<ApiMedicationEvent>>(
-        `${base}/medication-events${toListQuery({
-          perPage: DEFAULT_PAGE_SIZE,
-          filter: medicationEventWindow(),
-        })}`
+      this.section(
+        "claims",
+        this.client.request<ApiClaim[]>(`${base}/claim-requests`),
+        [] as ApiClaim[],
+        degraded
       ),
-      this.client.request<PaginatedResponse<ApiAppointment>>(
-        `${base}/appointments${toListQuery({ perPage: DEFAULT_PAGE_SIZE })}`
+      this.section(
+        "logs",
+        this.client.request<PaginatedResponse<ApiCareLog>>(
+          `${base}/care-logs${toListQuery({ perPage: DEFAULT_PAGE_SIZE })}`
+        ),
+        emptyPage<ApiCareLog>(),
+        degraded
       ),
-      this.client.request<PaginatedResponse<ApiCareTask>>(
-        `${base}/care-tasks${toListQuery({ perPage: DEFAULT_PAGE_SIZE })}`
+      this.section(
+        "medications",
+        this.client.request<PaginatedResponse<ApiMedication>>(
+          `${base}/medications${toListQuery({ perPage: DEFAULT_PAGE_SIZE })}`
+        ),
+        emptyPage<ApiMedication>(),
+        degraded
       ),
-      this.client.request<PaginatedResponse<ApiVitalReading>>(
-        `${base}/vital-readings${toListQuery({ perPage: DEFAULT_PAGE_SIZE })}`
+      this.section(
+        "medication events",
+        this.client.request<PaginatedResponse<ApiMedicationEvent>>(
+          `${base}/medication-events${toListQuery({
+            perPage: DEFAULT_PAGE_SIZE,
+            filter: medicationEventWindow(),
+          })}`
+        ),
+        emptyPage<ApiMedicationEvent>(),
+        degraded
       ),
-      this.client.request<PaginatedResponse<ApiDocument>>(
-        `${base}/documents${toListQuery({ perPage: DEFAULT_PAGE_SIZE })}`
+      this.section(
+        "appointments",
+        this.client.request<PaginatedResponse<ApiAppointment>>(
+          `${base}/appointments${toListQuery({ perPage: DEFAULT_PAGE_SIZE })}`
+        ),
+        emptyPage<ApiAppointment>(),
+        degraded
+      ),
+      this.section(
+        "tasks",
+        this.client.request<PaginatedResponse<ApiCareTask>>(
+          `${base}/care-tasks${toListQuery({ perPage: DEFAULT_PAGE_SIZE })}`
+        ),
+        emptyPage<ApiCareTask>(),
+        degraded
+      ),
+      this.section(
+        "vitals",
+        this.client.request<PaginatedResponse<ApiVitalReading>>(
+          `${base}/vital-readings${toListQuery({ perPage: DEFAULT_PAGE_SIZE })}`
+        ),
+        emptyPage<ApiVitalReading>(),
+        degraded
+      ),
+      this.section(
+        "documents",
+        this.client.request<PaginatedResponse<ApiDocument>>(
+          `${base}/documents${toListQuery({ perPage: DEFAULT_PAGE_SIZE })}`
+        ),
+        emptyPage<ApiDocument>(),
+        degraded
       ),
     ])
 
     const mappedMedications = medications.data.map((item) =>
       mapMedication(item, profileId)
     )
+    // One medication's schedules failing should cost that medication's
+    // schedule rows, not every other medication's.
     const scheduleGroups = await Promise.all(
-      mappedMedications.map(async (medication) => {
-        const rows = await this.client.request<ApiMedicationSchedule[]>(
-          `${base}/medications/${medication.id}/schedules`
+      mappedMedications.map((medication) =>
+        this.section(
+          `schedules for medication ${medication.id}`,
+          this.client
+            .request<ApiMedicationSchedule[]>(
+              `${base}/medications/${medication.id}/schedules`
+            )
+            .then((rows) => rows.map(mapSchedule)),
+          [],
+          degraded
         )
-        return rows.map(mapSchedule)
-      })
+      )
     )
+
+    if (degraded.length > 0) {
+      // Not a toast: the dashboard is usable, just missing these sections.
+      // Loud enough to find in devtools, and it names what to check rather
+      // than leaving an empty list to be read as "no data".
+      console.warn(
+        `care snapshot loaded without: ${degraded.join(", ")}. ` +
+        "Those sections render empty; the rest of the dashboard is live."
+      )
+    }
 
     return {
       members: membersResp.members.map((item) => mapMember(item, profileId)),
