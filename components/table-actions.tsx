@@ -18,7 +18,7 @@ export function TableActionButton({
     <Button
       variant={variant}
       size={size}
-      className={cn("h-7 px-2", className)}
+      className={cn("px-2", className)}
       {...props}
     />
   )

@@ -140,7 +140,7 @@ export function SettingsPage() {
                   key={item.id}
                   variant="ghost"
                   className={cn(
-                    "h-8 w-full justify-start gap-2 px-3 font-normal",
+                    "w-full justify-start gap-2 px-3 font-normal",
                     active
                       ? "bg-muted font-medium text-foreground"
                       : "text-muted-foreground"

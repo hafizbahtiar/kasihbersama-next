@@ -89,7 +89,8 @@ export function ResetPasswordForm({
 
         <Button
           type="submit"
-          className="h-11 min-h-11 w-full"
+          size="xl"
+          className="w-full"
           isDisabled={isSubmitting}
         >
           {isSubmitting ? "Menyimpan..." : "Set semula kata laluan"}

@@ -60,7 +60,8 @@ export function ForgotPasswordForm() {
 
         <Button
           type="submit"
-          className="h-11 min-h-11 w-full"
+          size="xl"
+          className="w-full"
           isDisabled={isSubmitting}
         >
           {isSubmitting ? "Menghantar..." : "Hantar pautan set semula"}

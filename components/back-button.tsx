@@ -51,7 +51,7 @@ export function BackButton({
       className={cn(
         isAction
           ? undefined
-          : "h-8 w-fit gap-1 px-2 text-muted-foreground hover:text-foreground",
+          : "w-fit gap-1 px-2 text-muted-foreground hover:text-foreground",
         className
       )}
       onPress={go}

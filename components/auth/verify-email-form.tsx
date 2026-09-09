@@ -99,7 +99,8 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
             : "E-mel telah disahkan. Log masuk untuk teruskan."}
         </div>
         <Button
-          className="h-11 w-full"
+          size="xl"
+          className="w-full"
           onPress={() => router.push(user ? "/home" : "/")}
         >
           {user ? "Pergi ke laman utama" : "Log masuk"}
@@ -130,7 +131,8 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
 
         <Button
           type="submit"
-          className="h-11 min-h-11 w-full"
+          size="xl"
+          className="w-full"
           isDisabled={isSubmitting}
         >
           {isSubmitting ? "Mengesahkan..." : "Sahkan e-mel"}

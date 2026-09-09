@@ -265,7 +265,7 @@ export function DataTable<TData extends RowData>({
                         {header.isPlaceholder ? null : canSort ? (
                           <Button
                             variant="ghost"
-                            className="-ml-2 h-8 px-2 font-medium"
+                            className="-ml-2 px-2 font-medium"
                             onPress={() => header.column.toggleSorting()}
                           >
                             <table.FlexRender header={header} />

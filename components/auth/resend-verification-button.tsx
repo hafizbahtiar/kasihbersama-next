@@ -38,11 +38,7 @@ export function ResendVerificationButton({
 
   return (
     <div className={className}>
-      <Button
-        onPress={onPress}
-        isDisabled={isSending}
-        className="h-11 min-h-11"
-      >
+      <Button onPress={onPress} isDisabled={isSending} size="xl">
         {isSending ? "Menghantar…" : sent ? "Hantar sekali lagi" : children}
       </Button>
       {sent ? (

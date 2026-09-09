@@ -36,7 +36,8 @@ export default function RegisterPage() {
       <Button
         type="button"
         variant="outline"
-        className="h-11 min-h-11 w-full"
+        size="xl"
+        className="w-full"
         isDisabled
       >
         <GoogleMark />
