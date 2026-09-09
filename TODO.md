@@ -149,6 +149,29 @@ domain penghantar disahkan di Resend.
 
 ### Selesai sesi ini (2026-09-09)
 
+- [x] **Pepijat: set jantina → toast berjaya → medan kosong semula.** Dua punca, satu
+  setiap sisi:
+  - **Backend:** `POST /me/health-profile` memulangkan rekod tersimpan dan **membuang
+    medan dalam badan**. Klien yang belum memuatkan rekod menghantar POST dan bukan PATCH,
+    jadi tulisan itu hilang di belakang 200. Kini ia menulis medan yang dihantar.
+  - **Frontend:** borang menetapkan semula dirinya daripada `profile` pada **setiap**
+    perubahan, jadi respons yang tak membawa medan itu mengosongkannya di skrin — dan
+    apa-apa yang ditaip semasa muat semula latar belakang dibuang di tengah suntingan.
+    Kini ia diseed sekali setiap rekod (`seededFor`), dan Simpan dilumpuhkan sehingga
+    bacaan pertama mendarat supaya ia tak menghantar permintaan yang salah.
+- [x] **Kad kecemasan dihalusi.** Meminjam perbendaharaan objek fizikal yang orang sudah
+  kenal: nisbah 85.6×54 mm, tanda pengeluar di sudut (dalam cip pucat yang logo raster
+  itu perlukan untuk terbaca), permukaan senyap dengan satu sumber cahaya lembut.
+  - Satu perkara yang kuat sahaja: **blok alahan merah**. Segala yang lain sengaja rata
+    supaya merah itu satu-satunya yang menjerit.
+  - **Kilauan mengikut penunjuk**, dan ia berada **di luar** elemen yang berputar. Di
+    dalamnya ia berputar bersama kad dan berakhir di belakang muka belakang — cahaya tak
+    dicetak pada satu sisi. Aku tulis versi pertama dengan salah dan menangkapnya.
+  - **Keadaan kosong dilayan:** kad yang berbunyi "Tiada direkodkan" lima kali lebih teruk
+    daripada satu yang mengaku ia kosong. Kad itu berkata maklumat belum diisi, dan untuk
+    rekod kau sendiri ia menawarkan butang ke `/my-health`. Untuk profil orang lain tiada
+    butang — borang profil belum mengumpul lapan medan itu, jadi butang itu akan jadi
+    jalan buntu.
 - [x] **Kad kecemasan kini objek 3D yang boleh diselak** (`emergency-card-view.tsx`).
   Muka depan membawa dua fakta yang mengubah tindakan klinisian: jenis darah dan alahan.
   Belakang membawa keadaan kesihatan, klinik/doktor, nota — dan **ruang untuk pautan NFC**
@@ -340,6 +363,60 @@ domain penghantar disahkan di Resend.
   kalendarnya dan `Select` semuanya sebaris.
 
 ---
+
+## Modul dirancang (2026-09-09)
+
+Belum dimulakan. Backend `TODO.md` §4 dan §5 memegang keputusan skema; di sini yang
+dicatat ialah kerja frontend dan perkara yang UI mesti jangan buat.
+
+### Bayi dan kanak-kanak: pertumbuhan, perkembangan, imunisasi
+
+Rujukan reka bentuknya ialah **Buku Rekod Kesihatan Bayi dan Kanak-kanak KKM** yang ibu
+bapa sudah bawa ke klinik. App ini patut boleh dikenali sebagai buku itu, bukan penjejak
+generik — itu yang menjadikannya berguna pada hari pertama dan bukan satu lagi borang.
+
+- [ ] **Carta pertumbuhan** — berat-ikut-umur, panjang/tinggi-ikut-umur, lilitan kepala,
+  BMI-ikut-umur, dengan pita rujukan WHO di belakang titik kanak-kanak itu. `chart.tsx`
+  sudah ada dalam `components/ui` dan carta trend vital sudah menggunakannya.
+- [ ] **Ukuran ialah bacaan vital, bukan jadual baharu.** `weight` sudah wujud dalam
+  `VITAL_TYPE_OPTIONS`; yang perlu ditambah ialah panjang/tinggi dan lilitan kepala.
+  Nota klinikal yang mesti dihormati borang: bayi diukur **baring** (panjang) dan
+  kanak-kanak **berdiri** (tinggi), dan WHO menganggapnya ukuran berbeza. Satu pilihan
+  "tinggi" sahaja menghilangkan perbezaan itu.
+- [ ] **Jangan beri diagnosis.** Skor-z di bawah −2 SD ada nama klinikal dalam dokumen
+  WHO, dan meletakkan perkataan itu di sebelah bayi seseorang ialah diagnosis yang produk
+  ini tak boleh buat — sekatan yang sama sudah dikenakan pada ringkasan AI. Plot titik
+  terhadap pita dan biarkan pita bercakap. Apa-apa ayat lebih kuat daripada "di bawah
+  julat rujukan — bincang dengan klinik" perlukan kelulusan klinisian.
+- [ ] **Dua medan sedia ada jadi wajib, dan kedua-duanya belum sedia:**
+  - **Tarikh lahir** — paksi-x carta ialah umur, jadi profil tanpa tarikh lahir tak boleh
+    ada carta. UI mesti meminta dan menerangkannya, bukan merender carta kosong.
+  - **Jantina** — rujukan WHO khusus jantina, jadi medan ini bertukar daripada label
+    kepada kunci carian. `GENDER_OPTIONS` menyimpan rentetan paparan Melayu
+    ("Lelaki"/"Perempuan"); ia perlu nilai berkod (`male`/`female`) dengan label
+    dikenakan semasa render. Inilah kos gandingan yang ditandakan semasa select itu
+    ditambah.
+- [ ] **Umur terkoreksi untuk bayi pramatang** — bayi lahir 32 minggu diplot pada umur
+  terkoreksi sehingga lebih kurang 2 tahun. Perlukan umur kandungan semasa lahir, yang
+  tiada dalam mana-mana jadual lagi.
+- [ ] **Jadual imunisasi kebangsaan** — dos, umur patut, tarikh diberi. Bentuknya dekat
+  dengan ubat + peristiwa dos yang sudah ada.
+- [ ] **Senarai semak perkembangan** ikut julat umur. Bahaya diagnosis sama seperti
+  pertumbuhan, malah lebih tajam — "belum" pada satu pencapaian jauh lebih kerap variasi
+  normal daripada penemuan.
+
+### Pelan dan penggunaan
+
+Halaman `/pricing` sudah menunjukkan penggunaan profil berbanding had, tetapi ia
+mengiranya daripada senarai yang kebetulan dipegang oleh provider. Itu berjaya untuk satu
+nombor dan takkan bertahan untuk yang kedua.
+
+- [ ] Guna `GET /me/usage` sebaik ia wujud, dan buang pengiraan tempatan itu.
+- [ ] **Amaran "hampir sampai had"** di tempat tindakan berlaku — butang cipta profil,
+  borang jemput ahli — bukan hanya pada halaman harga. Pengguna yang melanggar had
+  mendapati perkara itu pada saat mereka menekan simpan.
+- [ ] Bila had berbeza mengikut akaun, lajur Percuma pada `/pricing` mesti terus membaca
+  had **akaun ini**, bukan lalai pelan. Itu janji halaman itu.
 
 ## Audit aliran UX (2026-09-09)
 

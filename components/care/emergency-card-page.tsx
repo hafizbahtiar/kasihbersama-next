@@ -52,7 +52,12 @@ export function EmergencyCardPage({
         />
       </div>
 
-      <EmergencyCardView profileId={profileId} />
+      {/* Only your own record has a place to fill it in from here; for
+          someone you look after, the edit lives on their profile. */}
+      <EmergencyCardView
+        profileId={profileId}
+        completeHref={isOwn ? "/my-health" : undefined}
+      />
     </div>
   )
 }

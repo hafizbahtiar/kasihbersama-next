@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   IconAlertTriangle,
@@ -75,11 +75,19 @@ export function OwnHealthPage() {
   const [form, setForm] = useState<FormState>(empty)
   const [isSaving, setIsSaving] = useState(false)
 
+  // Seeded once per record, not on every change to it.
+  //
+  // Re-seeding whenever `profile` changed meant a save overwrote the form with
+  // whatever the response happened to contain - so a field the server dropped
+  // came back blank while the toast said it saved, and anything typed during a
+  // background reload was thrown away mid-edit.
+  const seededFor = useRef<string | null>(null)
+
   useEffect(() => {
-    if (!profile) {
+    if (!profile || seededFor.current === profile.id) {
       return
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    seededFor.current = profile.id
     setForm({
       legalName: profile.legalName ?? "",
       dateOfBirth: profile.dateOfBirth ?? "",
@@ -98,6 +106,12 @@ export function OwnHealthPage() {
   }
 
   async function submit() {
+    if (isLoading) {
+      // Saving before the first read lands sends a create where an update was
+      // meant. The endpoint handles that correctly now, but the request is
+      // still the wrong one to send.
+      return
+    }
     setIsSaving(true)
     try {
       await save({ displayName: user?.displayName, ...form })
@@ -332,7 +346,7 @@ export function OwnHealthPage() {
             </CardContent>
             <CardFooter className="justify-end">
               <Button
-                isDisabled={isSaving}
+                isDisabled={isSaving || isLoading}
                 onPress={() => {
                   void submit()
                 }}
