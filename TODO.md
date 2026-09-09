@@ -83,7 +83,7 @@
 - [x] Ahli & akses: `GET /care-profiles/{id}/members` (access review), kemas kini peranan melalui API
 - [x] Ubat: schedules & events dari API; padam `prescribedBy` / tarikh mock apabila DTO backend sedia _(jadual/events API; medan mock disembunyikan dalam mod API)_
 - [x] Profil jagaan: persist `relation`, tarikh lahir, nota apabila backend menambah medan DTO _(borang API hanya `display_name`; medan gap disembunyikan)_
-- [ ] Platform: sambung emergency card, doctor summary, audit apabila endpoint backend tersedia _(HTTP route belum wujud di backend)_
+- [ ] Platform: sambung emergency card, doctor summary, audit apabila endpoint backend tersedia _(disahkan 2026-09-09: `summaries/doctor-visit`, `summaries/{id}/pdf-url`, `audit-events` dan emergency card semuanya tiada dalam `server.go` walaupun ada dalam kontrak)_
 - [x] Device: daftar/revoke push token melalui API (bukan mock subscription id) _(revoke/list via API; daftar hanya ios/android di backend)_
 - [x] Buang `ResourceSnapshotProvider` / mock notification seed apabila tiada endpoint legacy diperlukan
 - [x] Selaraskan path repository dengan kontrak (contoh: verify `care-logs` vs `logs` pada semua resource)
@@ -99,5 +99,66 @@
 - [x] Cookie `kb-refresh-token`: selaraskan TTL, `Secure`/`SameSite` untuk production _(TTL via `NEXT_PUBLIC_SESSION_MAX_AGE_DAYS`, `Secure` on HTTPS, `SameSite=Lax`)_
 - [x] Rate limit UX untuk login/signup/forgot (papar mesej `rate_limited` / `locked`)
 - [x] Logout all devices: pastikan semua tab/client state direset selepas `POST /auth/logout-all` _(BroadcastChannel + storage sync, clear profil dipilih)_
-- [ ] Akaun: `POST /me/delete` apabila backend Module 3 sedia _(kontrak docs sahaja)_
+- [ ] Akaun: `POST /me/delete` apabila backend Module 3 sedia _(disahkan 2026-09-09: masih tiada route; tapak pemasaran mengiklankan patuh PDPA, jadi ini lebih dari sekadar nice-to-have)_
 - [x] Ujian aliran: signup → verify → login → refresh → logout → forgot → reset _(skrip: `npm run smoke:auth`)_
+
+---
+
+## Audit penuh (2026-09-09)
+
+Route backend dibaca terus dari `internal/transport/http/server.go` dan dibandingkan
+dengan `docs/06-api-contract.md`.
+
+### Menyekat — pengesahan e-mel jalan mati
+
+- [ ] **Tiada UI "hantar semula e-mel pengesahan"**, kerana backend tiada endpointnya.
+  E-mel dihantar sekali sahaja semasa signup dan luput dalam 24 jam. Halaman
+  `/verify-email` hanya menerima token yang sudah ada di tangan — ia tak boleh meminta
+  yang baharu. Akaun yang terlepas tempoh itu kekal tak sah selama-lamanya, dan
+  `EmailVerifiedGate` menyekat jemputan serta tuntutan untuk akaun sedemikian.
+  Bergantung pada `POST /auth/resend-verification` di backend; bina butang pada
+  `verify-email-form.tsx` sebaik ia wujud.
+
+### Belum siap kerana backend belum ada surface
+
+- [ ] Circle: tambah/buang ahli circle _(`care_circle_members` ada jadual dan lajur
+  peranan, tapi tiada route HTTP — profil boleh dipaut ke circle, orang tidak boleh)_
+- [ ] Circle: kemas kini circle _(`PATCH /care-circles/{id}` tak didaftarkan; hanya
+  create/read/delete)_
+- [ ] Medan profil `relation`, `dateOfBirth`, `notes` masih disembunyikan dalam mod API
+  _(`care-profile-field-gaps.ts` — DTO backend belum ada medan ini)_
+- [ ] Medan ubat `prescribedBy`, `startDate`, `endDate` — sama
+
+### Selesai sesi ini (2026-09-09)
+
+- [x] Snapshot jagaan mati sepenuhnya apabila satu endpoint gagal — `Promise.all` dalam
+  `loadProfileData` membuang sepuluh respons berjaya kerana satu 400. Setiap seksyen kini
+  merosot sendiri-sendiri; 401 kekal fatal supaya sesi luput tak dipaparkan sebagai
+  "tiada data".
+- [x] `medication-events` dipanggil tanpa `from`/`to` yang backend wajibkan → 400 →
+  dashboard kosong → semua permission dibaca `false`. Kini menghantar tingkap 7 hari.
+- [x] Setiap pautan (sidebar, breadcrumb, `LinkButton`) ialah `Link` react-aria tanpa
+  `RouterProvider`, jadi setiap klik memuat semula dokumen penuh. Disambungkan ke router Next.
+- [x] Skrin "Memuatkan sesi" ialah skeleton kandungan yang direka untuk dalam shell, jadi
+  ia terdampar di kiri atas viewport kosong. Kini komponen tersendiri, penuh-viewport dan
+  bertengah.
+- [x] `CareDataProvider` 1006 → 668 baris: 37 daripada 38 kaedah membawa implementasi mock
+  inline yang menduplikasi `InMemoryCareRepository`. Punca sebenar ialah `refresh()` pulang
+  awal dalam mod mock; membaikinya memusnahkan sebab duplikasi itu.
+- [x] `CareRepository` 48 kaedah dipecah kepada sepuluh interface ikut agregat.
+  `createResourceSnapshot` kini meminta `CareSnapshotReader` sahaja dan menerimanya sebagai
+  parameter — sekali gus menutup pelanggaran lapisan `application → composition`.
+- [x] `bun.lock` tak sepadan `package.json`; setiap build Railway gagal pada
+  `--frozen-lockfile`.
+- [x] Proxy `/api/v1/*` boleh guna `API_INTERNAL_BASE_URL` (rangkaian private Railway).
+  Nota: nilainya mesti `http://` dan berport `:8080` — rangkaian private tiada TLS.
+- [x] Semua pemboleh ubah env yang dibaca kod kini didokumen dalam `.env`/`.env.example`
+  _(`NEXT_PUBLIC_API_VERSION` dan `NEXT_PUBLIC_APP_PLATFORM` sebelum ini tiada dalam kedua-duanya)_
+
+### Perlu disahkan, bukan dakwaan
+
+- [ ] Navigasi client-side belum disahkan pada tahap klik — tiada pelayar dalam sesi itu.
+  Semak DevTools → Network: satu fetch `?_rsc=` bermakna berjaya; permintaan dokumen penuh
+  bermakna belum.
+- [ ] `smoke:auth` melangkau langkah verify (lihat header skripnya). Ia tak boleh lengkap
+  sehingga endpoint resend wujud.
