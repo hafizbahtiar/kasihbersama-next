@@ -12,6 +12,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { DateTimeField } from "@/components/ui/date-field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -213,11 +214,10 @@ export function VitalFormPage() {
           </Field>
           <Field data-invalid={Boolean(errors.measuredAt)}>
             <FieldLabel>Masa diukur</FieldLabel>
-            <Input
-              type="datetime-local"
-              className="h-11 bg-background"
+            <DateTimeField
               value={measuredAt}
-              onChange={(event) => setMeasuredAt(fieldValue(event))}
+              onChange={setMeasuredAt}
+              className="bg-background"
             />
             {errors.measuredAt ? (
               <FieldError>{errors.measuredAt}</FieldError>

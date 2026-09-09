@@ -12,6 +12,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { DateTimeField } from "@/components/ui/date-field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toDateTimeLocalValue } from "@/lib/application/care-format"
@@ -106,11 +107,10 @@ export function AppointmentFormPage() {
           </Field>
           <Field data-invalid={Boolean(errors.appointmentAt)}>
             <FieldLabel>Masa</FieldLabel>
-            <Input
-              type="datetime-local"
-              className="h-11 bg-background"
+            <DateTimeField
               value={appointmentAt}
-              onChange={(event) => setAppointmentAt(fieldValue(event))}
+              onChange={setAppointmentAt}
+              className="bg-background"
             />
             {errors.appointmentAt ? (
               <FieldError>{errors.appointmentAt}</FieldError>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { CareFormShell } from "@/components/care/care-form-shell"
 import { useCareData } from "@/components/care/care-data-provider"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { DateTimeField } from "@/components/ui/date-field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -76,11 +77,10 @@ export function TaskFormPage() {
           </Field>
           <Field>
             <FieldLabel>Masa akhir</FieldLabel>
-            <Input
-              type="datetime-local"
-              className="h-11 bg-background"
+            <DateTimeField
               value={dueAt}
-              onChange={(event) => setDueAt(fieldValue(event))}
+              onChange={setDueAt}
+              className="bg-background"
             />
           </Field>
           <Field>

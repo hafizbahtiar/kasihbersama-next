@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { DateField, TimeField } from "@/components/ui/date-field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -307,20 +308,18 @@ export function MedicationDetailPage({
                 <>
                   <Field>
                     <FieldLabel>Mula</FieldLabel>
-                    <Input
-                      type="date"
-                      className="h-11 bg-background"
+                    <DateField
                       value={startDate}
-                      onChange={(event) => setStartDate(fieldValue(event))}
+                      onChange={setStartDate}
+                      className="bg-background"
                     />
                   </Field>
                   <Field>
                     <FieldLabel>Tamat</FieldLabel>
-                    <Input
-                      type="date"
-                      className="h-11 bg-background"
+                    <DateField
                       value={endDate}
-                      onChange={(event) => setEndDate(fieldValue(event))}
+                      onChange={setEndDate}
+                      className="bg-background"
                     />
                   </Field>
                 </>
@@ -424,11 +423,10 @@ export function MedicationDetailPage({
                 ))}
               </SelectContent>
             </Select>
-            <Input
-              type="time"
-              className="h-9 bg-background"
+            <TimeField
               value={timeOfDay}
-              onChange={(event) => setTimeOfDay(fieldValue(event))}
+              onChange={setTimeOfDay}
+              className="h-9 bg-background"
             />
             <Select
               selectedKey={timezone}
@@ -626,11 +624,10 @@ export function MedicationCreatePage() {
               </Field>
               <Field>
                 <FieldLabel>Tarikh mula</FieldLabel>
-                <Input
-                  type="date"
-                  className="h-11 bg-background"
+                <DateField
                   value={startDate}
-                  onChange={(event) => setStartDate(fieldValue(event))}
+                  onChange={setStartDate}
+                  className="bg-background"
                 />
               </Field>
             </>
@@ -658,11 +655,10 @@ export function MedicationCreatePage() {
           </Field>
           <Field>
             <FieldLabel>Masa dos pertama</FieldLabel>
-            <Input
-              type="time"
-              className="h-11 bg-background"
+            <TimeField
               value={timeOfDay}
-              onChange={(event) => setTimeOfDay(fieldValue(event))}
+              onChange={setTimeOfDay}
+              className="bg-background"
             />
           </Field>
         </FieldGroup>

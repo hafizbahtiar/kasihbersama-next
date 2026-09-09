@@ -14,6 +14,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { DateField } from "@/components/ui/date-field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -201,20 +202,18 @@ export function DocumentFormPage() {
             </Field>
             <Field>
               <FieldLabel>Tarikh dikeluarkan</FieldLabel>
-              <Input
-                type="date"
-                className="h-11 bg-background"
+              <DateField
                 value={issueDate}
-                onChange={(event) => setIssueDate(fieldValue(event))}
+                onChange={setIssueDate}
+                className="bg-background"
               />
             </Field>
             <Field data-invalid={Boolean(errors.expiryDate)}>
               <FieldLabel>Tarikh tamat</FieldLabel>
-              <Input
-                type="date"
-                className="h-11 bg-background"
+              <DateField
                 value={expiryDate}
-                onChange={(event) => setExpiryDate(fieldValue(event))}
+                onChange={setExpiryDate}
+                className="bg-background"
               />
               {errors.expiryDate ? (
                 <FieldError>{errors.expiryDate}</FieldError>

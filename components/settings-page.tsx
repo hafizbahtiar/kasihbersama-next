@@ -86,11 +86,11 @@ export function SettingsPage() {
   const current = settingsNav.find((item) => item.id === section)
   const medicationPushEnabled = selectedProfile
     ? prefEnabled(
-      notificationPrefs.data,
-      selectedProfile.id,
-      "push",
-      "medication"
-    )
+        notificationPrefs.data,
+        selectedProfile.id,
+        "push",
+        "medication"
+      )
     : true
 
   async function saveAccount() {
