@@ -28,7 +28,8 @@ export async function createResourceSnapshot(
 
   const care = await getCareRepository().getSnapshot()
   for (const profile of care.profiles) {
-    recordLabels[recordLabelKey("care-profiles", profile.id)] = profile.displayName
+    recordLabels[recordLabelKey("care-profiles", profile.id)] =
+      profile.displayName
   }
   for (const circle of care.circles) {
     recordLabels[recordLabelKey("circles", circle.id)] = circle.name

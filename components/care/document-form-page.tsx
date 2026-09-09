@@ -8,7 +8,12 @@ import { EmailVerifiedGate } from "@/components/auth/email-verified-gate"
 import { CareFormShell } from "@/components/care/care-form-shell"
 import { useCareData } from "@/components/care/care-data-provider"
 import { usePlatform } from "@/components/platform/platform-provider"
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -24,11 +29,8 @@ import {
   validateDateRange,
   validateUploadSize,
 } from "@/lib/application/form-validation"
-import { isMockDataEnabled } from "@/lib/composition/config"
-import {
-  DOCUMENT_TYPE_LABELS,
-  type DocumentType,
-} from "@/lib/domain/care"
+import { isMockDataEnabled } from "@/lib/infrastructure/config"
+import { DOCUMENT_TYPE_LABELS, type DocumentType } from "@/lib/domain/care"
 import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
 
 const allowedTypes = [
@@ -173,11 +175,13 @@ export function DocumentFormPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(DOCUMENT_TYPE_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} id={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
+                  {Object.entries(DOCUMENT_TYPE_LABELS).map(
+                    ([value, label]) => (
+                      <SelectItem key={value} id={value}>
+                        {label}
+                      </SelectItem>
+                    )
+                  )}
                 </SelectContent>
               </Select>
             </Field>

@@ -29,7 +29,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
@@ -44,7 +48,7 @@ export function AppHeader() {
     <>
       <header className="flex h-14 shrink-0 items-center gap-3 border-b px-4 sm:px-6">
         <SidebarTrigger />
-        <Separator orientation="vertical" className="hidden my-2.5 sm:block" />
+        <Separator orientation="vertical" className="my-2.5 hidden sm:block" />
         <AppBreadcrumb />
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
@@ -86,7 +90,9 @@ export function AppHeader() {
               void refresh()
             }}
           >
-            <IconRefresh className={isRefreshing ? "animate-spin" : undefined} />
+            <IconRefresh
+              className={isRefreshing ? "animate-spin" : undefined}
+            />
           </Button>
 
           <Button

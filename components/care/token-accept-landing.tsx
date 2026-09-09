@@ -8,7 +8,7 @@ import {
   captureTokenFromUrl,
   type TokenAcceptKind,
 } from "@/lib/application/deep-links"
-import { isMockDataEnabled } from "@/lib/composition/config"
+import { isMockDataEnabled } from "@/lib/infrastructure/config"
 
 export function TokenAcceptLanding({ kind }: { kind: TokenAcceptKind }) {
   const router = useRouter()

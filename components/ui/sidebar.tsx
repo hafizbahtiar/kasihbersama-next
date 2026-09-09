@@ -42,8 +42,7 @@ type SidebarContextProps = {
 }
 
 type SidebarButtonProps =
-  | (LinkProps & { href: string })
-  | (ButtonProps & { href?: never })
+  (LinkProps & { href: string }) | (ButtonProps & { href?: never })
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
 

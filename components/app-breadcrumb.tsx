@@ -19,7 +19,10 @@ type Crumb = {
   label: string
 }
 
-function getCrumbs(pathname: string, snapshot: ResourceSnapshot | null): Crumb[] {
+function getCrumbs(
+  pathname: string,
+  snapshot: ResourceSnapshot | null
+): Crumb[] {
   const recordLabels = snapshot?.recordLabels ?? {}
   const schemas = snapshot?.schemas ?? []
   const crumbs: Crumb[] = [{ href: "/home", label: "Laman utama" }]
@@ -68,8 +71,7 @@ function getCrumbs(pathname: string, snapshot: ResourceSnapshot | null): Crumb[]
   }
 
   const slug = navMatch.href.replace(/^\//, "")
-  const recordLabel =
-    recordLabels[recordLabelKey(slug, parts[0])] ?? parts[0]
+  const recordLabel = recordLabels[recordLabelKey(slug, parts[0])] ?? parts[0]
   const schema = schemas.find((item) => item.slug === slug)
 
   if (parts[1] === "edit") {
@@ -98,7 +100,9 @@ export function AppBreadcrumb() {
           return (
             <BreadcrumbItem key={`${crumb.label}-${index}`}>
               {isLast || !crumb.href ? (
-                <BreadcrumbPage className="truncate">{crumb.label}</BreadcrumbPage>
+                <BreadcrumbPage className="truncate">
+                  {crumb.label}
+                </BreadcrumbPage>
               ) : (
                 <BreadcrumbLink href={crumb.href} className="truncate">
                   {crumb.label}

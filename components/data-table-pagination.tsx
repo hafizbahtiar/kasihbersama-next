@@ -95,7 +95,7 @@ export function DataTablePagination({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground whitespace-nowrap">
+          <span className="text-sm whitespace-nowrap text-muted-foreground">
             Baris setiap halaman
           </span>
           <Select

@@ -32,8 +32,9 @@ export function buildDashboardStats(
   return {
     profileCount: snapshot.profiles.filter((item) => item.status === "active")
       .length,
-    activeMedicationCount: medications.filter((item) => item.status === "active")
-      .length,
+    activeMedicationCount: medications.filter(
+      (item) => item.status === "active"
+    ).length,
     upcomingAppointmentCount: appointments.filter(
       (item) => item.status === "scheduled"
     ).length,

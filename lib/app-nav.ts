@@ -33,8 +33,18 @@ export const primaryNav: AppNavItem[] = [
   { href: "/medications", title: "Ubat", icon: IconPill },
   { href: "/appointments", title: "Temujanji", icon: IconCalendarEvent },
   { href: "/care-logs", title: "Log jagaan", icon: IconClipboardHeart },
-  { href: "/vitals", title: "Bacaan vital", icon: IconHeartbeat, permission: "can_view_vitals" },
-  { href: "/tasks", title: "Tugasan", icon: IconListCheck, permission: "can_manage_care_tasks" },
+  {
+    href: "/vitals",
+    title: "Bacaan vital",
+    icon: IconHeartbeat,
+    permission: "can_view_vitals",
+  },
+  {
+    href: "/tasks",
+    title: "Tugasan",
+    icon: IconListCheck,
+    permission: "can_manage_care_tasks",
+  },
   {
     href: "/documents",
     title: "Dokumen",

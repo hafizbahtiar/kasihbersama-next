@@ -47,7 +47,11 @@ export function ProfileSwitcher({ className }: { className?: string }) {
       </SelectTrigger>
       <SelectContent>
         {profiles.map((profile) => (
-          <SelectItem key={profile.id} id={profile.id} textValue={profile.displayName}>
+          <SelectItem
+            key={profile.id}
+            id={profile.id}
+            textValue={profile.displayName}
+          >
             {profile.displayName}
           </SelectItem>
         ))}

@@ -8,7 +8,9 @@ import type {
 
 export interface AccountRepository {
   updateDisplayName(displayName: string): Promise<AuthUser>
-  listNotificationPrefs(careProfileId: string): Promise<ProfileNotificationPref[]>
+  listNotificationPrefs(
+    careProfileId: string
+  ): Promise<ProfileNotificationPref[]>
   updateNotificationPref(input: {
     careProfileId: string
     channel: NotificationChannel

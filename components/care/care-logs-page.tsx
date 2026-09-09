@@ -5,22 +5,19 @@ import { useRouter } from "next/navigation"
 import { IconInbox, IconPlus, IconTrash } from "@tabler/icons-react"
 
 import { AsyncStateBanner } from "@/components/care/async-state"
-import { useCareData, useCareProfile } from "@/components/care/care-data-provider"
+import {
+  useCareData,
+  useCareProfile,
+} from "@/components/care/care-data-provider"
 import { ConfirmDialog } from "@/components/confirm-dialog"
-import {
-  createDataTableColumnHelper,
-  DataTable,
-} from "@/components/data-table"
-import {
-  TableActionButton,
-  TableActions,
-} from "@/components/table-actions"
+import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
+import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { usePaginatedCareResource } from "@/hooks/use-paginated-care-resource"
 import { formatDateTime } from "@/lib/application/care-format"
 import { getCareRepository } from "@/lib/composition/care-repository"
-import { isMockDataEnabled } from "@/lib/composition/config"
+import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import {
   LOG_TYPE_OPTIONS,
   VISIBILITY_LABELS,
@@ -54,9 +51,8 @@ export function CareLogsPage() {
 
   const logs = apiMode ? (paginated.data?.data ?? []) : mockLogs
   const isLoading = apiMode ? paginated.isLoading : isRefreshing
-  const errorMessage = apiMode && paginated.error
-    ? messageForApiError(paginated.error)
-    : undefined
+  const errorMessage =
+    apiMode && paginated.error ? messageForApiError(paginated.error) : undefined
 
   const columns = useMemo(() => {
     const helper = createDataTableColumnHelper<CareLog>()

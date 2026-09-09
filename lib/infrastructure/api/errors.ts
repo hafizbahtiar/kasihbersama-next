@@ -57,9 +57,7 @@ const STATUS_MESSAGES: Record<number, string> = {
 
 export function messageForApiError(error: ApiError) {
   return (
-    CODE_MESSAGES[error.code] ??
-    STATUS_MESSAGES[error.status] ??
-    error.message
+    CODE_MESSAGES[error.code] ?? STATUS_MESSAGES[error.status] ?? error.message
   )
 }
 
@@ -103,9 +101,7 @@ export async function parseApiError(response: Response) {
 
   const code = body?.error.code?.toLowerCase() ?? "internal"
   const message =
-    body?.error.message ??
-    response.statusText ??
-    "Permintaan gagal."
+    body?.error.message ?? response.statusText ?? "Permintaan gagal."
 
   return new ApiError(message, {
     code,

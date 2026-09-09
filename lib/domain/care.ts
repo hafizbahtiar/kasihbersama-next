@@ -37,27 +37,17 @@ export type InviteStatus = "pending" | "accepted" | "revoked" | "expired"
 export type ClaimStatus = "pending" | "accepted" | "revoked" | "expired"
 export type MedicationStatus = "active" | "paused" | "ended"
 export type ScheduleType = "daily" | "weekly" | "multi_daily" | "as_needed"
-export type EventStatus = "pending" | "taken" | "skipped" | "postponed" | "missed"
+export type EventStatus =
+  "pending" | "taken" | "skipped" | "postponed" | "missed"
 export type EventAction = "taken" | "skipped" | "postponed"
 export type AppointmentStatus =
-  | "scheduled"
-  | "completed"
-  | "cancelled"
-  | "missed"
+  "scheduled" | "completed" | "cancelled" | "missed"
 export type TaskStatus = "open" | "in_progress" | "completed" | "cancelled"
 export type LogVisibility = "circle" | "caregivers" | "private"
 export type DocumentType =
-  | "prescription"
-  | "lab_result"
-  | "imaging"
-  | "insurance"
-  | "other"
+  "prescription" | "lab_result" | "imaging" | "insurance" | "other"
 export type DocumentUploadState =
-  | "idle"
-  | "uploading"
-  | "processing"
-  | "done"
-  | "error"
+  "idle" | "uploading" | "processing" | "done" | "error"
 
 export type CareProfile = {
   id: string

@@ -47,7 +47,9 @@ export function PasswordField({
       <InputGroupAddon align="inline-end">
         <InputGroupButton
           size="icon-xs"
-          aria-label={visible ? "Sembunyikan kata laluan" : "Tunjukkan kata laluan"}
+          aria-label={
+            visible ? "Sembunyikan kata laluan" : "Tunjukkan kata laluan"
+          }
           aria-pressed={visible}
           onPress={() => setVisible((current) => !current)}
         >

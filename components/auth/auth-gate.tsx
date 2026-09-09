@@ -16,7 +16,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       return
     }
     const next =
-      pathname && pathname !== "/" ? `/?next=${encodeURIComponent(pathname)}` : "/"
+      pathname && pathname !== "/"
+        ? `/?next=${encodeURIComponent(pathname)}`
+        : "/"
     router.replace(next)
   }, [pathname, router, status])
 

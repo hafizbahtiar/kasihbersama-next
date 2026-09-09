@@ -2,17 +2,9 @@
 
 import { useMemo } from "react"
 import { useRouter } from "next/navigation"
-import {
-  IconEye,
-  IconInbox,
-  IconPencil,
-  IconPlus,
-} from "@tabler/icons-react"
+import { IconEye, IconInbox, IconPencil, IconPlus } from "@tabler/icons-react"
 
-import {
-  createDataTableColumnHelper,
-  DataTable,
-} from "@/components/data-table"
+import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -137,7 +129,9 @@ export function ResourceList({
             <h1 className="font-heading text-2xl tracking-tight">
               {schema.title}
             </h1>
-            <p className="text-sm text-muted-foreground">{schema.description}</p>
+            <p className="text-sm text-muted-foreground">
+              {schema.description}
+            </p>
           </div>
         ) : undefined
       }
@@ -150,9 +144,7 @@ export function ResourceList({
         ) : undefined
       }
       emptyIcon={<IconInbox />}
-      emptyTitle={
-        emptyTitle ?? `Tiada ${schema.singular.toLowerCase()} lagi`
-      }
+      emptyTitle={emptyTitle ?? `Tiada ${schema.singular.toLowerCase()} lagi`}
       emptyDescription={
         emptyDescription ??
         `Tambah ${schema.singular.toLowerCase()} pertama untuk mula rekod jagaan.`

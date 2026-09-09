@@ -1,4 +1,8 @@
-import type { BootstrapConfig, PlatformFeatures, PlatformLimits } from "@/lib/domain/platform"
+import type {
+  BootstrapConfig,
+  PlatformFeatures,
+  PlatformLimits,
+} from "@/lib/domain/platform"
 import type { PlatformRepository } from "@/lib/domain/platform-repository"
 
 type ApiBootstrapResponse = {
@@ -45,7 +49,7 @@ function mapBootstrap(api: ApiBootstrapResponse): BootstrapConfig {
 }
 
 export class ApiPlatformRepository implements PlatformRepository {
-  constructor(private readonly baseUrl: string) {}
+  constructor(private readonly baseUrl: string) { }
 
   async getBootstrap(appBuild: number): Promise<BootstrapConfig> {
     const url = `${this.baseUrl.replace(/\/$/, "")}/api/v1/bootstrap`

@@ -1,11 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import {
-  IconBell,
-  IconHeadset,
-  IconSettings,
-} from "@tabler/icons-react"
+import { IconBell, IconHeadset, IconSettings } from "@tabler/icons-react"
 
 import { AsyncStateBanner } from "@/components/care/async-state"
 import { useCareProfile } from "@/components/care/care-data-provider"
@@ -22,12 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   accountErrorMessage,
   prefEnabled,

@@ -12,11 +12,11 @@ import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useCareData } from "@/components/care/care-data-provider"
 import { PageHeader } from "@/components/care/page-header"
 import { PermissionGate } from "@/components/care/permission-gate"
-import { ProfileStatusBadge, MemberStatusBadge } from "@/components/care/status-badges"
 import {
-  createDataTableColumnHelper,
-  DataTable,
-} from "@/components/data-table"
+  ProfileStatusBadge,
+  MemberStatusBadge,
+} from "@/components/care/status-badges"
+import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button, LinkButton } from "@/components/ui/button"
@@ -38,16 +38,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { usePaginatedCareResource } from "@/hooks/use-paginated-care-resource"
 import { buildTimeline, formatDateTime } from "@/lib/application/care-format"
-import { isMockDataEnabled } from "@/lib/composition/config"
+import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import {
   buildClaimAcceptLink,
   buildInviteAcceptLink,
@@ -128,13 +122,18 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
   } = useCareData()
   const profile = snapshot.profiles.find((item) => item.id === profileId)
   const circle = snapshot.circles.find((item) => item.id === profile?.circleId)
-  const members = snapshot.members.filter((item) => item.profileId === profileId)
-  const invites = snapshot.invites.filter((item) => item.profileId === profileId)
+  const members = snapshot.members.filter(
+    (item) => item.profileId === profileId
+  )
+  const invites = snapshot.invites.filter(
+    (item) => item.profileId === profileId
+  )
   const claims = snapshot.claims.filter((item) => item.profileId === profileId)
 
   const fetchTimeline = useMemo(
-    () => (activeProfileId: string, params: { page?: number; perPage?: number }) =>
-      getCareRepository().listTimeline(activeProfileId, params),
+    () =>
+      (activeProfileId: string, params: { page?: number; perPage?: number }) =>
+        getCareRepository().listTimeline(activeProfileId, params),
     []
   )
 
@@ -149,9 +148,7 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
     () => (profile ? buildTimeline(snapshot, profile.id) : []),
     [profile, snapshot]
   )
-  const timeline = apiMode
-    ? (timelinePaginated.data?.data ?? [])
-    : mockTimeline
+  const timeline = apiMode ? (timelinePaginated.data?.data ?? []) : mockTimeline
   const timelineLoading = apiMode ? timelinePaginated.isLoading : isRefreshing
   const timelineError =
     apiMode && timelinePaginated.error
@@ -187,7 +184,11 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
       helper.accessor("granted", {
         header: "Status",
         cell: ({ getValue }) =>
-          getValue() ? <Badge>Ada</Badge> : <Badge variant="secondary">Tiada</Badge>,
+          getValue() ? (
+            <Badge>Ada</Badge>
+          ) : (
+            <Badge variant="secondary">Tiada</Badge>
+          ),
       }),
     ])
   }, [])
@@ -212,7 +213,9 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
         enableGlobalFilter: false,
         cell: ({ row }) => (
           <TableActions>
-            <TableActionButton onPress={() => setEditingMemberId(row.original.id)}>
+            <TableActionButton
+              onPress={() => setEditingMemberId(row.original.id)}
+            >
               Peranan
             </TableActionButton>
             {row.original.userId !== "user-me" ? (
@@ -399,11 +402,17 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
         actions={
           <>
             <ProfileStatusBadge value={profile.status} />
-            <LinkButton href={`/care-profiles/${profile.id}/edit`} variant="outline">
+            <LinkButton
+              href={`/care-profiles/${profile.id}/edit`}
+              variant="outline"
+            >
               Sunting
             </LinkButton>
             {profile.status === "active" ? (
-              <Button variant="destructive" onPress={() => setArchiveOpen(true)}>
+              <Button
+                variant="destructive"
+                onPress={() => setArchiveOpen(true)}
+              >
                 <IconArchive />
                 Arkib
               </Button>
@@ -448,7 +457,10 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
                 </div>
               ) : (
                 <>
-                  <Detail label="Tarikh lahir" value={profile.dateOfBirth || "—"} />
+                  <Detail
+                    label="Tarikh lahir"
+                    value={profile.dateOfBirth || "—"}
+                  />
                   <Detail label="Nota" value={profile.notes || "—"} />
                 </>
               )}
@@ -600,7 +612,10 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
               </CardFooter>
             </Card>
 
-            <PermissionGate feature="profile_claim" permission="can_invite_members">
+            <PermissionGate
+              feature="profile_claim"
+              permission="can_invite_members"
+            >
               <Card>
                 <CardHeader>
                   <CardTitle>Tuntutan profil</CardTitle>
@@ -626,8 +641,8 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
                         if (!claimEmail.trim()) {
                           return
                         }
-                        void createClaim(profile.id, claimEmail.trim()).then(() =>
-                          setClaimEmail("")
+                        void createClaim(profile.id, claimEmail.trim()).then(
+                          () => setClaimEmail("")
                         )
                       }}
                     >
@@ -710,7 +725,9 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
             pageIndex={apiMode ? timelinePaginated.page - 1 : undefined}
             pageCount={apiMode ? timelinePaginated.data?.totalPages : undefined}
             rowCount={apiMode ? timelinePaginated.data?.total : undefined}
-            onPageChange={(pageIndex) => timelinePaginated.setPage(pageIndex + 1)}
+            onPageChange={(pageIndex) =>
+              timelinePaginated.setPage(pageIndex + 1)
+            }
             onPageSizeChange={(nextSize) => {
               timelinePaginated.setPerPage(nextSize)
               timelinePaginated.setPage(1)
@@ -730,7 +747,9 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
             }
             toolbarStart={
               <div className="space-y-1">
-                <h2 className="font-heading text-lg tracking-tight">Timeline</h2>
+                <h2 className="font-heading text-lg tracking-tight">
+                  Timeline
+                </h2>
                 <p className="text-sm text-muted-foreground">
                   {apiMode
                     ? "Log jagaan dari API timeline (paginated)."
@@ -873,7 +892,9 @@ function PermissionEditor({
         <Button variant="outline" onPress={onCancel}>
           Batal
         </Button>
-        <Button onPress={() => onSave(nextRole, nextPermissions)}>Simpan</Button>
+        <Button onPress={() => onSave(nextRole, nextPermissions)}>
+          Simpan
+        </Button>
       </CardFooter>
     </Card>
   )

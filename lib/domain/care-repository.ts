@@ -35,12 +35,18 @@ export interface CareRepository {
   updateProfile(id: string, patch: Partial<CareProfile>): Promise<CareProfile>
   archiveProfile(id: string): Promise<void>
 
-  createCircle(input: Omit<CareCircle, "id" | "profileIds" | "archived">): Promise<CareCircle>
+  createCircle(
+    input: Omit<CareCircle, "id" | "profileIds" | "archived">
+  ): Promise<CareCircle>
   updateCircle(id: string, patch: Partial<CareCircle>): Promise<CareCircle>
   archiveCircle(id: string): Promise<void>
   linkProfileToCircle(profileId: string, circleId: string): Promise<void>
 
-  inviteMember(profileId: string, email: string, role: CareRole): Promise<CareInvite>
+  inviteMember(
+    profileId: string,
+    email: string,
+    role: CareRole
+  ): Promise<CareInvite>
   revokeInvite(profileId: string, inviteId: string): Promise<void>
   acceptInvite(token: string): Promise<string>
   createClaim(profileId: string, email: string): Promise<CareClaim>
@@ -163,7 +169,10 @@ export interface CareRepository {
   ): Promise<PaginatedResult<CareDocument>>
   createDocument(
     profileId: string,
-    input: Omit<CareDocument, "id" | "profileId" | "uploadState" | "uploadProgress">
+    input: Omit<
+      CareDocument,
+      "id" | "profileId" | "uploadState" | "uploadProgress"
+    >
   ): Promise<CareDocument>
   updateDocument(
     profileId: string,

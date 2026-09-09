@@ -20,14 +20,12 @@ import {
   type CareDocument,
   type CareInvite,
   type CareLog,
-  type CareMember,
   type CarePermissions,
   type CareProfile,
   type CareRole,
   type CareTask,
   type EventAction,
   type Medication,
-  type MedicationEvent,
   type MedicationSchedule,
   type ProfileStatus,
   type TaskStatus,
@@ -38,7 +36,7 @@ import { emptyCareSnapshot } from "@/lib/domain/care-snapshot"
 import { nextId } from "@/lib/application/care-format"
 import { useBrowserValue } from "@/hooks/use-browser-value"
 import { getCareRepository } from "@/lib/composition/care-repository"
-import { isMockDataEnabled } from "@/lib/composition/config"
+import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import {
   ApiError,
   isApiError,
@@ -104,10 +102,7 @@ type CareDataContextValue = CareProfileContextValue & {
   ) => Promise<void>
   removeMember: (profileId: string, memberUserId: string) => Promise<void>
   addCareLog: (log: Omit<CareLog, "id">) => Promise<void>
-  updateCareLog: (
-    logId: string,
-    patch: Partial<CareLog>
-  ) => Promise<void>
+  updateCareLog: (logId: string, patch: Partial<CareLog>) => Promise<void>
   deleteCareLog: (logId: string) => Promise<void>
   addMedication: (medication: Omit<Medication, "id">) => Promise<Medication>
   updateMedication: (id: string, patch: Partial<Medication>) => Promise<void>
@@ -130,9 +125,7 @@ type CareDataContextValue = CareProfileContextValue & {
   deleteTask: (id: string) => Promise<void>
   addVital: (vital: Omit<VitalReading, "id">) => Promise<void>
   deleteVital: (id: string) => Promise<void>
-  addDocument: (
-    document: Omit<CareDocument, "id">
-  ) => Promise<CareDocument>
+  addDocument: (document: Omit<CareDocument, "id">) => Promise<CareDocument>
   uploadDocument: (input: {
     file: File
     title: string
@@ -152,7 +145,11 @@ const CareProfileContext = createContext<CareProfileContextValue | null>(null)
 const CareDataContext = createContext<CareDataContextValue | null>(null)
 
 function defaultProfileId(profiles: CareProfile[]) {
-  return profiles.find((item) => item.status === "active")?.id ?? profiles[0]?.id ?? ""
+  return (
+    profiles.find((item) => item.status === "active")?.id ??
+    profiles[0]?.id ??
+    ""
+  )
 }
 
 export function CareDataProvider({
@@ -164,8 +161,12 @@ export function CareDataProvider({
 }) {
   const apiMode = !isMockDataEnabled()
   const repository = useMemo(() => getCareRepository(), [])
-  const [snapshot, setSnapshot] = useState(initialSnapshot ?? emptyCareSnapshot())
-  const [explicitProfileId, setExplicitProfileId] = useState<string | null>(null)
+  const [snapshot, setSnapshot] = useState(
+    initialSnapshot ?? emptyCareSnapshot()
+  )
+  const [explicitProfileId, setExplicitProfileId] = useState<string | null>(
+    null
+  )
   const [isReady, setIsReady] = useState(!apiMode)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [loadError, setLoadError] = useState<ApiError | null>(null)
@@ -266,7 +267,12 @@ export function CareDataProvider({
       selectedProfile,
       setSelectedProfileId,
     }),
-    [selectedProfile, selectedProfileId, setSelectedProfileId, snapshot.profiles]
+    [
+      selectedProfile,
+      selectedProfileId,
+      setSelectedProfileId,
+      snapshot.profiles,
+    ]
   )
 
   const value = useMemo<CareDataContextValue>(() => {
@@ -319,7 +325,10 @@ export function CareDataProvider({
           if (patch.status !== undefined) {
             apiPatch.status = patch.status
           }
-          return voidMutation(() => repository.updateProfile(id, apiPatch), message)
+          return voidMutation(
+            () => repository.updateProfile(id, apiPatch),
+            message
+          )
         }
         setSnapshot((current) => ({
           ...current,
@@ -363,7 +372,9 @@ export function CareDataProvider({
         if (apiMode) {
           return voidMutation(
             () => repository.updateCircle(id, patch),
-            patch.archived === false ? "Kumpulan diaktifkan semula." : "Kumpulan dikemas kini."
+            patch.archived === false
+              ? "Kumpulan diaktifkan semula."
+              : "Kumpulan dikemas kini."
           )
         }
         setSnapshot((current) => ({
@@ -418,7 +429,9 @@ export function CareDataProvider({
           role,
           status: "pending",
           token: nextId("invite"),
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          expiresAt: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000
+          ).toISOString(),
           createdAt: new Date().toISOString(),
         }
         setSnapshot((current) => ({
@@ -482,7 +495,9 @@ export function CareDataProvider({
           email,
           status: "pending",
           token: nextId("claimtok"),
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          expiresAt: new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000
+          ).toISOString(),
           createdAt: new Date().toISOString(),
         }
         setSnapshot((current) => ({
@@ -536,7 +551,12 @@ export function CareDataProvider({
       updateMemberRole(profileId, memberUserId, role, permissions) {
         if (apiMode) {
           return voidMutation(() =>
-            repository.updateMemberRole(profileId, memberUserId, role, permissions)
+            repository.updateMemberRole(
+              profileId,
+              memberUserId,
+              role,
+              permissions
+            )
           )
         }
         setSnapshot((current) => ({
@@ -659,7 +679,11 @@ export function CareDataProvider({
       addSchedule(schedule) {
         if (apiMode && profileId) {
           return voidMutation(() =>
-            repository.createSchedule(profileId, schedule.medicationId, schedule)
+            repository.createSchedule(
+              profileId,
+              schedule.medicationId,
+              schedule
+            )
           )
         }
         setSnapshot((current) => ({
@@ -699,11 +723,7 @@ export function CareDataProvider({
           }
           return voidMutation(
             () =>
-              repository.deleteSchedule(
-                profileId,
-                schedule.medicationId,
-                id
-              ),
+              repository.deleteSchedule(profileId, schedule.medicationId, id),
             "Jadual dipadam."
           )
         }
@@ -746,13 +766,18 @@ export function CareDataProvider({
       },
       updateAppointmentStatus(id, status) {
         if (apiMode && profileId) {
-          const appointment = snapshot.appointments.find((item) => item.id === id)
+          const appointment = snapshot.appointments.find(
+            (item) => item.id === id
+          )
           if (!appointment) {
             return Promise.resolve()
           }
           return voidMutation(
             () =>
-              repository.updateAppointment(profileId, id, { ...appointment, status }),
+              repository.updateAppointment(profileId, id, {
+                ...appointment,
+                status,
+              }),
             "Status temujanji dikemas kini."
           )
         }
@@ -950,7 +975,9 @@ export function CareDataProvider({
 
   return (
     <CareProfileContext.Provider value={profileContext}>
-      <CareDataContext.Provider value={value}>{children}</CareDataContext.Provider>
+      <CareDataContext.Provider value={value}>
+        {children}
+      </CareDataContext.Provider>
     </CareProfileContext.Provider>
   )
 }

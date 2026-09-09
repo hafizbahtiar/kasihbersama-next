@@ -2,26 +2,35 @@
 
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { IconDownload, IconInbox, IconPlus, IconTrash } from "@tabler/icons-react"
+import {
+  IconDownload,
+  IconInbox,
+  IconPlus,
+  IconTrash,
+} from "@tabler/icons-react"
 import { toast } from "sonner"
 
 import { AsyncStateBanner } from "@/components/care/async-state"
 import { ConfirmDialog } from "@/components/confirm-dialog"
-import { useCareData, useCareProfile } from "@/components/care/care-data-provider"
+import {
+  useCareData,
+  useCareProfile,
+} from "@/components/care/care-data-provider"
 import { PermissionGate } from "@/components/care/permission-gate"
 import { usePlatform } from "@/components/platform/platform-provider"
-import {
-  createDataTableColumnHelper,
-  DataTable,
-} from "@/components/data-table"
+import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Progress, ProgressLabel, ProgressValue } from "@/components/ui/progress"
+import {
+  Progress,
+  ProgressLabel,
+  ProgressValue,
+} from "@/components/ui/progress"
 import { usePaginatedCareResource } from "@/hooks/use-paginated-care-resource"
 import { formatFileSize } from "@/lib/application/care-format"
 import { getCareRepository } from "@/lib/composition/care-repository"
-import { isMockDataEnabled } from "@/lib/composition/config"
+import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import {
   DOCUMENT_TYPE_LABELS,
   UPLOAD_STATE_LABELS,

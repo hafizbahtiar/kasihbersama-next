@@ -6,10 +6,7 @@ import { IconEye, IconInbox, IconPencil, IconPlus } from "@tabler/icons-react"
 
 import { useCareData } from "@/components/care/care-data-provider"
 import { ProfileStatusBadge } from "@/components/care/status-badges"
-import {
-  createDataTableColumnHelper,
-  DataTable,
-} from "@/components/data-table"
+import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Button } from "@/components/ui/button"
 import {
@@ -102,17 +99,21 @@ export function ProfilesPage() {
       filter={{
         columnId: "status",
         label: "Status",
-        options: Object.entries(PROFILE_STATUS_LABELS).map(([value, label]) => ({
-          value,
-          label,
-        })),
+        options: Object.entries(PROFILE_STATUS_LABELS).map(
+          ([value, label]) => ({
+            value,
+            label,
+          })
+        ),
       }}
       toolbarStart={
         <div className="space-y-1">
-          <h1 className="font-heading text-2xl tracking-tight">Profil jagaan</h1>
+          <h1 className="font-heading text-2xl tracking-tight">
+            Profil jagaan
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Ahli yang anda jaga. Setiap rekod ubat, temujanji dan dokumen terikat
-            kepada satu profil.
+            Ahli yang anda jaga. Setiap rekod ubat, temujanji dan dokumen
+            terikat kepada satu profil.
           </p>
         </div>
       }

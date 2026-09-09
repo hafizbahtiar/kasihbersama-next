@@ -97,7 +97,7 @@ export function ResourceForm({
       ? `Tambah ${resource.singular.toLowerCase()}`
       : mode === "edit"
         ? `Sunting ${record?.name ?? resource.singular.toLowerCase()}`
-        : record?.name ?? resource.singular
+        : (record?.name ?? resource.singular)
 
   return (
     <div className="flex w-full flex-col gap-4">

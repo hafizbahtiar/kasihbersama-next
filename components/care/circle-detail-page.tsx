@@ -9,10 +9,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog"
 import { PageHeader } from "@/components/care/page-header"
 import { ProfileStatusBadge } from "@/components/care/status-badges"
 import { useCareData } from "@/components/care/care-data-provider"
-import {
-  createDataTableColumnHelper,
-  DataTable,
-} from "@/components/data-table"
+import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -83,7 +80,9 @@ export function CircleDetailPage({ circleId }: { circleId: string }) {
     return (
       <div className="flex flex-col gap-4">
         <BackButton href="/circles" />
-        <p className="text-sm text-muted-foreground">Kumpulan tidak dijumpai.</p>
+        <p className="text-sm text-muted-foreground">
+          Kumpulan tidak dijumpai.
+        </p>
       </div>
     )
   }

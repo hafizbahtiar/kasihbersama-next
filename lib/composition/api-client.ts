@@ -1,4 +1,4 @@
-import { getApiBaseUrl } from "@/lib/composition/config"
+import { getApiBaseUrl } from "@/lib/infrastructure/config"
 import {
   createApiClient,
   getApiClient,

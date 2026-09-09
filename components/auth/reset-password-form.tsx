@@ -13,7 +13,11 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { fieldValue } from "@/lib/application/form-value"
 import { readTokenFromUrl } from "@/lib/application/deep-links"
 
-export function ResetPasswordForm({ initialToken = "" }: { initialToken?: string }) {
+export function ResetPasswordForm({
+  initialToken = "",
+}: {
+  initialToken?: string
+}) {
   const { resetPassword, error, clearError } = useAuth()
   useClearAuthErrorOnMount()
   const hydrated = useHydrated()

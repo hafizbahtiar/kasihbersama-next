@@ -2,7 +2,6 @@ import {
   CARE_PERMISSIONS,
   CARE_ROLES,
   type Appointment,
-  type AppointmentStatus,
   type CareClaim,
   type CareCircle,
   type CareDocument,
@@ -11,21 +10,10 @@ import {
   type CareMember,
   type CarePermissions,
   type CareProfile,
-  type CareRole,
   type CareTask,
-  type ClaimStatus,
-  type DocumentType,
-  type EventStatus,
-  type InviteStatus,
-  type LogVisibility,
   type Medication,
   type MedicationEvent,
   type MedicationSchedule,
-  type MedicationStatus,
-  type MemberStatus,
-  type ProfileStatus,
-  type ScheduleType,
-  type TaskStatus,
   type VitalReading,
   LOG_TYPE_OPTIONS,
   viewerPermissions,
@@ -226,7 +214,10 @@ export function mapCareLog(api: ApiCareLog, profileId: string): CareLog {
   }
 }
 
-export function mapTimelineItem(api: ApiCareLog, profileId: string): TimelineItem {
+export function mapTimelineItem(
+  api: ApiCareLog,
+  profileId: string
+): TimelineItem {
   return {
     id: `log:${api.id}`,
     profileId,
@@ -240,7 +231,10 @@ export function mapTimelineItem(api: ApiCareLog, profileId: string): TimelineIte
   }
 }
 
-export function mapMedication(api: ApiMedication, profileId: string): Medication {
+export function mapMedication(
+  api: ApiMedication,
+  profileId: string
+): Medication {
   return {
     id: api.id,
     profileId,
@@ -292,7 +286,10 @@ export function mapMedicationEvent(
   }
 }
 
-export function mapAppointment(api: ApiAppointment, profileId: string): Appointment {
+export function mapAppointment(
+  api: ApiAppointment,
+  profileId: string
+): Appointment {
   return {
     id: api.id,
     profileId,
@@ -325,7 +322,10 @@ export function mapCareTask(api: ApiCareTask, profileId: string): CareTask {
   }
 }
 
-export function mapVitalReading(api: ApiVitalReading, profileId: string): VitalReading {
+export function mapVitalReading(
+  api: ApiVitalReading,
+  profileId: string
+): VitalReading {
   return {
     id: api.id,
     profileId,

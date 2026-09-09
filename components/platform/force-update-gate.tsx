@@ -24,7 +24,9 @@ export function ForceUpdateGate({ children }: { children: React.ReactNode }) {
     <div className="grid min-h-svh place-items-center bg-background p-6">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="font-heading text-xl">Kemas kini diperlukan</CardTitle>
+          <CardTitle className="font-heading text-xl">
+            Kemas kini diperlukan
+          </CardTitle>
           <CardDescription>
             Versi aplikasi anda (build {appBuild}) sudah tidak disokong. Sila
             muat semula halaman atau kemas kini aplikasi untuk meneruskan.

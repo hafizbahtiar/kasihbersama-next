@@ -1,11 +1,8 @@
 import type {
   Appointment,
-  CareClaim,
   CareCircle,
   CareDocument,
-  CareInvite,
   CareLog,
-  CareMember,
   CarePermissions,
   CareProfile,
   CareRole,
@@ -61,7 +58,10 @@ type ApiAccessReview = {
 function mapAccessMembers(review: ApiAccessReview, profileId: string) {
   return review.members.map((item) => mapMember(item, profileId))
 }
-import type { PaginatedResponse, AcceptMembershipResponse } from "@/lib/infrastructure/api/types"
+import type {
+  PaginatedResponse,
+  AcceptMembershipResponse,
+} from "@/lib/infrastructure/api/types"
 
 const DEFAULT_PAGE_SIZE = 100
 
@@ -70,7 +70,7 @@ function profilePath(profileId: string) {
 }
 
 export class ApiCareRepository implements CareRepository {
-  constructor(private readonly client: ApiClient) {}
+  constructor(private readonly client: ApiClient) { }
 
   async getSnapshot(profileId?: string): Promise<CareSnapshot> {
     const [profiles, circles] = await Promise.all([
@@ -170,9 +170,7 @@ export class ApiCareRepository implements CareRepository {
     }
   }
 
-  async createProfile(input: {
-    displayName: string
-  }) {
+  async createProfile(input: { displayName: string }) {
     const response = await this.client.request<ApiProfile>("/care-profiles", {
       method: "POST",
       body: JSON.stringify({ display_name: input.displayName }),
@@ -199,7 +197,9 @@ export class ApiCareRepository implements CareRepository {
     })
   }
 
-  async createCircle(input: Omit<CareCircle, "id" | "profileIds" | "archived">) {
+  async createCircle(
+    input: Omit<CareCircle, "id" | "profileIds" | "archived">
+  ) {
     const response = await this.client.request<ApiCircle>("/care-circles", {
       method: "POST",
       body: JSON.stringify({
@@ -390,9 +390,9 @@ export class ApiCareRepository implements CareRepository {
   }
 
   async listMedications(profileId: string, params?: ListParams) {
-    const response = await this.client.request<PaginatedResponse<ApiMedication>>(
-      `${profilePath(profileId)}/medications${toListQuery(params)}`
-    )
+    const response = await this.client.request<
+      PaginatedResponse<ApiMedication>
+    >(`${profilePath(profileId)}/medications${toListQuery(params)}`)
     return mapPaginated(response, (item) => mapMedication(item, profileId))
   }
 
@@ -511,9 +511,9 @@ export class ApiCareRepository implements CareRepository {
   }
 
   async listAppointments(profileId: string, params?: ListParams) {
-    const response = await this.client.request<PaginatedResponse<ApiAppointment>>(
-      `${profilePath(profileId)}/appointments${toListQuery(params)}`
-    )
+    const response = await this.client.request<
+      PaginatedResponse<ApiAppointment>
+    >(`${profilePath(profileId)}/appointments${toListQuery(params)}`)
     return mapPaginated(response, (item) => mapAppointment(item, profileId))
   }
 
@@ -621,9 +621,9 @@ export class ApiCareRepository implements CareRepository {
   }
 
   async listVitals(profileId: string, params?: ListParams) {
-    const response = await this.client.request<PaginatedResponse<ApiVitalReading>>(
-      `${profilePath(profileId)}/vital-readings${toListQuery(params)}`
-    )
+    const response = await this.client.request<
+      PaginatedResponse<ApiVitalReading>
+    >(`${profilePath(profileId)}/vital-readings${toListQuery(params)}`)
     return mapPaginated(response, (item) => mapVitalReading(item, profileId))
   }
 
@@ -749,19 +749,18 @@ export class ApiCareRepository implements CareRepository {
       notes?: string
     }
   ) {
-    const intent = await this.client.request<import("@/lib/infrastructure/api/types").UploadIntentResponse>(
-      `${profilePath(profileId)}/uploads/intents`,
-      {
-        method: "POST",
-        idempotencyKey: crypto.randomUUID(),
-        body: JSON.stringify({
-          title: input.title,
-          document_type: input.documentType,
-          mime_type: file.type,
-          filename: file.name,
-        }),
-      }
-    )
+    const intent = await this.client.request<
+      import("@/lib/infrastructure/api/types").UploadIntentResponse
+    >(`${profilePath(profileId)}/uploads/intents`, {
+      method: "POST",
+      idempotencyKey: crypto.randomUUID(),
+      body: JSON.stringify({
+        title: input.title,
+        document_type: input.documentType,
+        mime_type: file.type,
+        filename: file.name,
+      }),
+    })
 
     const uploadResponse = await fetch(intent.upload_url, {
       method: "PUT",

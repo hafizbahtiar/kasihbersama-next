@@ -23,8 +23,7 @@ function setSessionCookie(refreshToken: string) {
   if (!canUseDom()) {
     return
   }
-  const secure =
-    window.location.protocol === "https:" ? "; Secure" : ""
+  const secure = window.location.protocol === "https:" ? "; Secure" : ""
   document.cookie = `${SESSION_COOKIE}=${encodeURIComponent(refreshToken)}; Path=/; SameSite=Lax; Max-Age=${sessionMaxAgeSeconds()}${secure}`
 }
 

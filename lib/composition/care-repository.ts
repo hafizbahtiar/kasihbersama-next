@@ -1,5 +1,5 @@
 import { ensureApiClient } from "@/lib/composition/api-client"
-import { isMockDataEnabled } from "@/lib/composition/config"
+import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import type { CareRepository } from "@/lib/domain/care-repository"
 import { ApiCareRepository } from "@/lib/infrastructure/api/api-care-repository"
 import { InMemoryCareRepository } from "@/lib/infrastructure/mock/in-memory-care-repository"

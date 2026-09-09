@@ -3,11 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 
 import type { ListParams, PaginatedResult } from "@/lib/domain/pagination"
-import {
-  ApiError,
-  isApiError,
-  messageForApiError,
-} from "@/lib/infrastructure/api/errors"
+import { ApiError, isApiError } from "@/lib/infrastructure/api/errors"
 
 type AsyncState<T> = {
   data: T | null

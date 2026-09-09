@@ -1,8 +1,5 @@
 export type PlatformFeature =
-  | "doctor_summary"
-  | "profile_claim"
-  | "document_upload"
-  | "caregiver_mode"
+  "doctor_summary" | "profile_claim" | "document_upload" | "caregiver_mode"
 
 export type PlatformFeatures = Record<PlatformFeature, boolean>
 

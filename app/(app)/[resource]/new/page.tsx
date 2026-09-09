@@ -43,11 +43,5 @@ export default async function NewResourcePage({
     })
   )
 
-  return (
-    <ResourceForm
-      resource={resource}
-      mode="new"
-      defaults={defaults}
-    />
-  )
+  return <ResourceForm resource={resource} mode="new" defaults={defaults} />
 }

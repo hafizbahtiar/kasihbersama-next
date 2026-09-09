@@ -42,9 +42,7 @@ export function DashboardPage() {
 
   const vitals = useMemo(
     () =>
-      snapshot.vitals.filter(
-        (item) => item.profileId === selectedProfile?.id
-      ),
+      snapshot.vitals.filter((item) => item.profileId === selectedProfile?.id),
     [selectedProfile?.id, snapshot.vitals]
   )
 
@@ -53,7 +51,8 @@ export function DashboardPage() {
       return undefined
     }
     return snapshot.members.filter(
-      (item) => item.profileId === selectedProfile.id && item.status === "active"
+      (item) =>
+        item.profileId === selectedProfile.id && item.status === "active"
     ).length
   }, [selectedProfile, snapshot.members])
 
@@ -108,7 +107,10 @@ export function DashboardPage() {
       </div>
 
       <CaregiverModeBanner />
-      <PlatformQuotaBanner profileCount={stats.profileCount} memberCount={memberCount} />
+      <PlatformQuotaBanner
+        profileCount={stats.profileCount}
+        memberCount={memberCount}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
         {cards.map((item) => (

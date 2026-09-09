@@ -34,7 +34,9 @@ function mapMe(response: MeResponse): AuthUser {
   }
 }
 
-function mapNotificationPref(api: ApiNotificationPref): ProfileNotificationPref {
+function mapNotificationPref(
+  api: ApiNotificationPref
+): ProfileNotificationPref {
   return {
     careProfileId: api.care_profile_id,
     channel: api.channel as NotificationChannel,
@@ -55,7 +57,7 @@ function mapDeviceToken(api: ApiDeviceToken): DeviceToken {
 }
 
 export class ApiAccountRepository implements AccountRepository {
-  constructor(private readonly client: ApiClient) {}
+  constructor(private readonly client: ApiClient) { }
 
   updateDisplayName(displayName: string) {
     return this.client

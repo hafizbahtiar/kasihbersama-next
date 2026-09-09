@@ -29,9 +29,6 @@ export function TableActions({
   ...props
 }: ComponentProps<typeof ButtonGroup>) {
   return (
-    <ButtonGroup
-      className={cn("ml-auto justify-end", className)}
-      {...props}
-    />
+    <ButtonGroup className={cn("ml-auto justify-end", className)} {...props} />
   )
 }

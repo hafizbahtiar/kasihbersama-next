@@ -84,7 +84,9 @@ export function PlatformFeaturesSection() {
                 </div>
                 <CardDescription>{item.description}</CardDescription>
                 {!item.endpointAvailable ? (
-                  <Badge variant="secondary">Endpoint backend belum tersedia</Badge>
+                  <Badge variant="secondary">
+                    Endpoint backend belum tersedia
+                  </Badge>
                 ) : null}
               </CardHeader>
             </Card>

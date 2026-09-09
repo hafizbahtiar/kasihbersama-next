@@ -1,7 +1,11 @@
 "use client"
 
 import { type ReactNode } from "react"
-import { IconChevronDown, IconChevronUp, IconSelector } from "@tabler/icons-react"
+import {
+  IconChevronDown,
+  IconChevronUp,
+  IconSelector,
+} from "@tabler/icons-react"
 import {
   columnFilteringFeature,
   createColumnHelper,
@@ -57,8 +61,10 @@ const dataTableFeatures = tableFeatures({
 
 export type DataTableFeatures = typeof dataTableFeatures
 
-export type DataTableColumnDef<TData extends RowData, TValue = unknown> =
-  ColumnDef<DataTableFeatures, TData, TValue>
+export type DataTableColumnDef<
+  TData extends RowData,
+  TValue = unknown,
+> = ColumnDef<DataTableFeatures, TData, TValue>
 
 export function createDataTableColumnHelper<TData extends RowData>() {
   return createColumnHelper<DataTableFeatures, TData>()
@@ -150,7 +156,9 @@ export function DataTable<TData extends RowData>({
     table.setPageIndex(controlledPageIndex)
   }
 
-  const rows = manualPagination ? table.getCoreRowModel().rows : table.getRowModel().rows
+  const rows = manualPagination
+    ? table.getCoreRowModel().rows
+    : table.getRowModel().rows
   const pageCount = manualPagination
     ? (controlledPageCount ?? 1)
     : table.getPageCount()
@@ -163,12 +171,11 @@ export function DataTable<TData extends RowData>({
       : table.state.pagination.pageIndex * table.state.pagination.pageSize + 1
   const to = Math.min(rowCount, from + rows.length - 1)
   const searchValue = String(table.state.globalFilter ?? "")
-  const filterColumn = filter
-    ? table.getColumn(filter.columnId)
-    : undefined
+  const filterColumn = filter ? table.getColumn(filter.columnId) : undefined
   const filterValue = String(filterColumn?.getFilterValue() ?? "all")
   const hasActiveQuery =
-    searchValue.trim().length > 0 || (filterValue !== "" && filterValue !== "all")
+    searchValue.trim().length > 0 ||
+    (filterValue !== "" && filterValue !== "all")
 
   function resetQuery() {
     table.setGlobalFilter("")
@@ -240,7 +247,7 @@ export function DataTable<TData extends RowData>({
               }
             />
           ) : sourceEmpty ? (
-            emptyState ?? defaultEmpty
+            (emptyState ?? defaultEmpty)
           ) : (
             <Table aria-label="Jadual data" selectionMode="none">
               <TableHeader>

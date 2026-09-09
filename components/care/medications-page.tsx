@@ -8,20 +8,17 @@ import { AsyncStateBanner } from "@/components/care/async-state"
 import { PageHeader } from "@/components/care/page-header"
 import { PermissionGate } from "@/components/care/permission-gate"
 import { MedicationStatusBadge } from "@/components/care/status-badges"
-import { useCareData, useCareProfile } from "@/components/care/care-data-provider"
 import {
-  createDataTableColumnHelper,
-  DataTable,
-} from "@/components/data-table"
+  useCareData,
+  useCareProfile,
+} from "@/components/care/care-data-provider"
+import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Button } from "@/components/ui/button"
 import { usePaginatedCareResource } from "@/hooks/use-paginated-care-resource"
 import { getCareRepository } from "@/lib/composition/care-repository"
-import { isMockDataEnabled } from "@/lib/composition/config"
-import {
-  MEDICATION_STATUS_LABELS,
-  type Medication,
-} from "@/lib/domain/care"
+import { isMockDataEnabled } from "@/lib/infrastructure/config"
+import { MEDICATION_STATUS_LABELS, type Medication } from "@/lib/domain/care"
 import { messageForApiError } from "@/lib/infrastructure/api/errors"
 
 type MedicationRow = Medication & { pendingCount: number }
@@ -45,10 +42,17 @@ export function MedicationsPage() {
     initialPerPage: 10,
   })
 
-  const mockMedications = snapshot.medications.filter(
-    (item) => item.profileId === selectedProfile?.id
+  // Memoised: a fresh array each render would invalidate every downstream
+  // useMemo that depends on it.
+  const medications = useMemo(
+    () =>
+      apiMode
+        ? (paginated.data?.data ?? [])
+        : snapshot.medications.filter(
+            (item) => item.profileId === selectedProfile?.id
+          ),
+    [apiMode, paginated.data?.data, selectedProfile?.id, snapshot.medications]
   )
-  const medications = apiMode ? (paginated.data?.data ?? []) : mockMedications
   const isLoading = apiMode ? paginated.isLoading : isRefreshing
   const errorMessage =
     apiMode && paginated.error ? messageForApiError(paginated.error) : undefined

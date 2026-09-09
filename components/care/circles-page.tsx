@@ -5,10 +5,7 @@ import { useRouter } from "next/navigation"
 import { IconEye, IconInbox, IconPlus } from "@tabler/icons-react"
 
 import { useCareData } from "@/components/care/care-data-provider"
-import {
-  createDataTableColumnHelper,
-  DataTable,
-} from "@/components/data-table"
+import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -94,7 +91,9 @@ export function CirclesPage() {
       }}
       toolbarStart={
         <div className="space-y-1">
-          <h1 className="font-heading text-2xl tracking-tight">Kumpulan jagaan</h1>
+          <h1 className="font-heading text-2xl tracking-tight">
+            Kumpulan jagaan
+          </h1>
           <p className="text-sm text-muted-foreground">
             Kumpulan menghubungkan beberapa profil, contohnya satu rumah atau
             satu keluarga.

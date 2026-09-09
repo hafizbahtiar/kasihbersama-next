@@ -90,7 +90,11 @@ export function useNotificationPrefs(profileId: string | undefined) {
           }),
         }))
       } catch (cause) {
-        setState({ data: previous, isLoading: false, error: isApiError(cause) ? cause : null })
+        setState({
+          data: previous,
+          isLoading: false,
+          error: isApiError(cause) ? cause : null,
+        })
         throw cause
       }
     },

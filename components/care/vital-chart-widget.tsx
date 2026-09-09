@@ -88,7 +88,9 @@ export function VitalChartWidget({
         {!hydrated ? (
           <Skeleton className="aspect-[16/9] w-full rounded-xl" />
         ) : data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Tiada data untuk carta.</p>
+          <p className="text-sm text-muted-foreground">
+            Tiada data untuk carta.
+          </p>
         ) : (
           <ChartContainer config={config} className="aspect-[16/9]">
             <LineChart data={data}>

@@ -111,9 +111,7 @@ export function GlobalSearchDialog({
             placeholder="Cari halaman, profil, ubat..."
             value={query}
             onChange={(event) =>
-              setQuery(
-                typeof event === "string" ? event : event.target.value
-              )
+              setQuery(typeof event === "string" ? event : event.target.value)
             }
           />
         </InputGroup>

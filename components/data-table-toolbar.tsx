@@ -65,7 +65,7 @@ export function DataTableToolbar({
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
         {searchable ? (
           <InputGroup
-            className="min-w-0 max-w-md flex-1 sm:max-w-xs"
+            className="max-w-md min-w-0 flex-1 sm:max-w-xs"
             aria-label="Cari dalam jadual"
           >
             <InputGroupAddon>
@@ -105,7 +105,9 @@ export function DataTableToolbar({
         ) : null}
       </div>
 
-      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className="flex flex-wrap items-center gap-2">{actions}</div>
+      ) : null}
     </div>
   )
 }

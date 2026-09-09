@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react"
 
-import { getAppBuild } from "@/lib/composition/config"
+import { getAppBuild } from "@/lib/infrastructure/config"
 import { getPlatformRepository } from "@/lib/composition/platform-repository"
 import type {
   BootstrapConfig,
@@ -49,7 +49,9 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       setBootstrap(next)
     } catch (error) {
       setLoadError(
-        error instanceof Error ? error.message : "Gagal memuatkan konfigurasi platform."
+        error instanceof Error
+          ? error.message
+          : "Gagal memuatkan konfigurasi platform."
       )
     } finally {
       setIsLoading(false)
@@ -72,7 +74,9 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       loadError,
       refresh,
       isFeatureEnabled(feature) {
-        return bootstrap?.features[feature] ?? DEFAULT_PLATFORM_FEATURES[feature]
+        return (
+          bootstrap?.features[feature] ?? DEFAULT_PLATFORM_FEATURES[feature]
+        )
       },
       limits: bootstrap?.limits ?? DEFAULT_PLATFORM_LIMITS,
       forceUpdate: bootstrap?.forceUpdate ?? false,
@@ -82,7 +86,9 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <PlatformContext.Provider value={value}>{children}</PlatformContext.Provider>
+    <PlatformContext.Provider value={value}>
+      {children}
+    </PlatformContext.Provider>
   )
 }
 

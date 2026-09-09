@@ -1,5 +1,5 @@
 import { ensureApiClient } from "@/lib/composition/api-client"
-import { isMockDataEnabled } from "@/lib/composition/config"
+import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import type { AccountRepository } from "@/lib/domain/account-repository"
 import { ApiAccountRepository } from "@/lib/infrastructure/api/api-account-repository"
 import {

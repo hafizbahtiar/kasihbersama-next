@@ -135,7 +135,11 @@ function ThemeHotkey() {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const inserted = useRef(false)
-  const theme = useSyncExternalStore(subscribe, readTheme, () => "system" as Theme)
+  const theme = useSyncExternalStore(
+    subscribe,
+    readTheme,
+    () => "system" as Theme
+  )
   const resolvedTheme = useSyncExternalStore(
     subscribe,
     readResolvedTheme,

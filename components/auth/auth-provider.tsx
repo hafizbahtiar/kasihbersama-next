@@ -16,17 +16,20 @@ import { ensureApiClient } from "@/lib/composition/api-client"
 import { getAccountRepository } from "@/lib/composition/account-repository"
 import { getAuthRepository } from "@/lib/composition/auth-repository"
 import { clearAppSessionState } from "@/lib/application/app-session-state"
-import { isMockDataEnabled } from "@/lib/composition/config"
+import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import type {
   AuthUser,
   LoginInput,
   RegisterInput,
   ResetPasswordInput,
 } from "@/lib/domain/auth"
-import { messageForApiError, normalizeApiError, type ApiError } from "@/lib/infrastructure/api/errors"
+import {
+  messageForApiError,
+  normalizeApiError,
+  type ApiError,
+} from "@/lib/infrastructure/api/errors"
 import { sessionSync } from "@/lib/infrastructure/api/session-sync"
 import { tokenStorage } from "@/lib/infrastructure/api/token-storage"
-import { seedAccountUser } from "@/lib/infrastructure/mock/account"
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated"
 
@@ -55,13 +58,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<ApiError | null>(null)
 
   const bootstrap = useCallback(async () => {
-    if (isMockDataEnabled()) {
-      setUser(seedAccountUser)
-      setStatus("authenticated")
-      return
-    }
-
-    if (!tokenStorage.hasSession()) {
+    // Mock mode has no real session to restore, and its repository always
+    // resolves a user, so skip the session check and sign in automatically.
+    // This is the only place the provider still asks which mode it is in -
+    // every other path goes through AuthRepository, which is swapped for an
+    // in-memory implementation in lib/composition/auth-repository.ts.
+    if (!isMockDataEnabled() && !tokenStorage.hasSession()) {
       tokenStorage.clearSessionCookieOnly()
       setUser(null)
       setStatus("unauthenticated")
@@ -121,16 +123,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus("unauthenticated")
   }, [])
 
-  const persistSession = useCallback(async (tokens: {
-    accessToken: string
-    refreshToken: string
-  }) => {
-    tokenStorage.saveTokens(tokens.accessToken, tokens.refreshToken)
-    const me = await getAuthRepository().me()
-    setUser(me)
-    setStatus("authenticated")
-    setError(null)
-  }, [])
+  const persistSession = useCallback(
+    async (tokens: { accessToken: string; refreshToken: string }) => {
+      tokenStorage.saveTokens(tokens.accessToken, tokens.refreshToken)
+      const me = await getAuthRepository().me()
+      setUser(me)
+      setStatus("authenticated")
+      setError(null)
+    },
+    []
+  )
 
   const handleAuthError = useCallback((cause: unknown): ApiError => {
     const apiError = normalizeApiError(cause)
@@ -148,16 +150,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       retryBootstrap: bootstrap,
       async login(input, redirectTo) {
         const destination =
-          redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+          redirectTo &&
+          redirectTo.startsWith("/") &&
+          !redirectTo.startsWith("//")
             ? redirectTo
             : "/home"
-        if (isMockDataEnabled()) {
-          tokenStorage.saveTokens("mock-access", "mock-refresh")
-          setUser(seedAccountUser)
-          setStatus("authenticated")
-          router.push(destination)
-          return
-        }
         try {
           const tokens = await getAuthRepository().login(input)
           await persistSession(tokens)
@@ -167,13 +164,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
       async register(input) {
-        if (isMockDataEnabled()) {
-          tokenStorage.saveTokens("mock-access", "mock-refresh")
-          setUser(seedAccountUser)
-          setStatus("authenticated")
-          router.push("/home")
-          return
-        }
         try {
           const tokens = await getAuthRepository().register(input)
           await persistSession(tokens)
@@ -183,12 +173,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
       async logoutAll() {
-        if (isMockDataEnabled()) {
-          clearLocalSession()
-          router.push("/")
-          toast.success("Semua sesi ditamatkan (mock).")
-          return
-        }
         try {
           await getAuthRepository().logoutAll()
           clearLocalSession()
@@ -203,15 +187,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!trimmed) {
           return
         }
-        if (isMockDataEnabled()) {
-          setUser((current) =>
-            current ? { ...current, displayName: trimmed } : current
-          )
-          toast.success("Nama disimpan.")
-          return
-        }
         try {
-          const updated = await getAccountRepository().updateDisplayName(trimmed)
+          const updated =
+            await getAccountRepository().updateDisplayName(trimmed)
           setUser(updated)
           toast.success("Nama disimpan.")
         } catch (cause) {
@@ -219,11 +197,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
       async logout() {
-        if (isMockDataEnabled()) {
-          clearLocalSession()
-          router.push("/")
-          return
-        }
         const refresh = tokenStorage.readRefresh()
         clearLocalSession()
         if (refresh) {
@@ -266,7 +239,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
     }),
-    [bootstrap, clearLocalSession, handleAuthError, persistSession, router, status, user, error]
+    [
+      bootstrap,
+      clearLocalSession,
+      handleAuthError,
+      persistSession,
+      router,
+      status,
+      user,
+      error,
+    ]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

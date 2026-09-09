@@ -90,5 +90,7 @@ export function asEnum<T extends string>(
   allowed: readonly T[],
   fallback: T
 ): T {
-  return (allowed as readonly string[]).includes(value) ? (value as T) : fallback
+  return (allowed as readonly string[]).includes(value)
+    ? (value as T)
+    : fallback
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
   IconBell,
   IconDeviceMobile,
@@ -14,9 +14,7 @@ import { AsyncStateBanner } from "@/components/care/async-state"
 import { useCareProfile } from "@/components/care/care-data-provider"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useLogout } from "@/components/logout-provider"
-import {
-  PushPermissionHint,
-} from "@/components/notifications/push-onboarding"
+import { PushPermissionHint } from "@/components/notifications/push-onboarding"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button, LinkButton } from "@/components/ui/button"
@@ -49,7 +47,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import {
-  accountErrorMessage,
   prefEnabled,
   useDeviceTokens,
   useNotificationPrefs,
@@ -157,7 +154,10 @@ export function SettingsPage() {
           </nav>
         </aside>
 
-        <section className="min-w-0 flex-1" aria-labelledby="settings-section-title">
+        <section
+          className="min-w-0 flex-1"
+          aria-labelledby="settings-section-title"
+        >
           <h2 id="settings-section-title" className="sr-only">
             {current?.label}
           </h2>
@@ -213,7 +213,9 @@ export function SettingsPage() {
                 <CardContent>
                   <FieldGroup>
                     <Field>
-                      <FieldLabel htmlFor="display-name">Nama paparan</FieldLabel>
+                      <FieldLabel htmlFor="display-name">
+                        Nama paparan
+                      </FieldLabel>
                       <Input
                         id="display-name"
                         value={displayName}
@@ -305,7 +307,9 @@ export function SettingsPage() {
                       <Switch
                         aria-label="Peringatan ubat push"
                         isSelected={medicationPushEnabled}
-                        isDisabled={!selectedProfile || notificationPrefs.isLoading}
+                        isDisabled={
+                          !selectedProfile || notificationPrefs.isLoading
+                        }
                         onChange={(value) => {
                           void toggleMedicationPush(value)
                         }}
@@ -334,9 +338,9 @@ export function SettingsPage() {
                 )}
 
                 <p className="text-xs text-muted-foreground">
-                  Saluran push aktif:{" "}
-                  {PUSH_ENABLED_REMINDER_TYPES.join(", ")}. Profil tanpa baris
-                  keutamaan dianggap opted-in (lalai backend).
+                  Saluran push aktif: {PUSH_ENABLED_REMINDER_TYPES.join(", ")}.
+                  Profil tanpa baris keutamaan dianggap opted-in (lalai
+                  backend).
                 </p>
               </CardContent>
             </Card>
@@ -347,7 +351,8 @@ export function SettingsPage() {
               <CardHeader>
                 <CardTitle>Peranti</CardTitle>
                 <CardDescription>
-                  Peranti iOS/Android yang menerima push melalui subscription id.
+                  Peranti iOS/Android yang menerima push melalui subscription
+                  id.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -363,8 +368,8 @@ export function SettingsPage() {
                   <Skeleton className="h-24 w-full" />
                 ) : devices.data.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Tiada peranti didaftarkan. Daftar melalui aplikasi mudah alih
-                    Kasih Bersama.
+                    Tiada peranti didaftarkan. Daftar melalui aplikasi mudah
+                    alih Kasih Bersama.
                   </p>
                 ) : (
                   <ItemGroup className="gap-3">

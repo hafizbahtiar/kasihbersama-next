@@ -5,7 +5,6 @@ import type {
   CareDocument,
   CareInvite,
   CareLog,
-  CareMember,
   CarePermissions,
   CareProfile,
   CareRole,
@@ -102,7 +101,9 @@ export class InMemoryCareRepository implements CareRepository {
     await this.updateProfile(id, { status: "archived" })
   }
 
-  async createCircle(input: Omit<CareCircle, "id" | "profileIds" | "archived">) {
+  async createCircle(
+    input: Omit<CareCircle, "id" | "profileIds" | "archived">
+  ) {
     const circle: CareCircle = {
       id: nextId("circle"),
       profileIds: [],

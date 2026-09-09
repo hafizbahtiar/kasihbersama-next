@@ -1,7 +1,11 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { IconChevronLeft, IconChevronRight, IconPlus } from "@tabler/icons-react"
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconPlus,
+} from "@tabler/icons-react"
 
 import { AppointmentCard } from "@/components/care/appointment-card"
 import { CareCalendar } from "@/components/care/care-calendar"
@@ -130,7 +134,9 @@ export function AppointmentCalendar({
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label={view === "week" ? "Minggu sebelumnya" : "Hari sebelumnya"}
+                aria-label={
+                  view === "week" ? "Minggu sebelumnya" : "Hari sebelumnya"
+                }
                 onPress={() => shift(view === "week" ? -7 : -1)}
               >
                 <IconChevronLeft />
@@ -143,7 +149,9 @@ export function AppointmentCalendar({
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label={view === "week" ? "Minggu seterusnya" : "Hari seterusnya"}
+                aria-label={
+                  view === "week" ? "Minggu seterusnya" : "Hari seterusnya"
+                }
                 onPress={() => shift(view === "week" ? 7 : 1)}
               >
                 <IconChevronRight />
@@ -313,7 +321,7 @@ function WeekView({
                         EDGE_CLASS[APPOINTMENT_STATUS_KIND[item.status]]
                       )}
                     >
-                      <p className="text-[0.7rem] leading-none tabular-nums text-muted-foreground">
+                      <p className="text-[0.7rem] leading-none text-muted-foreground tabular-nums">
                         {formatTime(item.appointmentAt)}
                       </p>
                       <p className="mt-1 truncate text-sm font-medium">

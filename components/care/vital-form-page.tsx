@@ -6,7 +6,12 @@ import { toast } from "sonner"
 
 import { CareFormShell } from "@/components/care/care-form-shell"
 import { useCareData } from "@/components/care/care-data-provider"
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -21,7 +26,6 @@ import { fieldValue } from "@/lib/application/form-value"
 import {
   parseDateTimeLocal,
   parsePositiveNumber,
-  required,
 } from "@/lib/application/form-validation"
 import { VITAL_TYPE_OPTIONS } from "@/lib/domain/care"
 
@@ -162,7 +166,9 @@ export function VitalFormPage() {
                   value={systolic}
                   onChange={(event) => setSystolic(fieldValue(event))}
                 />
-                {errors.systolic ? <FieldError>{errors.systolic}</FieldError> : null}
+                {errors.systolic ? (
+                  <FieldError>{errors.systolic}</FieldError>
+                ) : null}
               </Field>
               <Field data-invalid={Boolean(errors.diastolic)}>
                 <FieldLabel>Diastolik</FieldLabel>
@@ -172,7 +178,9 @@ export function VitalFormPage() {
                   value={diastolic}
                   onChange={(event) => setDiastolic(fieldValue(event))}
                 />
-                {errors.diastolic ? <FieldError>{errors.diastolic}</FieldError> : null}
+                {errors.diastolic ? (
+                  <FieldError>{errors.diastolic}</FieldError>
+                ) : null}
               </Field>
             </div>
           ) : (
@@ -201,11 +209,7 @@ export function VitalFormPage() {
           )}
           <Field>
             <FieldLabel>Unit</FieldLabel>
-            <Input
-              className="h-11 bg-background"
-              value={unit}
-              readOnly
-            />
+            <Input className="h-11 bg-background" value={unit} readOnly />
           </Field>
           <Field data-invalid={Boolean(errors.measuredAt)}>
             <FieldLabel>Masa diukur</FieldLabel>
@@ -215,7 +219,9 @@ export function VitalFormPage() {
               value={measuredAt}
               onChange={(event) => setMeasuredAt(fieldValue(event))}
             />
-            {errors.measuredAt ? <FieldError>{errors.measuredAt}</FieldError> : null}
+            {errors.measuredAt ? (
+              <FieldError>{errors.measuredAt}</FieldError>
+            ) : null}
           </Field>
           <Field>
             <FieldLabel>Nota</FieldLabel>

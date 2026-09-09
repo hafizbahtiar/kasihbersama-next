@@ -7,7 +7,12 @@ import { toast } from "sonner"
 import { ApiFieldGapNotice } from "@/components/care/api-field-gap-notice"
 import { CareFormShell } from "@/components/care/care-form-shell"
 import { useCareData } from "@/components/care/care-data-provider"
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -19,7 +24,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { fieldValue } from "@/lib/application/form-value"
 import { parseDate, required } from "@/lib/application/form-validation"
-import { isMockDataEnabled } from "@/lib/composition/config"
+import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import { RELATION_OPTIONS } from "@/lib/domain/care"
 
 export function ProfileFormPage({ profileId }: { profileId?: string }) {
@@ -45,7 +50,9 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
 
   return (
     <CareFormShell
-      title={existing ? `Sunting ${existing.displayName}` : "Tambah profil jagaan"}
+      title={
+        existing ? `Sunting ${existing.displayName}` : "Tambah profil jagaan"
+      }
       backHref={backHref}
       dirty={dirty}
       submitLabel={existing ? "Simpan" : "Cipta"}
@@ -101,7 +108,9 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
         )
           .then((created) => {
             if (!apiMode && circleId) {
-              return linkProfileToCircle(created.id, circleId).then(() => created)
+              return linkProfileToCircle(created.id, circleId).then(
+                () => created
+              )
             }
             return created
           })
@@ -123,7 +132,9 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
             value={displayName}
             onChange={(event) => setDisplayName(fieldValue(event))}
           />
-          {errors.displayName ? <FieldError>{errors.displayName}</FieldError> : null}
+          {errors.displayName ? (
+            <FieldError>{errors.displayName}</FieldError>
+          ) : null}
         </Field>
         {!apiMode ? (
           <>
@@ -146,7 +157,9 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.relation ? <FieldError>{errors.relation}</FieldError> : null}
+              {errors.relation ? (
+                <FieldError>{errors.relation}</FieldError>
+              ) : null}
             </Field>
             <Field data-invalid={Boolean(errors.dateOfBirth)}>
               <FieldLabel>Tarikh lahir</FieldLabel>

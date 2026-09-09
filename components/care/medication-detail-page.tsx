@@ -12,10 +12,7 @@ import { CareFormShell } from "@/components/care/care-form-shell"
 import { EventStatusBadge } from "@/components/care/status-badges"
 import { MedicationStatusBadge } from "@/components/care/status-badges"
 import { useCareData } from "@/components/care/care-data-provider"
-import {
-  createDataTableColumnHelper,
-  DataTable,
-} from "@/components/data-table"
+import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Button } from "@/components/ui/button"
 import {
@@ -48,7 +45,7 @@ import {
   validateDosage,
   validateTime,
 } from "@/lib/application/form-validation"
-import { isMockDataEnabled } from "@/lib/composition/config"
+import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import {
   BEFORE_AFTER_MEAL_OPTIONS,
   EVENT_STATUS_LABELS,
@@ -62,7 +59,11 @@ import {
   type ScheduleType,
 } from "@/lib/domain/care"
 
-export function MedicationDetailPage({ medicationId }: { medicationId: string }) {
+export function MedicationDetailPage({
+  medicationId,
+}: {
+  medicationId: string
+}) {
   const apiMode = !isMockDataEnabled()
   const {
     snapshot,
@@ -73,13 +74,21 @@ export function MedicationDetailPage({ medicationId }: { medicationId: string })
     actOnEvent,
     isRefreshing,
   } = useCareData()
-  const medication = snapshot.medications.find((item) => item.id === medicationId)
+  const medication = snapshot.medications.find(
+    (item) => item.id === medicationId
+  )
   const schedules = snapshot.schedules.filter(
     (item) => item.medicationId === medicationId
   )
-  const events = snapshot.events.filter((item) => item.medicationId === medicationId)
-  const [instructions, setInstructions] = useState(medication?.instructions ?? "")
-  const [prescribedBy, setPrescribedBy] = useState(medication?.prescribedBy ?? "")
+  const events = snapshot.events.filter(
+    (item) => item.medicationId === medicationId
+  )
+  const [instructions, setInstructions] = useState(
+    medication?.instructions ?? ""
+  )
+  const [prescribedBy, setPrescribedBy] = useState(
+    medication?.prescribedBy ?? ""
+  )
   const [beforeAfterMeal, setBeforeAfterMeal] = useState(
     medication?.beforeAfterMeal ?? ""
   )
@@ -102,7 +111,10 @@ export function MedicationDetailPage({ medicationId }: { medicationId: string })
         header: "Masa",
       }),
       helper.accessor("timezone", { header: "Zon masa" }),
-      helper.accessor((row) => row.rrule ?? "—", { id: "rrule", header: "RRule" }),
+      helper.accessor((row) => row.rrule ?? "—", {
+        id: "rrule",
+        header: "RRule",
+      }),
       helper.accessor("status", {
         header: "Status",
         cell: ({ getValue }) => (getValue() === "active" ? "Aktif" : "Dijeda"),
@@ -116,7 +128,8 @@ export function MedicationDetailPage({ medicationId }: { medicationId: string })
             <TableActionButton
               onPress={() =>
                 updateSchedule(row.original.id, {
-                  status: row.original.status === "active" ? "paused" : "active",
+                  status:
+                    row.original.status === "active" ? "paused" : "active",
                 })
               }
             >
@@ -226,7 +239,9 @@ export function MedicationDetailPage({ medicationId }: { medicationId: string })
       <BackButton href="/medications" />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
-          <h1 className="font-heading text-2xl tracking-tight">{medication.name}</h1>
+          <h1 className="font-heading text-2xl tracking-tight">
+            {medication.name}
+          </h1>
           <p className="text-sm text-muted-foreground">{medication.dosage}</p>
         </div>
         <MedicationStatusBadge value={medication.status} />
@@ -466,10 +481,12 @@ export function MedicationDetailPage({ medicationId }: { medicationId: string })
         filter={{
           columnId: "actionStatus",
           label: "Status",
-          options: Object.entries(EVENT_STATUS_LABELS).map(([value, label]) => ({
-            value,
-            label,
-          })),
+          options: Object.entries(EVENT_STATUS_LABELS).map(
+            ([value, label]) => ({
+              value,
+              label,
+            })
+          ),
         }}
         toolbarStart={
           <div className="space-y-1">
@@ -534,7 +551,9 @@ export function MedicationCreatePage() {
         const nameError = !name.trim() ? "Nama diperlukan." : null
         const timeError = validateTime(timeOfDay)
         if (nameError || dosageError || timeError) {
-          toast.error(nameError ?? dosageError ?? timeError ?? "Medan tidak sah.")
+          toast.error(
+            nameError ?? dosageError ?? timeError ?? "Medan tidak sah."
+          )
           return
         }
         void addMedication({
@@ -546,15 +565,17 @@ export function MedicationCreatePage() {
           prescribedBy: apiMode ? "" : prescribedBy,
           startDate: apiMode ? "" : startDate,
           status: "active",
-        }).then((created) => {
-          void addSchedule({
-            medicationId: created.id,
-            scheduleType: "daily",
-            timeOfDay,
-            timezone: "Asia/Kuala_Lumpur",
-            status: "active",
-          }).then(() => router.push(`/medications/${created.id}`))
-        }).catch(() => undefined)
+        })
+          .then((created) => {
+            void addSchedule({
+              medicationId: created.id,
+              scheduleType: "daily",
+              timeOfDay,
+              timezone: "Asia/Kuala_Lumpur",
+              status: "active",
+            }).then(() => router.push(`/medications/${created.id}`))
+          })
+          .catch(() => undefined)
       }}
     >
       {!selectedProfile ? (
@@ -565,8 +586,8 @@ export function MedicationCreatePage() {
         <FieldGroup>
           {apiMode ? (
             <ApiFieldGapNotice>
-              Hanya nama, dos, arahan, dan masa makan dihantar ke API. Prescriber
-              dan tarikh mula tersedia dalam mod mock.
+              Hanya nama, dos, arahan, dan masa makan dihantar ke API.
+              Prescriber dan tarikh mula tersedia dalam mod mock.
             </ApiFieldGapNotice>
           ) : null}
           <Field>

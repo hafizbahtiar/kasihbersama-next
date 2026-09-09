@@ -18,7 +18,9 @@ export function buildTimeline(
     snapshot.medications.map((item) => [item.id, item.name])
   )
 
-  for (const log of snapshot.logs.filter((item) => item.profileId === profileId)) {
+  for (const log of snapshot.logs.filter(
+    (item) => item.profileId === profileId
+  )) {
     items.push({
       id: `log:${log.id}`,
       profileId,
@@ -32,7 +34,9 @@ export function buildTimeline(
     })
   }
 
-  for (const event of snapshot.events.filter((item) => item.profileId === profileId)) {
+  for (const event of snapshot.events.filter(
+    (item) => item.profileId === profileId
+  )) {
     items.push({
       id: `med:${event.id}`,
       profileId,
@@ -58,10 +62,12 @@ export function buildTimeline(
     })
   }
 
-  for (const vital of snapshot.vitals.filter((item) => item.profileId === profileId)) {
+  for (const vital of snapshot.vitals.filter(
+    (item) => item.profileId === profileId
+  )) {
     const typeLabel =
-      VITAL_TYPE_OPTIONS.find((item) => item.value === vital.readingType)?.label ??
-      vital.readingType
+      VITAL_TYPE_OPTIONS.find((item) => item.value === vital.readingType)
+        ?.label ?? vital.readingType
     const value =
       vital.systolic != null && vital.diastolic != null
         ? `${vital.systolic}/${vital.diastolic} ${vital.unit ?? ""}`
@@ -78,7 +84,9 @@ export function buildTimeline(
     })
   }
 
-  for (const task of snapshot.tasks.filter((item) => item.profileId === profileId)) {
+  for (const task of snapshot.tasks.filter(
+    (item) => item.profileId === profileId
+  )) {
     items.push({
       id: `task:${task.id}`,
       profileId,

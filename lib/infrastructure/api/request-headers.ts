@@ -2,7 +2,7 @@ import {
   getApiVersion,
   getAppBuild,
   getAppPlatform,
-} from "@/lib/composition/config"
+} from "@/lib/infrastructure/config"
 
 export function applyDefaultApiHeaders(headers: Headers) {
   headers.set("X-App-Build", String(getAppBuild()))

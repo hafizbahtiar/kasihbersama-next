@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { fieldValue } from "@/lib/application/form-value"
 
 function safeRedirectPath(next: string | null) {
   if (!next || !next.startsWith("/") || next.startsWith("//")) {

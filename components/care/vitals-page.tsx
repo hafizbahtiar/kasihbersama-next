@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation"
 import { IconInbox, IconPlus } from "@tabler/icons-react"
 
 import { AsyncStateBanner } from "@/components/care/async-state"
-import { useCareData, useCareProfile } from "@/components/care/care-data-provider"
+import {
+  useCareData,
+  useCareProfile,
+} from "@/components/care/care-data-provider"
 import {
   numericChartConfig,
   pressureChartConfig,
@@ -13,21 +16,13 @@ import {
   toPressureChartData,
   VitalChartWidget,
 } from "@/components/care/vital-chart-widget"
-import {
-  createDataTableColumnHelper,
-  DataTable,
-} from "@/components/data-table"
+import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { usePaginatedCareResource } from "@/hooks/use-paginated-care-resource"
 import { formatDateTime } from "@/lib/application/care-format"
 import { getCareRepository } from "@/lib/composition/care-repository"
-import { isMockDataEnabled } from "@/lib/composition/config"
+import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import { VITAL_TYPE_OPTIONS, type VitalReading } from "@/lib/domain/care"
 import { messageForApiError } from "@/lib/infrastructure/api/errors"
 
@@ -75,7 +70,10 @@ export function VitalsPage() {
             ?.label ?? row.readingType,
         { id: "readingType", header: "Jenis" }
       ),
-      helper.accessor((row) => vitalValue(row), { id: "value", header: "Nilai" }),
+      helper.accessor((row) => vitalValue(row), {
+        id: "value",
+        header: "Nilai",
+      }),
       helper.accessor((row) => row.unit ?? "—", { id: "unit", header: "Unit" }),
       helper.accessor("measuredAt", {
         header: "Masa",

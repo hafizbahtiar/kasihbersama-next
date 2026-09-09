@@ -7,21 +7,18 @@ import { IconInbox, IconPlus } from "@tabler/icons-react"
 import { AsyncStateBanner } from "@/components/care/async-state"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { TaskStatusBadge } from "@/components/care/status-badges"
-import { useCareData, useCareProfile } from "@/components/care/care-data-provider"
 import {
-  createDataTableColumnHelper,
-  DataTable,
-} from "@/components/data-table"
+  useCareData,
+  useCareProfile,
+} from "@/components/care/care-data-provider"
+import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Button } from "@/components/ui/button"
 import { usePaginatedCareResource } from "@/hooks/use-paginated-care-resource"
 import { formatDateTime } from "@/lib/application/care-format"
 import { getCareRepository } from "@/lib/composition/care-repository"
-import { isMockDataEnabled } from "@/lib/composition/config"
-import {
-  TASK_STATUS_LABELS,
-  type CareTask,
-} from "@/lib/domain/care"
+import { isMockDataEnabled } from "@/lib/infrastructure/config"
+import { TASK_STATUS_LABELS, type CareTask } from "@/lib/domain/care"
 import { messageForApiError } from "@/lib/infrastructure/api/errors"
 
 export function TasksPage() {
@@ -115,7 +112,7 @@ export function TasksPage() {
         ),
       }),
     ])
-  }, [updateTaskStatus])
+  }, [apiMode, updateTaskStatus])
 
   return (
     <>

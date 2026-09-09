@@ -63,6 +63,8 @@ export class InMemoryAccountRepository implements AccountRepository {
   }
 
   async revokeDeviceToken(tokenId: string) {
-    this.state.devices = this.state.devices.filter((item) => item.id !== tokenId)
+    this.state.devices = this.state.devices.filter(
+      (item) => item.id !== tokenId
+    )
   }
 }

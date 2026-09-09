@@ -40,9 +40,7 @@ export function storageKeyForTokenKind(kind: TokenAcceptKind) {
 }
 
 /** Read token from `#token=` fragment (preferred) or legacy `?token=` query. */
-export function readTokenFromUrl(
-  searchParams?: Pick<URLSearchParams, "get">
-) {
+export function readTokenFromUrl(searchParams?: Pick<URLSearchParams, "get">) {
   if (typeof window === "undefined") {
     return searchParams?.get("token") ?? ""
   }

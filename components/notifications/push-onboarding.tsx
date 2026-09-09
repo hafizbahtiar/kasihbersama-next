@@ -42,8 +42,8 @@ export function PushOnboardingBanner({
           Peringatan push pada telefon
         </CardTitle>
         <CardDescription>
-          Backend hari ini hantar push ubat ke aplikasi iOS/Android sahaja.
-          Web boleh urus keutamaan, tetapi pendaftaran peranti push memerlukan
+          Backend hari ini hantar push ubat ke aplikasi iOS/Android sahaja. Web
+          boleh urus keutamaan, tetapi pendaftaran peranti push memerlukan
           aplikasi mudah alih.
         </CardDescription>
       </CardHeader>

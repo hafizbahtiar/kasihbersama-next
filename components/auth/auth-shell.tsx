@@ -27,7 +27,7 @@ export function AuthShell({
           className="pointer-events-none absolute right-10 bottom-16 hidden size-40 rounded-full bg-primary-foreground/10 blur-2xl lg:block"
         />
 
-        <div className="relative mx-auto flex w-full min-w-0 max-w-md flex-col lg:mx-0 lg:h-full lg:max-w-lg lg:justify-between">
+        <div className="relative mx-auto flex w-full max-w-md min-w-0 flex-col lg:mx-0 lg:h-full lg:max-w-lg lg:justify-between">
           <div className="flex items-center gap-3">
             <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-foreground p-1.5 text-primary">
               <LogoMark className="size-full" decorative />
@@ -59,7 +59,7 @@ export function AuthShell({
       </section>
 
       <section className="flex min-h-0 flex-1 items-start justify-center overflow-y-auto px-5 py-8 sm:px-8 sm:py-12 lg:items-center lg:px-12 lg:py-12 xl:px-16">
-        <div className="w-full min-w-0 max-w-md pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="w-full max-w-md min-w-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {children}
         </div>
       </section>
