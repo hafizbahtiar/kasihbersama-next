@@ -31,6 +31,11 @@ const CODE_MESSAGES: Record<string, string> = {
   forbidden: "Anda tidak dibenarkan melakukan tindakan ini.",
   not_found: "Rekod tidak dijumpai.",
   conflict: "Rekod sudah wujud atau bercanggah.",
+  // The backend has returned this since the free tier shipped and nothing
+  // mapped it, so hitting the profile cap read as "Rekod bercanggah." - a
+  // message that names neither the cause nor the fix.
+  quota_exceeded:
+    "Anda sudah mencapai had pelan Percuma. Lihat Pelan untuk butiran.",
   deletion_blocked:
     "Selesaikan profil jagaan di bawah sebelum memadam akaun anda.",
   pending_invites:

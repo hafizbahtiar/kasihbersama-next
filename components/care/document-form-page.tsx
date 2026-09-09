@@ -1,11 +1,12 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { EmailVerifiedGate } from "@/components/auth/email-verified-gate"
 import { CareFormShell } from "@/components/care/care-form-shell"
+import { FileField } from "@/components/care/file-field"
 import { SelectProfileEmpty } from "@/components/care/select-profile-empty"
 import { useCareData } from "@/components/care/care-data-provider"
 import { usePlatform } from "@/components/platform/platform-provider"
@@ -15,7 +16,6 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import { controlHeight } from "@/components/ui/control-size"
 import { DatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import {
@@ -35,7 +35,6 @@ import {
 import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import { DOCUMENT_TYPE_LABELS, type DocumentType } from "@/lib/domain/care"
 import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
-import { cn } from "@/lib/utils"
 
 const allowedTypes = [
   "application/pdf",
@@ -50,7 +49,6 @@ export function DocumentFormPage() {
   const { limits } = usePlatform()
   const { selectedProfile, uploadDocument, addDocument, updateDocument } =
     useCareData()
-  const inputRef = useRef<HTMLInputElement>(null)
   const [title, setTitle] = useState("")
   const [documentType, setDocumentType] = useState<DocumentType>("lab_result")
   const [issueDate, setIssueDate] = useState("")
@@ -191,22 +189,13 @@ export function DocumentFormPage() {
             </Field>
             <Field data-invalid={Boolean(errors.file)}>
               <FieldLabel>Fail</FieldLabel>
-              <input
-                ref={inputRef}
-                type="file"
+              <FileField
+                value={file}
+                onChange={setFile}
                 accept=".pdf,image/jpeg,image/png,image/webp"
-                // A native file input: there is no Input component to carry
-                // the size, so it reads the scale directly rather than
-                // hardcoding a height that would drift from its neighbours.
-                className={cn(
-                  controlHeight.xl,
-                  "w-full rounded-lg border border-input bg-background px-2.5 text-sm file:mr-3 file:border-0 file:bg-transparent file:text-sm file:font-medium"
-                )}
-                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                hint={`PDF atau imej, maksimum ${limits.maxUploadMb} MB`}
+                isInvalid={Boolean(errors.file)}
               />
-              <p className="text-xs text-muted-foreground">
-                PDF atau imej, maksimum {limits.maxUploadMb} MB.
-              </p>
               {errors.file ? <FieldError>{errors.file}</FieldError> : null}
             </Field>
             <Field>

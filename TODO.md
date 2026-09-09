@@ -149,6 +149,57 @@ domain penghantar disahkan di Resend.
 
 ### Selesai sesi ini (2026-09-09)
 
+- [x] **Kad kecemasan kini objek 3D yang boleh diselak** (`emergency-card-view.tsx`).
+  Muka depan membawa dua fakta yang mengubah tindakan klinisian: jenis darah dan alahan.
+  Belakang membawa keadaan kesihatan, klinik/doktor, nota — dan **ruang untuk pautan NFC**
+  yang dilukis sekarang supaya susun atur tak perlu berubah bila tag itu wujud. Ia
+  menyatakan ia belum tersedia dan bukan menunjukkan kod palsu.
+  - **CSS transform, bukan three.js.** Kad ialah dua muka rata dan satu putaran; konteks
+    WebGL, graf adegan dan gelung render ialah jentera yang banyak untuk melukis segi
+    empat, dan ia akan merampas teks itu daripada boleh dipilih dan daripada pembaca
+    skrin. anime.js pun tak diperlukan: hanya selakan yang bermasa.
+  - **Condongan menjejak penunjuk dan sengaja tak dianimasikan.** Condongan yang di-ease
+    ketinggalan di belakang jari dan terasa rosak. `motion-reduce` menggugurkan kedua-dua.
+  - Cetakan dapat **render rata tersendiri**: kad 3D memotong baris alahan pada dua baris
+    dan hanya satu muka boleh dicetak. Orang yang mencetak ini sedang membuat salinan
+    untuk beg tangan, jadi ia mesti lengkap.
+- [x] **Pepijat: "kad kecemasan saya" menunjukkan kad saudara.** Butang itu menetapkan
+  profil dipilih lalu menavigasi — kelihatan betul, bukan. `selectedProfileId` **menolak
+  id yang tiada dalam snapshot yang dimuatkan dan jatuh balik ke profil lalai**, senyap.
+  Kad kini menerima `profileId` secara eksplisit (`/emergency-card?profile=<id>`), jadi
+  pratonton seseorang menamakan orang itu dan bukan bertanya keadaan global siapa yang
+  sedang dipilih.
+- [x] **Halaman Pelan (`/pricing`).** Dikaji daripada `aymanch-03/shadcn-pricing-page` —
+  togol bulanan/tahunan dan peralihan harga `@number-flow/react` diambil daripadanya.
+  Selebihnya dilabuhkan pada projek ini:
+  - Pelan berbeza pada **had yang backend benar-benar kuatkuasakan** —
+    `MAX_PROFILES_FREE`, `MAX_MEMBERS_FREE`, `MAX_UPLOAD_MB` — bukan matriks ciri rekaan.
+    Yang berskala dalam produk ini bukan seat atau storan; ia berapa ramai yang kau jaga.
+  - Lajur **Percuma dibaca daripada `/bootstrap` pada masa render**, bukan ditulis keras.
+    Halaman harga yang bercanggah dengan had yang sebenarnya dikuatkuasakan pada akaun
+    kau lebih teruk daripada tiada halaman harga.
+  - Kad penggunaan menunjukkan profil kau berbanding had itu — perkara yang halaman harga
+    biasanya tak boleh katakan, sebab ia menerangkan akaun hipotesis.
+  - Tajuknya bertanya "Berapa ramai yang anda jaga?" dan bukan "Harga mudah dan telus",
+    sebab itulah keputusan yang sebenarnya dibuat.
+  - **Butang dilumpuhkan dengan sengaja.** Tiada integrasi pembayaran; butang yang
+    membawa keputusan ke mana-mana lebih teruk daripada yang mengaku pelan itu belum
+    dijual.
+- [x] **`quota_exceeded` akhirnya dipetakan.** Backend memulangkannya sejak tier percuma
+  dihantar dan tiada apa mengendalikannya, jadi mencapai had profil terbaca sebagai
+  "Rekod bercanggah." — mesej yang tak menamakan sebab mahupun penyelesaian.
+- [x] **Medan fail guna `ui/attachment`, bukan `<input type="file">` bergaya.**
+  Komponen itu **sudah ada dalam projek** dan tak pernah digunakan di mana-mana — aku
+  menggayakan input asli sedangkan ia duduk di situ.
+  - Input asli kekal, tersembunyi: ia satu-satunya benda yang boleh membuka dialog fail.
+    Semua yang kelihatan ialah komponen shadcn di atasnya.
+  - Kawalan asli menunjukkan butang krom pelayar dan nama fail yang terpotong dari hujung
+    yang salah, dan ia tak boleh menunjukkan apa yang app sebenarnya tahu: saiz berbanding
+    kuota, jenis fail, sama ada muat naik masih berjalan. `Attachment` menerima `state`
+    untuk kitaran itu.
+  - Ditambah: seret-dan-lepas, dan butang buang yang **mengosongkan nilai input**. Tanpa
+    itu, memilih semula fail yang sama selepas membuangnya tak mencetuskan `change` dan
+    kelihatan rosak.
 - [x] **Rekod sendiri kini boleh dikenali dan dicapai.** Dua kecacatan yang ditinggalkan
   bila rekod kesihatan sendiri dibina sebagai profil jagaan:
   - Penukar profil menyenaraikannya di bawah nama kau sendiri, **tak dapat dibezakan**

@@ -11,7 +11,6 @@ import { toast } from "sonner"
 
 import { useAuth } from "@/components/auth/auth-provider"
 import { AsyncStateBanner } from "@/components/care/async-state"
-import { useCareProfile } from "@/components/care/care-data-provider"
 import { PageHeader } from "@/components/care/page-header"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -72,7 +71,6 @@ const empty: FormState = {
 export function OwnHealthPage() {
   const router = useRouter()
   const { user } = useAuth()
-  const { setSelectedProfileId } = useCareProfile()
   const { profile, isLoading, error, reload, save } = useOwnHealthProfile()
   const [form, setForm] = useState<FormState>(empty)
   const [isSaving, setIsSaving] = useState(false)
@@ -123,13 +121,12 @@ export function OwnHealthPage() {
             <Button
               variant="outline"
               onPress={() => {
-                // The emergency card page reads the selected care profile, and
-                // your own record is one - so previewing your own card means
-                // selecting it first. Without this you would have to find
-                // yourself in the profile switcher and know which entry is
-                // you, which is exactly the thing that was hard.
-                setSelectedProfileId(profile.id)
-                router.push("/emergency-card")
+                // The id travels in the URL. The previous version set the
+                // selected profile and navigated, which looked right and was
+                // not: the provider rejects an id that is absent from the
+                // loaded snapshot and falls back to the default profile, so
+                // this button showed a relative's card.
+                router.push(`/emergency-card?profile=${profile.id}`)
               }}
             >
               <IconAlertTriangle />

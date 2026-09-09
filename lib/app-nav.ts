@@ -11,6 +11,7 @@ import {
   IconHome,
   IconListCheck,
   IconPill,
+  IconReceipt,
   IconSettings,
   IconStethoscope,
   IconUsers,
@@ -75,6 +76,7 @@ export const secondaryNav: AppNavItem[] = [
   // one of the people they look after.
   { href: "/my-health", title: "Kesihatan saya", icon: IconStethoscope },
   { href: "/notifications", title: "Notifikasi", icon: IconBell },
+  { href: "/pricing", title: "Pelan", icon: IconReceipt },
   { href: "/settings", title: "Tetapan", icon: IconSettings },
 ]
 
