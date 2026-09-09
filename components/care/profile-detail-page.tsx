@@ -572,7 +572,8 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
                     <Field>
                       <FieldLabel>E-mel</FieldLabel>
                       <Input
-                        className="h-11 bg-background"
+                        size="xl"
+                        className="bg-background"
                         value={inviteEmail}
                         onChange={(event) => setInviteEmail(fieldValue(event))}
                         placeholder="nama@contoh.com"
@@ -587,7 +588,7 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
                           setInviteRole(String(key) as CareRole)
                         }
                       >
-                        <SelectTrigger className="h-11 w-full">
+                        <SelectTrigger size="xl" className="w-full">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -678,7 +679,8 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
                       <Field>
                         <FieldLabel>E-mel subjek</FieldLabel>
                         <Input
-                          className="h-11 bg-background"
+                          size="xl"
+                          className="bg-background"
                           value={claimEmail}
                           onChange={(event) => setClaimEmail(fieldValue(event))}
                           placeholder="subjek@contoh.com"
@@ -911,7 +913,7 @@ function PermissionEditor({
             selectedKey={nextRole}
             onSelectionChange={(key) => setNextRole(String(key) as CareRole)}
           >
-            <SelectTrigger className="h-11 w-full">
+            <SelectTrigger size="xl" className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

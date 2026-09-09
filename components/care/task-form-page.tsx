@@ -62,7 +62,8 @@ export function TaskFormPage() {
           <Field>
             <FieldLabel>Tajuk</FieldLabel>
             <Input
-              className="h-11 bg-background"
+              size="xl"
+              className="bg-background"
               value={title}
               onChange={(event) => setTitle(fieldValue(event))}
             />
@@ -78,6 +79,7 @@ export function TaskFormPage() {
           <Field>
             <FieldLabel>Masa akhir</FieldLabel>
             <DateTimePicker
+              size="xl"
               value={dueAt}
               onChange={setDueAt}
               className="bg-background"
@@ -91,7 +93,7 @@ export function TaskFormPage() {
               onSelectionChange={(key) => setAssigneeId(String(key ?? ""))}
               placeholder="Pilih ahli"
             >
-              <SelectTrigger className="h-11 w-full">
+              <SelectTrigger size="xl" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

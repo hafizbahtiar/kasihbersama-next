@@ -240,7 +240,8 @@ export function ChangeEmailCard() {
               id="current-email"
               value={user?.email ?? ""}
               readOnly
-              className="h-11 bg-muted"
+              size="xl"
+              className="bg-muted"
             />
           </Field>
           <Field data-invalid={Boolean(errors.newEmail)}>
@@ -251,7 +252,8 @@ export function ChangeEmailCard() {
               autoComplete="email"
               value={newEmail}
               onChange={(event) => setNewEmail(fieldValue(event))}
-              className="h-11 bg-background"
+              size="xl"
+              className="bg-background"
             />
             {errors.newEmail ? (
               <FieldError>{errors.newEmail}</FieldError>

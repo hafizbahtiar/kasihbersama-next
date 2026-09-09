@@ -238,7 +238,8 @@ export function SettingsPage() {
                         id="display-name"
                         value={displayName}
                         onChange={(event) => setDisplayName(fieldValue(event))}
-                        className="h-11 bg-background"
+                        size="xl"
+                        className="bg-background"
                       />
                     </Field>
                     <Field>
@@ -248,7 +249,8 @@ export function SettingsPage() {
                         type="email"
                         value={user?.email ?? ""}
                         readOnly
-                        className="h-11 bg-muted"
+                        size="xl"
+                        className="bg-muted"
                       />
                       <FieldDescription>
                         Tukar e-mel di bahagian Keselamatan.

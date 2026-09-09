@@ -8,6 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverTrigger } from "@/components/ui/popover"
 import { DateField, DateTimeField, TimeField } from "@/components/ui/date-field"
+import {
+  controlIconButtonSize,
+  type ControlSize,
+} from "@/components/ui/control-size"
 import { cn } from "@/lib/utils"
 
 /**
@@ -33,12 +37,14 @@ export function DatePicker({
   onChange,
   className,
   isInvalid,
+  size = "default",
   "aria-label": ariaLabel,
 }: {
   value: string
   onChange: (value: string) => void
   className?: string
   isInvalid?: boolean
+  size?: ControlSize
   "aria-label"?: string
 }) {
   const [isOpen, setIsOpen] = React.useState(false)
@@ -56,12 +62,13 @@ export function DatePicker({
         value={value}
         onChange={onChange}
         isInvalid={isInvalid}
+        size={size}
         aria-label={ariaLabel}
       />
       <PopoverTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
         <Button
           variant="outline"
-          size="icon"
+          size={controlIconButtonSize[size]}
           aria-label="Pilih dari kalendar"
           className="shrink-0"
         >
@@ -96,12 +103,14 @@ export function DateTimePicker({
   onChange,
   className,
   isInvalid,
+  size = "default",
   "aria-label": ariaLabel,
 }: {
   value: string
   onChange: (value: string) => void
   className?: string
   isInvalid?: boolean
+  size?: ControlSize
   "aria-label"?: string
 }) {
   const [isOpen, setIsOpen] = React.useState(false)
@@ -120,12 +129,13 @@ export function DateTimePicker({
         value={value}
         onChange={onChange}
         isInvalid={isInvalid}
+        size={size}
         aria-label={ariaLabel}
       />
       <PopoverTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
         <Button
           variant="outline"
-          size="icon"
+          size={controlIconButtonSize[size]}
           aria-label="Pilih dari kalendar"
           className="shrink-0"
         >

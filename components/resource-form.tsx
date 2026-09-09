@@ -143,7 +143,7 @@ export function ResourceForm({
                       isDisabled={readOnly}
                       placeholder="Pilih"
                     >
-                      <SelectTrigger className="h-11 w-full">
+                      <SelectTrigger size="xl" className="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -168,7 +168,8 @@ export function ResourceForm({
                         update(field.name, fieldValue(event))
                       }
                       disabled={readOnly}
-                      className="h-11 bg-background"
+                      size="xl"
+                      className="bg-background"
                     />
                   )}
                 </Field>

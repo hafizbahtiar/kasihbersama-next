@@ -87,7 +87,7 @@ export function CareLogFormPage() {
               selectedKey={logType}
               onSelectionChange={(key) => setLogType(String(key))}
             >
-              <SelectTrigger className="h-11 w-full">
+              <SelectTrigger size="xl" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -102,7 +102,8 @@ export function CareLogFormPage() {
           <Field>
             <FieldLabel>Tajuk</FieldLabel>
             <Input
-              className="h-11 bg-background"
+              size="xl"
+              className="bg-background"
               value={title}
               onChange={(event) => setTitle(fieldValue(event))}
             />
@@ -118,6 +119,7 @@ export function CareLogFormPage() {
           <Field>
             <FieldLabel>Masa kejadian</FieldLabel>
             <DateTimePicker
+              size="xl"
               value={occurredAt}
               onChange={setOccurredAt}
               className="bg-background"
@@ -132,7 +134,7 @@ export function CareLogFormPage() {
                 setVisibility(String(key) as LogVisibility)
               }
             >
-              <SelectTrigger className="h-11 w-full">
+              <SelectTrigger size="xl" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

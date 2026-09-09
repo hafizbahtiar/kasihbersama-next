@@ -15,6 +15,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
+import { controlHeight } from "@/components/ui/control-size"
 import { DatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import {
@@ -34,6 +35,7 @@ import {
 import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import { DOCUMENT_TYPE_LABELS, type DocumentType } from "@/lib/domain/care"
 import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
+import { cn } from "@/lib/utils"
 
 const allowedTypes = [
   "application/pdf",
@@ -157,7 +159,8 @@ export function DocumentFormPage() {
             <Field data-invalid={Boolean(errors.title)}>
               <FieldLabel>Tajuk</FieldLabel>
               <Input
-                className="h-11 bg-background"
+                size="xl"
+                className="bg-background"
                 value={title}
                 onChange={(event) => setTitle(fieldValue(event))}
               />
@@ -172,7 +175,7 @@ export function DocumentFormPage() {
                   setDocumentType(String(key) as DocumentType)
                 }
               >
-                <SelectTrigger className="h-11 w-full">
+                <SelectTrigger size="xl" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -192,7 +195,13 @@ export function DocumentFormPage() {
                 ref={inputRef}
                 type="file"
                 accept=".pdf,image/jpeg,image/png,image/webp"
-                className="h-11 w-full rounded-lg border border-input bg-background px-2.5 text-sm file:mr-3 file:border-0 file:bg-transparent file:text-sm file:font-medium"
+                // A native file input: there is no Input component to carry
+                // the size, so it reads the scale directly rather than
+                // hardcoding a height that would drift from its neighbours.
+                className={cn(
+                  controlHeight.xl,
+                  "w-full rounded-lg border border-input bg-background px-2.5 text-sm file:mr-3 file:border-0 file:bg-transparent file:text-sm file:font-medium"
+                )}
                 onChange={(event) => setFile(event.target.files?.[0] ?? null)}
               />
               <p className="text-xs text-muted-foreground">
@@ -203,6 +212,7 @@ export function DocumentFormPage() {
             <Field>
               <FieldLabel>Tarikh dikeluarkan</FieldLabel>
               <DatePicker
+                size="xl"
                 value={issueDate}
                 onChange={setIssueDate}
                 className="bg-background"
@@ -211,6 +221,7 @@ export function DocumentFormPage() {
             <Field data-invalid={Boolean(errors.expiryDate)}>
               <FieldLabel>Tarikh tamat</FieldLabel>
               <DatePicker
+                size="xl"
                 value={expiryDate}
                 onChange={setExpiryDate}
                 className="bg-background"

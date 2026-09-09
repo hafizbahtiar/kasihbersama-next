@@ -104,7 +104,8 @@ export function AcceptTokenPage({
           <Field>
             <FieldLabel>Token</FieldLabel>
             <Input
-              className="h-11 bg-background"
+              size="xl"
+              className="bg-background"
               value={token}
               onChange={(event) => setEditedToken(fieldValue(event))}
               autoComplete="off"

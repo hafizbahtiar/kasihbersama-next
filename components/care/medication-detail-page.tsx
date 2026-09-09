@@ -268,7 +268,8 @@ export function MedicationDetailPage({
               <Field>
                 <FieldLabel>Prescriber</FieldLabel>
                 <Input
-                  className="h-11 bg-background"
+                  size="xl"
+                  className="bg-background"
                   value={prescribedBy}
                   onChange={(event) => setPrescribedBy(fieldValue(event))}
                 />
@@ -283,7 +284,7 @@ export function MedicationDetailPage({
                   }
                   placeholder="Pilih masa makan"
                 >
-                  <SelectTrigger className="h-11 w-full">
+                  <SelectTrigger size="xl" className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -298,6 +299,7 @@ export function MedicationDetailPage({
               <Field>
                 <FieldLabel>Mula</FieldLabel>
                 <DatePicker
+                  size="xl"
                   value={startDate}
                   onChange={setStartDate}
                   className="bg-background"
@@ -306,6 +308,7 @@ export function MedicationDetailPage({
               <Field>
                 <FieldLabel>Tamat</FieldLabel>
                 <DatePicker
+                  size="xl"
                   value={endDate}
                   onChange={setEndDate}
                   className="bg-background"
@@ -322,7 +325,7 @@ export function MedicationDetailPage({
                     })
                   }
                 >
-                  <SelectTrigger className="h-11 w-full">
+                  <SelectTrigger size="xl" className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -407,6 +410,7 @@ export function MedicationDetailPage({
               </SelectContent>
             </Select>
             <TimeField
+              size="xl"
               value={timeOfDay}
               onChange={setTimeOfDay}
               className="h-9 bg-background"
@@ -563,7 +567,8 @@ export function MedicationCreatePage() {
           <Field>
             <FieldLabel>Nama</FieldLabel>
             <Input
-              className="h-11 bg-background"
+              size="xl"
+              className="bg-background"
               value={name}
               onChange={(event) => setName(fieldValue(event))}
             />
@@ -571,7 +576,8 @@ export function MedicationCreatePage() {
           <Field>
             <FieldLabel>Dos</FieldLabel>
             <Input
-              className="h-11 bg-background"
+              size="xl"
+              className="bg-background"
               value={dosage}
               onChange={(event) => setDosage(fieldValue(event))}
             />
@@ -587,7 +593,8 @@ export function MedicationCreatePage() {
           <Field>
             <FieldLabel>Prescriber</FieldLabel>
             <Input
-              className="h-11 bg-background"
+              size="xl"
+              className="bg-background"
               value={prescribedBy}
               onChange={(event) => setPrescribedBy(fieldValue(event))}
             />
@@ -595,6 +602,7 @@ export function MedicationCreatePage() {
           <Field>
             <FieldLabel>Tarikh mula</FieldLabel>
             <DatePicker
+              size="xl"
               value={startDate}
               onChange={setStartDate}
               className="bg-background"
@@ -609,7 +617,7 @@ export function MedicationCreatePage() {
                 setBeforeAfterMeal(String(key ?? beforeAfterMeal))
               }
             >
-              <SelectTrigger className="h-11 w-full">
+              <SelectTrigger size="xl" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -624,6 +632,7 @@ export function MedicationCreatePage() {
           <Field>
             <FieldLabel>Masa dos pertama</FieldLabel>
             <TimeField
+              size="xl"
               value={timeOfDay}
               onChange={setTimeOfDay}
               className="bg-background"

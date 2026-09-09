@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { IconEye, IconEyeOff } from "@tabler/icons-react"
 
+import { type ControlSize } from "@/components/ui/control-size"
 import {
   InputGroup,
   InputGroupAddon,
@@ -13,6 +14,7 @@ import {
 type PasswordFieldProps = {
   id: string
   name: string
+  size?: ControlSize
   placeholder?: string
   autoComplete?: string
   required?: boolean
@@ -23,6 +25,7 @@ type PasswordFieldProps = {
 export function PasswordField({
   id,
   name,
+  size = "xl",
   placeholder = "Masukkan kata laluan",
   autoComplete = "current-password",
   required = true,
@@ -32,7 +35,7 @@ export function PasswordField({
   const [visible, setVisible] = useState(false)
 
   return (
-    <InputGroup className="h-11 min-h-11 bg-background">
+    <InputGroup size={size} className="bg-background">
       <InputGroupInput
         id={id}
         name={name}
@@ -42,7 +45,6 @@ export function PasswordField({
         required={required}
         value={value}
         onChange={onChange}
-        className="h-11 min-h-11"
       />
       <InputGroupAddon align="inline-end">
         <InputGroupButton

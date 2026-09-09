@@ -132,7 +132,8 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
             onChange={(event) => setToken(event.target.value)}
             placeholder="Tampal token dari e-mel"
             required
-            className="h-11 min-h-11 bg-background"
+            size="xl"
+            className="bg-background"
           />
         </Field>
 

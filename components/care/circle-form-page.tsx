@@ -39,7 +39,8 @@ export function CircleFormPage() {
         <Field>
           <FieldLabel>Nama</FieldLabel>
           <Input
-            className="h-11 bg-background"
+            size="xl"
+            className="bg-background"
             value={name}
             onChange={(event) => setName(fieldValue(event))}
           />

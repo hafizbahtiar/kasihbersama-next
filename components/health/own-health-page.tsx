@@ -155,7 +155,8 @@ export function OwnHealthPage() {
                   </FieldLabel>
                   <Input
                     id="legal-name"
-                    className="h-11 bg-background"
+                    size="xl"
+                    className="bg-background"
                     value={form.legalName}
                     onChange={(event) => set("legalName", fieldValue(event))}
                   />
@@ -164,6 +165,7 @@ export function OwnHealthPage() {
                   <Field>
                     <FieldLabel>Tarikh lahir</FieldLabel>
                     <DatePicker
+                      size="xl"
                       value={form.dateOfBirth}
                       onChange={(value) => set("dateOfBirth", value)}
                       className="bg-background"
@@ -173,7 +175,8 @@ export function OwnHealthPage() {
                     <FieldLabel htmlFor="blood-type">Jenis darah</FieldLabel>
                     <Input
                       id="blood-type"
-                      className="h-11 bg-background"
+                      size="xl"
+                      className="bg-background"
                       placeholder="Contoh: O+"
                       value={form.bloodType}
                       onChange={(event) => set("bloodType", fieldValue(event))}
@@ -183,7 +186,8 @@ export function OwnHealthPage() {
                     <FieldLabel htmlFor="gender">Jantina</FieldLabel>
                     <Input
                       id="gender"
-                      className="h-11 bg-background"
+                      size="xl"
+                      className="bg-background"
                       value={form.gender}
                       onChange={(event) => set("gender", fieldValue(event))}
                     />
@@ -236,7 +240,8 @@ export function OwnHealthPage() {
                     <FieldLabel htmlFor="clinic">Klinik utama</FieldLabel>
                     <Input
                       id="clinic"
-                      className="h-11 bg-background"
+                      size="xl"
+                      className="bg-background"
                       value={form.primaryClinic}
                       onChange={(event) =>
                         set("primaryClinic", fieldValue(event))
@@ -247,7 +252,8 @@ export function OwnHealthPage() {
                     <FieldLabel htmlFor="doctor">Doktor utama</FieldLabel>
                     <Input
                       id="doctor"
-                      className="h-11 bg-background"
+                      size="xl"
+                      className="bg-background"
                       value={form.primaryDoctor}
                       onChange={(event) =>
                         set("primaryDoctor", fieldValue(event))

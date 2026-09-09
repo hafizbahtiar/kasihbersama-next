@@ -9,6 +9,7 @@ import {
   TimeField as TimeFieldPrimitive,
   composeRenderProps,
 } from "react-aria-components"
+import { controlHeight, type ControlSize } from "@/components/ui/control-size"
 import {
   CalendarDate,
   CalendarDateTime,
@@ -35,17 +36,23 @@ import {
  */
 
 const inputStyles =
-  "flex h-8 w-full min-w-0 items-center rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 md:text-sm dark:bg-input/30 data-invalid:border-destructive data-invalid:ring-3 data-invalid:ring-destructive/20 dark:data-invalid:border-destructive/50 dark:data-invalid:ring-destructive/40"
+  "flex w-full min-w-0 items-center rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 md:text-sm dark:bg-input/30 data-invalid:border-destructive data-invalid:ring-3 data-invalid:ring-destructive/20 dark:data-invalid:border-destructive/50 dark:data-invalid:ring-destructive/40"
 
 const segmentStyles =
   "rounded px-0.5 tabular-nums caret-transparent outline-none type-literal:px-0 type-literal:text-muted-foreground data-focused:bg-primary data-focused:text-primary-foreground data-placeholder:text-muted-foreground"
 
-function DateInput({ className }: { className?: string }) {
+function DateInput({
+  className,
+  size = "default",
+}: {
+  className?: string
+  size?: ControlSize
+}) {
   return (
     <DateInputPrimitive
       data-slot="date-input"
       className={composeRenderProps(className, (className) =>
-        cn(inputStyles, className)
+        cn(inputStyles, controlHeight[size], className)
       )}
     >
       {(segment) => (
@@ -71,12 +78,14 @@ export function DateField({
   onChange,
   className,
   isInvalid,
+  size = "default",
   "aria-label": ariaLabel,
 }: {
   value: string
   onChange: (value: string) => void
   className?: string
   isInvalid?: boolean
+  size?: ControlSize
   "aria-label"?: string
 }) {
   return (
@@ -94,7 +103,7 @@ export function DateField({
       }
       className="w-full"
     >
-      <DateInput className={className} />
+      <DateInput className={className} size={size} />
     </DateFieldPrimitive>
   )
 }
@@ -105,12 +114,14 @@ export function DateTimeField({
   onChange,
   className,
   isInvalid,
+  size = "default",
   "aria-label": ariaLabel,
 }: {
   value: string
   onChange: (value: string) => void
   className?: string
   isInvalid?: boolean
+  size?: ControlSize
   "aria-label"?: string
 }) {
   return (
@@ -142,7 +153,7 @@ export function DateTimeField({
       }}
       className="w-full"
     >
-      <DateInput className={className} />
+      <DateInput className={className} size={size} />
     </DateFieldPrimitive>
   )
 }
@@ -153,12 +164,14 @@ export function TimeField({
   onChange,
   className,
   isInvalid,
+  size = "default",
   "aria-label": ariaLabel,
 }: {
   value: string
   onChange: (value: string) => void
   className?: string
   isInvalid?: boolean
+  size?: ControlSize
   "aria-label"?: string
 }) {
   return (
@@ -174,7 +187,7 @@ export function TimeField({
       }
       className="w-full"
     >
-      <DateInput className={className} />
+      <DateInput className={className} size={size} />
     </TimeFieldPrimitive>
   )
 }

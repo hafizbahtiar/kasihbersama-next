@@ -55,7 +55,8 @@ export function LoginForm() {
             autoComplete="email"
             inputMode="email"
             required
-            className="h-11 min-h-11 bg-background"
+            size="xl"
+            className="bg-background"
           />
         </Field>
 

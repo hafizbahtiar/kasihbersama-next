@@ -159,7 +159,7 @@ export function VitalFormPage() {
                 )
               }}
             >
-              <SelectTrigger className="h-11 w-full">
+              <SelectTrigger size="xl" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -176,7 +176,8 @@ export function VitalFormPage() {
               <Field data-invalid={Boolean(errors.systolic)}>
                 <FieldLabel>Sistolik</FieldLabel>
                 <Input
-                  className="h-11 bg-background"
+                  size="xl"
+                  className="bg-background"
                   inputMode="decimal"
                   value={systolic}
                   onChange={(event) => setSystolic(fieldValue(event))}
@@ -188,7 +189,8 @@ export function VitalFormPage() {
               <Field data-invalid={Boolean(errors.diastolic)}>
                 <FieldLabel>Diastolik</FieldLabel>
                 <Input
-                  className="h-11 bg-background"
+                  size="xl"
+                  className="bg-background"
                   inputMode="decimal"
                   value={diastolic}
                   onChange={(event) => setDiastolic(fieldValue(event))}
@@ -203,7 +205,8 @@ export function VitalFormPage() {
               <Field data-invalid={Boolean(errors.valueNumeric)}>
                 <FieldLabel>Nilai nombor</FieldLabel>
                 <Input
-                  className="h-11 bg-background"
+                  size="xl"
+                  className="bg-background"
                   inputMode="decimal"
                   value={valueNumeric}
                   onChange={(event) => setValueNumeric(fieldValue(event))}
@@ -215,7 +218,8 @@ export function VitalFormPage() {
               <Field>
                 <FieldLabel>Nilai teks</FieldLabel>
                 <Input
-                  className="h-11 bg-background"
+                  size="xl"
+                  className="bg-background"
                   value={valueText}
                   onChange={(event) => setValueText(fieldValue(event))}
                 />
@@ -224,11 +228,12 @@ export function VitalFormPage() {
           )}
           <Field>
             <FieldLabel>Unit</FieldLabel>
-            <Input className="h-11 bg-background" value={unit} readOnly />
+            <Input size="xl" className="bg-background" value={unit} readOnly />
           </Field>
           <Field data-invalid={Boolean(errors.measuredAt)}>
             <FieldLabel>Masa diukur</FieldLabel>
             <DateTimePicker
+              size="xl"
               value={measuredAt}
               onChange={setMeasuredAt}
               className="bg-background"

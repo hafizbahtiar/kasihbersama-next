@@ -83,7 +83,8 @@ export function AppointmentFormPage() {
           <Field data-invalid={Boolean(errors.title)}>
             <FieldLabel>Tajuk</FieldLabel>
             <Input
-              className="h-11 bg-background"
+              size="xl"
+              className="bg-background"
               value={title}
               onChange={(event) => setTitle(fieldValue(event))}
             />
@@ -92,7 +93,8 @@ export function AppointmentFormPage() {
           <Field>
             <FieldLabel>Tempat</FieldLabel>
             <Input
-              className="h-11 bg-background"
+              size="xl"
+              className="bg-background"
               value={location}
               onChange={(event) => setLocation(fieldValue(event))}
             />
@@ -100,7 +102,8 @@ export function AppointmentFormPage() {
           <Field>
             <FieldLabel>Doktor</FieldLabel>
             <Input
-              className="h-11 bg-background"
+              size="xl"
+              className="bg-background"
               value={doctorName}
               onChange={(event) => setDoctorName(fieldValue(event))}
             />
@@ -108,6 +111,7 @@ export function AppointmentFormPage() {
           <Field data-invalid={Boolean(errors.appointmentAt)}>
             <FieldLabel>Masa</FieldLabel>
             <DateTimePicker
+              size="xl"
               value={appointmentAt}
               onChange={setAppointmentAt}
               className="bg-background"

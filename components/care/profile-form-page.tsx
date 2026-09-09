@@ -132,7 +132,8 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
         <Field data-invalid={Boolean(errors.displayName)}>
           <FieldLabel>Nama</FieldLabel>
           <Input
-            className="h-11 bg-background"
+            size="xl"
+            className="bg-background"
             value={displayName}
             onChange={(event) => setDisplayName(fieldValue(event))}
           />
@@ -150,7 +151,7 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
                 onSelectionChange={(key) => setRelation(String(key ?? ""))}
                 placeholder="Pilih hubungan"
               >
-                <SelectTrigger className="h-11 w-full">
+                <SelectTrigger size="xl" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -168,6 +169,7 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
             <Field data-invalid={Boolean(errors.dateOfBirth)}>
               <FieldLabel>Tarikh lahir</FieldLabel>
               <DatePicker
+                size="xl"
                 value={dateOfBirth}
                 onChange={setDateOfBirth}
                 className="bg-background"
@@ -184,7 +186,7 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
                 onSelectionChange={(key) => setCircleId(String(key ?? ""))}
                 placeholder="Pilih kumpulan"
               >
-                <SelectTrigger className="h-11 w-full">
+                <SelectTrigger size="xl" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
