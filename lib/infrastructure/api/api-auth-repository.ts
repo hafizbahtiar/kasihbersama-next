@@ -93,6 +93,14 @@ export class ApiAuthRepository implements AuthRepository {
     })
   }
 
+  resendVerification() {
+    // Authenticated and keyed on the session: the backend reads the caller
+    // from the access token, so there is no address to send.
+    return this.client.request<void>("/auth/resend-verification", {
+      method: "POST",
+    })
+  }
+
   forgotPassword(email: string) {
     return this.client.request<void>("/auth/forgot-password", {
       method: "POST",

@@ -52,6 +52,8 @@ export class InMemoryAuthRepository implements AuthRepository {
 
   async logoutAll() {}
 
+  async resendVerification() {}
+
   async verifyEmail(_token: string) {
     this.user = { ...this.user, emailVerified: true }
   }

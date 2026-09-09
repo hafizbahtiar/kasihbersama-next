@@ -11,6 +11,7 @@ import { toast } from "sonner"
 
 import { useAuth } from "@/components/auth/auth-provider"
 import { AsyncStateBanner } from "@/components/care/async-state"
+import { ResendVerificationButton } from "@/components/auth/resend-verification-button"
 import { useCareProfile } from "@/components/care/care-data-provider"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useLogout } from "@/components/logout-provider"
@@ -197,8 +198,11 @@ export function SettingsPage() {
                       Akaun anda belum disahkan. Sahkan e-mel untuk akses penuh.
                     </CardDescription>
                   </CardHeader>
-                  <CardFooter className="justify-end">
-                    <LinkButton href="/verify-email">Sahkan e-mel</LinkButton>
+                  <CardFooter className="flex-wrap justify-end gap-2">
+                    <LinkButton href="/verify-email" variant="outline">
+                      Saya ada token
+                    </LinkButton>
+                    <ResendVerificationButton />
                   </CardFooter>
                 </Card>
               ) : null}

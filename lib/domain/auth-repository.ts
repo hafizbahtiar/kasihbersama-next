@@ -13,6 +13,7 @@ export interface AuthRepository {
   logout(refreshToken: string): Promise<void>
   logoutAll(): Promise<void>
   verifyEmail(token: string): Promise<void>
+  resendVerification(): Promise<void>
   forgotPassword(email: string): Promise<void>
   resetPassword(input: ResetPasswordInput): Promise<void>
   me(): Promise<AuthUser>

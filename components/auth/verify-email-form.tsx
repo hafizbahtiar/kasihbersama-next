@@ -9,6 +9,7 @@ import { useAuth } from "@/components/auth/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { ResendVerificationButton } from "@/components/auth/resend-verification-button"
 
 export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
   const router = useRouter()
@@ -107,6 +108,15 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
           {isSubmitting ? "Mengesahkan..." : "Sahkan e-mel"}
         </Button>
       </FieldGroup>
+
+      {user ? (
+        <div className="border-t pt-6">
+          <p className="mb-3 text-sm text-muted-foreground">
+            Tiada e-mel, atau pautan sudah tamat tempoh?
+          </p>
+          <ResendVerificationButton />
+        </div>
+      ) : null}
     </form>
   )
 }

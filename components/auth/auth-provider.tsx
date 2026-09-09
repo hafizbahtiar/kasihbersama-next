@@ -43,6 +43,7 @@ type AuthContextValue = {
   logoutAll: () => Promise<void>
   updateDisplayName: (displayName: string) => Promise<void>
   verifyEmail: (token: string) => Promise<boolean>
+  resendVerification: () => Promise<boolean>
   forgotPassword: (email: string) => Promise<boolean>
   resetPassword: (input: ResetPasswordInput) => Promise<void>
   clearError: () => void
@@ -213,6 +214,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await getAuthRepository().verifyEmail(token)
           toast.success("E-mel disahkan.")
           await bootstrap()
+          return true
+        } catch (cause) {
+          handleAuthError(cause)
+          return false
+        }
+      },
+      async resendVerification() {
+        try {
+          await getAuthRepository().resendVerification()
+          toast.success("E-mel pengesahan dihantar. Semak peti masuk anda.")
           return true
         } catch (cause) {
           handleAuthError(cause)
