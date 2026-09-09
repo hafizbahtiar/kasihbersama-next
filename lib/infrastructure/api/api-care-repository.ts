@@ -65,12 +65,33 @@ import type {
 
 const DEFAULT_PAGE_SIZE = 100
 
+/**
+ * medication-events is the one list endpoint the backend bounds by time: it
+ * requires `from` and `to` as RFC3339 and answers 400 without them. Sending no
+ * window took the whole dashboard down, because loadProfileData fetches with
+ * Promise.all and one rejection loses every other request with it.
+ *
+ * Seven days either side of now covers all three things the snapshot feeds:
+ * upcoming pending doses, the profile timeline, and a medication's recent dose
+ * history - without pulling an unbounded event table.
+ */
+const EVENT_WINDOW_DAYS = 7
+
+function medicationEventWindow() {
+  const span = EVENT_WINDOW_DAYS * 24 * 60 * 60 * 1000
+  const now = Date.now()
+  return {
+    from: new Date(now - span).toISOString(),
+    to: new Date(now + span).toISOString(),
+  }
+}
+
 function profilePath(profileId: string) {
   return `/care-profiles/${profileId}`
 }
 
 export class ApiCareRepository implements CareRepository {
-  constructor(private readonly client: ApiClient) { }
+  constructor(private readonly client: ApiClient) {}
 
   async getSnapshot(profileId?: string): Promise<CareSnapshot> {
     const [profiles, circles] = await Promise.all([
@@ -125,7 +146,10 @@ export class ApiCareRepository implements CareRepository {
         `${base}/medications${toListQuery({ perPage: DEFAULT_PAGE_SIZE })}`
       ),
       this.client.request<PaginatedResponse<ApiMedicationEvent>>(
-        `${base}/medication-events${toListQuery({ perPage: DEFAULT_PAGE_SIZE })}`
+        `${base}/medication-events${toListQuery({
+          perPage: DEFAULT_PAGE_SIZE,
+          filter: medicationEventWindow(),
+        })}`
       ),
       this.client.request<PaginatedResponse<ApiAppointment>>(
         `${base}/appointments${toListQuery({ perPage: DEFAULT_PAGE_SIZE })}`
