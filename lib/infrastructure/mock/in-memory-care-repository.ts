@@ -12,10 +12,18 @@ import type {
   EventAction,
   Medication,
   MedicationSchedule,
+  ProfileHealthInfo,
   ProfileStatus,
   VitalReading,
 } from "@/lib/domain/care"
 import { adminPermissions } from "@/lib/domain/care"
+
+/**
+ * The mock account's id, matching seedAccountUser. The mock repository has to
+ * agree with it or "my health record" would never match the signed-in demo
+ * user.
+ */
+const MOCK_USER_ID = "user-me"
 import type { CareSnapshot } from "@/lib/domain/care-snapshot"
 import type { CareRepository } from "@/lib/domain/care-repository"
 import type { ListParams, PaginatedResult } from "@/lib/domain/pagination"
@@ -99,6 +107,44 @@ export class InMemoryCareRepository implements CareRepository {
 
   async archiveProfile(id: string) {
     await this.updateProfile(id, { status: "archived" })
+  }
+
+  async getOwnHealthProfile() {
+    const found = this.snapshot.profiles.find(
+      (profile: CareProfile) => profile.subjectUserId === MOCK_USER_ID
+    )
+    return found ? { ...found } : null
+  }
+
+  async ensureOwnHealthProfile(
+    input: { displayName?: string } & ProfileHealthInfo
+  ) {
+    // Get-or-create, like the API: a second call returns the same record
+    // rather than a second one, so a retry cannot leave the demo with two.
+    const existing = await this.getOwnHealthProfile()
+    if (existing) {
+      return existing
+    }
+    const created: CareProfile = {
+      id: nextId("profile"),
+      displayName: input.displayName?.trim() || "Saya",
+      relation: "Diri sendiri",
+      status: "active",
+      role: "subject_owner",
+      permissions: adminPermissions(),
+      subjectUserId: MOCK_USER_ID,
+      dateOfBirth: input.dateOfBirth ?? "",
+      legalName: input.legalName,
+      gender: input.gender,
+      bloodType: input.bloodType,
+      allergySummary: input.allergySummary,
+      conditionSummary: input.conditionSummary,
+      primaryClinic: input.primaryClinic,
+      primaryDoctor: input.primaryDoctor,
+      emergencyNote: input.emergencyNote,
+    }
+    this.snapshot.profiles.unshift(created)
+    return { ...created }
   }
 
   async createCircle(

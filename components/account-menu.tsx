@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { IconLogout, IconUser } from "@tabler/icons-react"
+import { IconLogout, IconStethoscope, IconUser } from "@tabler/icons-react"
 
 import { useAuth } from "@/components/auth/auth-provider"
 import { useLogout } from "@/components/logout-provider"
@@ -72,6 +72,10 @@ export function AccountMenu({
       <DropdownMenuItem onAction={() => router.push("/settings")}>
         <IconUser />
         Profil & tetapan
+      </DropdownMenuItem>
+      <DropdownMenuItem onAction={() => router.push("/my-health")}>
+        <IconStethoscope />
+        Kesihatan saya
       </DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuItem onAction={requestLogout}>

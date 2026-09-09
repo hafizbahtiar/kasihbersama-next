@@ -30,7 +30,7 @@ function vitalValue(item: VitalReading) {
   if (item.systolic != null && item.diastolic != null) {
     return `${item.systolic}/${item.diastolic}`
   }
-  return String(item.valueNumeric ?? item.valueText ?? "—")
+  return String(item.valueNumeric ?? item.valueText ?? "-")
 }
 
 export function VitalsPage() {
@@ -74,12 +74,12 @@ export function VitalsPage() {
         id: "value",
         header: "Nilai",
       }),
-      helper.accessor((row) => row.unit ?? "—", { id: "unit", header: "Unit" }),
+      helper.accessor((row) => row.unit ?? "-", { id: "unit", header: "Unit" }),
       helper.accessor("measuredAt", {
         header: "Masa",
         cell: ({ getValue }) => formatDateTime(getValue()),
       }),
-      helper.accessor((row) => row.note ?? "—", {
+      helper.accessor((row) => row.note ?? "-", {
         id: "note",
         header: "Nota",
         cell: ({ getValue }) => (

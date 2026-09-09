@@ -382,7 +382,7 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
           <span className="block max-w-xs truncate">{getValue()}</span>
         ),
       }),
-      helper.accessor((row) => row.meta ?? "—", { id: "meta", header: "Meta" }),
+      helper.accessor((row) => row.meta ?? "-", { id: "meta", header: "Meta" }),
     ])
   }, [])
 
@@ -462,7 +462,7 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
-              <Detail label="Tarikh lahir" value={profile.dateOfBirth || "—"} />
+              <Detail label="Tarikh lahir" value={profile.dateOfBirth || "-"} />
               {apiMode ? (
                 <div className="sm:col-span-2">
                   <ApiFieldGapNotice>
@@ -471,7 +471,7 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
                 </div>
               ) : (
                 <>
-                  <Detail label="Nota" value={profile.notes || "—"} />
+                  <Detail label="Nota" value={profile.notes || "-"} />
                 </>
               )}
               <Detail label="Kumpulan" value={circle?.name ?? "Tiada"} />

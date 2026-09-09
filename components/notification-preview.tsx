@@ -26,7 +26,7 @@ export function NotificationPreview() {
         <PopoverHeader className="px-3 pt-3 pb-2">
           <PopoverTitle>Peringatan</PopoverTitle>
           <PopoverDescription>
-            Tiada peti masuk — urus keutamaan push/e-mel di tetapan.
+            Tiada peti masuk - urus keutamaan push/e-mel di tetapan.
           </PopoverDescription>
         </PopoverHeader>
         <div className="p-3 pt-0">

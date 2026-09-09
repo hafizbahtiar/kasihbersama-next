@@ -10,6 +10,7 @@ import type {
   EventAction,
   Medication,
   MedicationSchedule,
+  ProfileHealthInfo,
   VitalReading,
 } from "@/lib/domain/care"
 import type { CareSnapshot } from "@/lib/domain/care-snapshot"
@@ -94,6 +95,35 @@ function medicationEventWindow() {
  * "not filled in", so sending it unconditionally would blank a date that is
  * already stored the next time anyone saves the form for another reason.
  */
+/**
+ * The health columns as a request body, omitting anything the form left empty.
+ *
+ * Empty means "not filled in", and every one of these columns is
+ * COALESCE-patched server-side, so sending `""` would erase a stored value
+ * rather than leave it alone.
+ */
+function healthFieldsBody(input: ProfileHealthInfo) {
+  const pairs: Array<[string, string | undefined]> = [
+    ["legal_name", input.legalName],
+    ["date_of_birth", input.dateOfBirth],
+    ["gender", input.gender],
+    ["blood_type", input.bloodType],
+    ["allergy_summary", input.allergySummary],
+    ["condition_summary", input.conditionSummary],
+    ["primary_clinic", input.primaryClinic],
+    ["primary_doctor", input.primaryDoctor],
+    ["emergency_note", input.emergencyNote],
+  ]
+  const body: Record<string, string> = {}
+  for (const [key, value] of pairs) {
+    const trimmed = value?.trim()
+    if (trimmed) {
+      body[key] = trimmed
+    }
+  }
+  return body
+}
+
 function optionalDate(key: string, value: string | undefined) {
   const trimmed = value?.trim()
   return trimmed ? { [key]: trimmed } : {}
@@ -338,7 +368,40 @@ export class ApiCareRepository implements CareRepository {
         method: "PATCH",
         body: JSON.stringify({
           display_name: patch.displayName,
-          ...optionalDate("date_of_birth", patch.dateOfBirth),
+          ...healthFieldsBody(patch),
+        }),
+      }
+    )
+    return mapProfile(response)
+  }
+
+  /**
+   * 404 means "not set up yet", which is an answer rather than a failure, so
+   * it becomes null. Every other error still throws.
+   */
+  async getOwnHealthProfile() {
+    try {
+      const response =
+        await this.client.request<ApiProfile>("/me/health-profile")
+      return mapProfile(response)
+    } catch (error) {
+      if (isApiError(error) && error.status === 404) {
+        return null
+      }
+      throw error
+    }
+  }
+
+  async ensureOwnHealthProfile(
+    input: { displayName?: string } & ProfileHealthInfo
+  ) {
+    const response = await this.client.request<ApiProfile>(
+      "/me/health-profile",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          ...(input.displayName ? { display_name: input.displayName } : {}),
+          ...healthFieldsBody(input),
         }),
       }
     )

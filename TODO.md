@@ -1,4 +1,4 @@
-## P0 — Asas backend integration
+## P0 - Asas backend integration
 
 - [x] Bina API client untuk backend `/api/v1`
 - [x] Implement auth sebenar: login, register, refresh token, logout
@@ -11,7 +11,7 @@
 - [x] Tambah delete action dengan confirmation
 - [x] Guna pagination/filter/sort server-side mengikut response backend (contoh: log jagaan)
 
-## P1 — Domain care utama
+## P1 - Domain care utama
 
 - [x] Profile jagaan: detail, edit, archive, status, permissions
 - [x] Care circle: create, list, detail, link profile, archive
@@ -27,7 +27,7 @@
 - [x] Carta trend untuk bacaan vital
 - [x] Dokumen: file picker, upload progress, validation, metadata, download, delete
 
-## P1 — Account, notification, dan device
+## P1 - Account, notification, dan device
 
 - [x] Sambungkan `/me` untuk profile display name dan email verification status
 - [x] Selaraskan settings dengan notification preferences berasaskan care profile
@@ -39,7 +39,7 @@
 - [x] Tentukan API notification inbox; backend sekarang hanya expose preferences/delivery
 - [x] Buang atau tandakan jelas admin notification UI sehingga backend endpoint tersedia
 
-## P2 — Dashboard dan platform
+## P2 - Dashboard dan platform
 
 - [x] Sambungkan dashboard kepada data sebenar atau tambah dashboard aggregation endpoint
 - [x] Consume `/api/v1/bootstrap`
@@ -70,7 +70,7 @@
 
 ---
 
-## P3 — Sambung semua API
+## P3 - Sambung semua API
 
 - [x] Buang/mock fallback bila `NEXT_PUBLIC_API_BASE_URL` diset; pastikan semua halaman guna repository API
 - [x] Ganti semua toast/copy `UI sahaja` dengan maklum balas API sebenar (profil, kumpulan, ubat, temujanji, tugasan, dokumen)
@@ -78,7 +78,7 @@
 - [x] Tambah `Idempotency-Key` pada mutasi yang memerlukan (invite/claim accept, medication action, upload complete)
 - [x] Dokumen: aliran upload intent → complete → metadata (`/uploads/intents`, `/uploads/{id}/complete`)
 - [x] Dokumen: muat turun melalui `GET …/documents/{id}/download-url` (bukan toast demo)
-- [x] Pagination server-side untuk semua senarai (ubat, temujanji, tugasan, vital, dokumen, ahli) — ahli tiada pagination backend; senarai lain siap
+- [x] Pagination server-side untuk semua senarai (ubat, temujanji, tugasan, vital, dokumen, ahli) - ahli tiada pagination backend; senarai lain siap
 - [x] Timeline profil dari `GET /care-profiles/{id}/timeline` (gantikan agregasi snapshot tempatan) _(API = log jagaan sahaja; mock kekal agregasi penuh)_
 - [x] Ahli & akses: `GET /care-profiles/{id}/members` (access review), kemas kini peranan melalui API
 - [x] Ubat: schedules & events dari API; padam `prescribedBy` / tarikh mock apabila DTO backend sedia _(jadual/events API; medan mock disembunyikan dalam mod API)_
@@ -88,10 +88,10 @@
 - [x] Buang `ResourceSnapshotProvider` / mock notification seed apabila tiada endpoint legacy diperlukan
 - [x] Selaraskan path repository dengan kontrak (contoh: verify `care-logs` vs `logs` pada semua resource)
 
-## P3 — Cater auth
+## P3 - Cater auth
 
 - [x] Google sign-in: sambung atau buang butang placeholder pada login/register _(butang dinyahdayakan)_
-- [ ] Phone auth: `POST /auth/phone/start` + `/auth/phone/verify` — ditangguh (kontrak docs sahaja, route belum didaftarkan di backend)
+- [ ] Phone auth: `POST /auth/phone/start` + `/auth/phone/verify` - ditangguh (kontrak docs sahaja, route belum didaftarkan di backend)
 - [x] Gate tindakan sensitif jika `email_verified === false` (jemputan, tuntutan, upload, dll.)
 - [x] Halaman verify email: auto-terima token dari pautan + state selepas login
 - [x] Refresh token: handle 401 global, retry sekali, logout bersih jika refresh gagal
@@ -112,7 +112,7 @@ dengan `docs/06-api-contract.md`.
 ### Pengesahan e-mel berfungsi; pemulihan selepas terlepas tempoh tidak
 
 Dibetulkan 2026-09-09 selepas diuji, bukan sekadar dibaca. Nota terdahulu di sini
-mendakwa e-mel pengesahan tak pernah dibina. Ia dibina dan ia sampai — pendaftaran
+mendakwa e-mel pengesahan tak pernah dibina. Ia dibina dan ia sampai - pendaftaran
 ujian terhadap staging menghasilkan rekod Resend "Verify your KasihBersama email"
 dengan `last_event: delivered`. Akaun yang tak menerimanya didaftarkan 11 jam sebelum
 domain penghantar disahkan di Resend.
@@ -127,17 +127,26 @@ domain penghantar disahkan di Resend.
 ### Belum siap kerana backend belum ada surface
 
 - [ ] Circle: tambah/buang ahli circle _(`care_circle_members` ada jadual dan lajur
-  peranan, tapi tiada route HTTP — profil boleh dipaut ke circle, orang tidak boleh)_
+  peranan, tapi tiada route HTTP - profil boleh dipaut ke circle, orang tidak boleh)_
 - [ ] Circle: kemas kini circle _(`PATCH /care-circles/{id}` tak didaftarkan; hanya
   create/read/delete)_
 - [ ] Medan profil `relation` dan `notes` masih disembunyikan dalam mod API
-  _(tiada lajur langsung dalam `care_profiles` — perlu migrasi dahulu, bukan sekadar DTO)_
+  _(tiada lajur langsung dalam `care_profiles` - perlu migrasi dahulu, bukan sekadar DTO)_
 
 ### Selesai sesi ini (2026-09-09)
 
+- [x] **Halaman "Kesihatan saya" (`/my-health`).** Jenis darah, tarikh lahir, alahan,
+  keadaan kesihatan, klinik/doktor utama, nota kecemasan — untuk diri sendiri. Backend
+  memodelkannya sebagai profil jagaan yang subjeknya diri sendiri, jadi frontend
+  membandingkan `subject_user_id` dengan pengguna yang log masuk (`isOwnHealthProfile`).
+  Boleh dicapai dari sidebar (Akaun → Kesihatan saya) dan menu akaun.
+  - Satu butang simpan sahaja: `save()` mencipta rekod pada simpanan pertama dan mem-PATCH
+    selepas itu. Dua laluan berbeza ialah sesuatu yang pengguna terpaksa faham tanpa sebab.
+  - Medan kosong dihantar sebagai **kunci tiada**. Lajur ini di-COALESCE, jadi menghantar
+    `""` untuk medan yang tak diisi akan memadam apa yang tersimpan.
 - [x] **Footer sidebar ialah menu akaun, bukan butang log keluar.** Slot tempat setiap
   pengguna cari "siapa aku / ubah maklumat aku" memaparkan `Penjaga` di atas `KB` yang
-  ditulis keras — dua-duanya bukan pengguna — dan menekannya melog keluar. Avatar header
+  ditulis keras - dua-duanya bukan pengguna - dan menekannya melog keluar. Avatar header
   sama: `KB` dan `Penjaga`. Aplikasi tak pernah menunjukkan siapa yang log masuk, pada
   aplikasi di mana satu orang lazimnya pegang akaun untuk ibu bapa **dan** untuk diri
   sendiri. Kini kedua-duanya guna `components/account-menu.tsx` yang sama.
@@ -148,25 +157,25 @@ domain penghantar disahkan di Resend.
   `date_of_birth` (profil) dan `start_date`/`end_date`/`prescribed_by` (ubat) ditambah ke
   DTO backend awal sesi ini, tetapi mapper frontend masih menulis `""` ke atasnya dan
   borang masih dipagar `!apiMode`. Borang mengumpul data yang ia buang.
-  - Tarikh kosong dihantar sebagai **kunci tiada**, bukan `""` — lajur ini di-COALESCE,
+  - Tarikh kosong dihantar sebagai **kunci tiada**, bukan `""` - lajur ini di-COALESCE,
     jadi rentetan kosong akan memadam nilai tersimpan.
   - Backend: `createMedicationReq.start_date` dahulunya RFC3339 sedangkan responsnya
     `YYYY-MM-DD`. Borang yang membaca ubat dan menyimpannya semula ditolak atas datanya
     sendiri. Kini ISO dua-dua arah, dengan ujian round-trip.
 - [x] **Sampul ralat 429 kini JSON.** `ratelimit` tak boleh import lapisan transport (kitaran
   import), jadi ia guna `http.Error` dan menjawab text/plain sedangkan semua ralat lain JSON.
-  Klien gagal parse → jatuh ke "Ralat pelayan. Cuba lagi." — nasihat yang betul-betul
+  Klien gagal parse → jatuh ke "Ralat pelayan. Cuba lagi." - nasihat yang betul-betul
   bertentangan dengan apa yang had kadar itu minta. Sampul dipindah ke `internal/apierr`
   (pakej daun), kod `rate_limited` kini benar-benar dihantar.
 - [x] **Keselamatan akaun (Modul 2 backend) kini ada UI.** Tab baharu "Keselamatan" dalam
   Tetapan: tukar kata laluan dan tukar e-mel, kedua-duanya berpagar kata laluan semasa.
   Tab "Sesi" kini menyenaraikan peranti yang log masuk (`GET /me/sessions`) dengan lencana
   "Peranti ini" dan butang tamatkan bagi yang lain.
-  - 401 pada dua borang ini **tidak** boleh guna teks kongsi "Sila log masuk semula" — sesi
+  - 401 pada dua borang ini **tidak** boleh guna teks kongsi "Sila log masuk semula" - sesi
     pengguna elok, kata laluan dalam borang yang salah. Ia dipetakan ke ralat medan.
   - Backend memisahkan dua sebab 409 kepada kod `pending_invites` dan `email_taken`;
     satu kod `conflict` tak boleh diterjemah tepat.
-  - Sesi semasa tiada butang "Tamatkan" — ia kelihatan seperti tindakan keselamatan
+  - Sesi semasa tiada butang "Tamatkan" - ia kelihatan seperti tindakan keselamatan
     sedangkan hasilnya cuma log keluar dari peranti di depan mata. Itu kerja butang
     "Log keluar" di bawahnya.
   - Repositori mock menguatkuasakan kata laluan seednya (`katalaluanlama`), jadi keadaan
@@ -175,7 +184,7 @@ domain penghantar disahkan di Resend.
     salah, bukan sesi luput. Tanpanya klien membelanjakan satu putaran refresh token pada
     setiap salah taip, dan pengguna yang refreshnya gagal dilog keluar kerana tersalah
     taip kata laluan sendiri.
-- [x] Snapshot jagaan mati sepenuhnya apabila satu endpoint gagal — `Promise.all` dalam
+- [x] Snapshot jagaan mati sepenuhnya apabila satu endpoint gagal - `Promise.all` dalam
   `loadProfileData` membuang sepuluh respons berjaya kerana satu 400. Setiap seksyen kini
   merosot sendiri-sendiri; 401 kekal fatal supaya sesi luput tak dipaparkan sebagai
   "tiada data".
@@ -191,17 +200,17 @@ domain penghantar disahkan di Resend.
   awal dalam mod mock; membaikinya memusnahkan sebab duplikasi itu.
 - [x] `CareRepository` 48 kaedah dipecah kepada sepuluh interface ikut agregat.
   `createResourceSnapshot` kini meminta `CareSnapshotReader` sahaja dan menerimanya sebagai
-  parameter — sekali gus menutup pelanggaran lapisan `application → composition`.
+  parameter - sekali gus menutup pelanggaran lapisan `application → composition`.
 - [x] `bun.lock` tak sepadan `package.json`; setiap build Railway gagal pada
   `--frozen-lockfile`.
 - [x] Proxy `/api/v1/*` boleh guna `API_INTERNAL_BASE_URL` (rangkaian private Railway).
-  Nota: nilainya mesti `http://` dan berport `:8080` — rangkaian private tiada TLS.
+  Nota: nilainya mesti `http://` dan berport `:8080` - rangkaian private tiada TLS.
 - [x] Semua pemboleh ubah env yang dibaca kod kini didokumen dalam `.env`/`.env.example`
   _(`NEXT_PUBLIC_API_VERSION` dan `NEXT_PUBLIC_APP_PLATFORM` sebelum ini tiada dalam kedua-duanya)_
 
 ### Perlu disahkan, bukan dakwaan
 
-- [ ] Navigasi client-side belum disahkan pada tahap klik — tiada pelayar dalam sesi itu.
+- [ ] Navigasi client-side belum disahkan pada tahap klik - tiada pelayar dalam sesi itu.
   Semak DevTools → Network: satu fetch `?_rsc=` bermakna berjaya; permintaan dokumen penuh
   bermakna belum.
 - [ ] `smoke:auth` melangkau langkah verify (lihat header skripnya). Ia tak boleh lengkap
@@ -211,7 +220,7 @@ domain penghantar disahkan di Resend.
 
 ## Audit aliran UX (2026-09-09)
 
-Diukur dari kod, bukan diandaikan. Borang itu sendiri elok — tarikh/masa memang
+Diukur dari kod, bukan diandaikan. Borang itu sendiri elok - tarikh/masa memang
 diisi lalai dengan masa sekarang, dan borang vital adaptif (sistolik/diastolik
 hanya untuk tekanan darah, unit auto-set dari jenis). Geserannya **antara**
 borang: cara pengguna tiba, dan apa berlaku selepas simpan.
@@ -222,7 +231,7 @@ borang: cara pengguna tiba, dan apa berlaku selepas simpan.
   `app-header.tsx:55` ialah satu-satunya `ProfileSwitcher` dalam kod, dan ia
   `hidden sm:flex`. Sidebar tak menunjukkan profil terpilih. Jadi pada telefon
   kelima-lima borang render penuh, butang hantar `isDisabled` senyap, dan teks
-  bantuannya berkata "Pilih profil jagaan di header dahulu" — kawalan yang tiada
+  bantuannya berkata "Pilih profil jagaan di header dahulu" - kawalan yang tiada
   pada saiz skrin itu. Ini aplikasi yang digunakan di sisi katil.
   Perlu: switcher dalam sidebar (ada pada semua saiz), dan borang patut tunjuk
   `Empty` + "Pilih profil" daripada merender medan yang tak boleh dihantar.
@@ -231,7 +240,7 @@ borang: cara pengguna tiba, dan apa berlaku selepas simpan.
 
 - [ ] **Sifar elemen interaktif.** `grep -cE "href=|onPress=|Button"` pada
   `dashboard-page.tsx` = 0. Jubin statistik dan dua carta, tiada satu pautan.
-  `buildDashboardStats` mengira `openTaskCount` dan `upcomingAppointmentCount` —
+  `buildDashboardStats` mengira `openTaskCount` dan `upcomingAppointmentCount` -
   tepat perkara yang pengguna mahu klik terus.
   Perlu: setiap jubin jadi pautan ke senarainya. Perubahan paling murah di sini.
 
@@ -247,7 +256,7 @@ borang: cara pengguna tiba, dan apa berlaku selepas simpan.
 ### Satu borang, satu rekod
 
 - [ ] **Tiada "Simpan dan tambah lagi".** Borang ubat ialah contoh terbaik dalam
-  projek ini — ia cipta ubat *dan* jadual pertamanya dalam satu hantar, kemudian
+  projek ini - ia cipta ubat *dan* jadual pertamanya dalam satu hantar, kemudian
   mendarat di halaman butiran (`medication-detail-page.tsx:558`). Tiada borang lain
   berkelakuan begitu; log, vital, tugasan, temujanji semuanya kembali ke senarai,
   jadi "rekod dua bacaan" ialah dua perjalanan penuh.
@@ -275,33 +284,38 @@ Disemak terhadap skema DB sebenar, bukan terhadap `care-profile-field-gaps.ts`.
       condition_summary, primary_clinic, primary_doctor, emergency_note
 
   Sembilan lajur, dan `ProfileView` backend tak memulangkan satu pun. Fail ini perlu
-  dibetulkan supaya ia menamakan medan yang wujud — kalau tidak ia menyembunyikan
+  dibetulkan supaya ia menamakan medan yang wujud - kalau tidak ia menyembunyikan
   medan yang salah dan memberi gambaran jurang itu kecil.
 
 ### Borang profil menunggu satu perubahan DTO
 
 - [ ] Borang cipta/sunting profil hanya menghantar `display_name`, sebab itu sahaja yang
   `updateProfileReq` terima. Sebaik backend mendedahkan sembilan medan itu (perubahan
-  DTO, bukan migrasi — data sudah dalam memori), borang ini boleh mengumpul tarikh
+  DTO, bukan migrasi - data sudah dalam memori), borang ini boleh mengumpul tarikh
   lahir, jenis darah, alahan, keadaan, klinik dan doktor.
   Bergantung pada entri "DTO gaps" dalam TODO backend.
 
 ### Kad kecemasan: UI ada, data ada, endpoint tiada
 
 - [ ] `can_view_emergency_card` sudah ditapis dalam `platform-features-section.tsx` dan
-  `lib/domain/care.ts`, dan lajur `emergency_note` sudah dimigrasi — tetapi tiada
+  `lib/domain/care.ts`, dan lajur `emergency_note` sudah dimigrasi - tetapi tiada
   endpoint menghubungkannya. Bahagian frontend sudah sedia; ia menunggu backend.
 
-### Tiada modul kesihatan diri sendiri
+### Modul kesihatan diri sendiri — SELESAI 2026-09-09
 
-- [ ] Tiada halaman untuk maklumat kesihatan pengguna sendiri (jenis darah, tarikh lahir,
-  tinggi). `/me` memulangkan empat medan sahaja — id, e-mel, nama paparan, status
-  pengesahan — dan `PATCH /me` menerima satu. Settings menunjukkan tepat apa yang ada.
+Dibina sebagai profil jagaan yang subjeknya diri sendiri (pilihan pertama di bawah
+menang): `GET/POST /me/health-profile` + halaman `/my-health`.
+
+- [ ] **`tinggi` masih tiada** dalam mana-mana jadual — satu-satunya medan dalam nota asal
+  yang masih perlukan migrasi.
+- [x] ~~Tiada halaman untuk maklumat kesihatan pengguna sendiri (jenis darah, tarikh lahir,
+  tinggi).~~ `/me` memulangkan empat medan sahaja - id, e-mel, nama paparan, status
+  pengesahan - dan `PATCH /me` menerima satu. Settings menunjukkan tepat apa yang ada.
 
   Keputusan reka bentuk ada di sebelah backend: sama ada "kesihatan saya" ialah profil
   jagaan yang subjeknya diri sendiri (guna semula segalanya yang sedia ada), atau medan
   baharu pada `users` (menduakan model). Kalau pilihan pertama menang, kerja frontendnya
-  kecil — halaman itu ialah halaman profil jagaan sedia ada.
+  kecil - halaman itu ialah halaman profil jagaan sedia ada.
 
   Nota: `tinggi` tiada dalam mana-mana jadual, jadi ia perlu migrasi walau apa pun.
 

@@ -1,4 +1,4 @@
-/** Lingkaran Kasih — symmetric 32×32 mark, center (16, 16). */
+/** Lingkaran Kasih - symmetric 32×32 mark, center (16, 16). */
 export const LOGO_SEGMENTS = [
   "M20.88 5.04A12 12 0 0 1 27.93 17.25L24.35 16.88A8.4 8.4 0 0 0 19.42 8.33Z",
   "M23.05 25.71A12 12 0 0 1 8.95 25.71L11.06 22.8A8.4 8.4 0 0 0 20.94 22.8Z",

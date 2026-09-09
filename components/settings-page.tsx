@@ -198,7 +198,7 @@ export function SettingsPage() {
                       ) : null}
                     </div>
                     <p className="truncate text-sm text-muted-foreground">
-                      {user?.email ?? "—"}
+                      {user?.email ?? "-"}
                     </p>
                   </div>
                 </CardContent>
@@ -348,7 +348,7 @@ export function SettingsPage() {
                             {REMINDER_TYPE_LABELS[type]} (push)
                           </FieldTitle>
                           <FieldDescription>
-                            Push belum dihantar oleh backend — tetapan akan
+                            Push belum dihantar oleh backend - tetapan akan
                             tersedia apabila saluran diaktifkan.
                           </FieldDescription>
                         </FieldContent>

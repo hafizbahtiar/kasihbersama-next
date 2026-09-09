@@ -30,7 +30,7 @@ export function ProfilesPage() {
         ...profile,
         circleName:
           snapshot.circles.find((item) => item.id === profile.circleId)?.name ??
-          "—",
+          "-",
         memberCount: snapshot.members.filter(
           (item) => item.profileId === profile.id
         ).length,

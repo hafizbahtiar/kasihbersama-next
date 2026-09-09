@@ -106,12 +106,12 @@ export function MedicationDetailPage({
         header: "Jenis",
         cell: ({ getValue }) => SCHEDULE_TYPE_LABELS[getValue()],
       }),
-      helper.accessor((row) => row.timeOfDay ?? "—", {
+      helper.accessor((row) => row.timeOfDay ?? "-", {
         id: "timeOfDay",
         header: "Masa",
       }),
       helper.accessor("timezone", { header: "Zon masa" }),
-      helper.accessor((row) => row.rrule ?? "—", {
+      helper.accessor((row) => row.rrule ?? "-", {
         id: "rrule",
         header: "RRule",
       }),
@@ -160,7 +160,7 @@ export function MedicationDetailPage({
         enableColumnFilter: true,
         cell: ({ getValue }) => <EventStatusBadge value={getValue()} />,
       }),
-      helper.accessor((row) => row.note ?? "—", { id: "note", header: "Nota" }),
+      helper.accessor((row) => row.note ?? "-", { id: "note", header: "Nota" }),
       helper.display({
         id: "action",
         header: () => <span className="flex justify-end">Action</span>,

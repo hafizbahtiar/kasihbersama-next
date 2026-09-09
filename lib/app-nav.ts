@@ -10,6 +10,7 @@ import {
   IconListCheck,
   IconPill,
   IconSettings,
+  IconStethoscope,
   IconUsers,
 } from "@tabler/icons-react"
 
@@ -55,6 +56,9 @@ export const primaryNav: AppNavItem[] = [
 ]
 
 export const secondaryNav: AppNavItem[] = [
+  // Under "Akaun" rather than "Jagaan": this is the user's own record, not
+  // one of the people they look after.
+  { href: "/my-health", title: "Kesihatan saya", icon: IconStethoscope },
   { href: "/notifications", title: "Notifikasi", icon: IconBell },
   { href: "/settings", title: "Tetapan", icon: IconSettings },
 ]

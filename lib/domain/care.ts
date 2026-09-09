@@ -49,6 +49,25 @@ export type DocumentType =
 export type DocumentUploadState =
   "idle" | "uploading" | "processing" | "done" | "error"
 
+/**
+ * The health columns on a care profile.
+ *
+ * Every field is optional and absent means unknown, never blank - a form that
+ * sends "" for a field nobody filled in would erase what is stored, because
+ * the backend COALESCE-patches each column.
+ */
+export type ProfileHealthInfo = {
+  legalName?: string
+  dateOfBirth?: string
+  gender?: string
+  bloodType?: string
+  allergySummary?: string
+  conditionSummary?: string
+  primaryClinic?: string
+  primaryDoctor?: string
+  emergencyNote?: string
+}
+
 export type CareProfile = {
   id: string
   displayName: string
@@ -59,7 +78,14 @@ export type CareProfile = {
   role: CareRole
   permissions: CarePermissions
   notes?: string
-}
+  /**
+   * The user this profile is *about*, when there is one. The backend models
+   * "my health" as a care profile whose subject is me, so comparing this to
+   * the signed-in user is how the UI tells your own record apart from the
+   * people you look after.
+   */
+  subjectUserId?: string
+} & ProfileHealthInfo
 
 export type CareCircle = {
   id: string
@@ -388,4 +414,16 @@ export function viewerPermissions(): CarePermissions {
     can_view_documents: true,
     can_view_emergency_card: true,
   }
+}
+
+/**
+ * True when this profile is the signed-in user's own health record rather than
+ * someone they look after. The two are the same shape; only the subject
+ * differs.
+ */
+export function isOwnHealthProfile(
+  profile: Pick<CareProfile, "subjectUserId">,
+  userId: string | undefined
+) {
+  return Boolean(userId && profile.subjectUserId === userId)
 }

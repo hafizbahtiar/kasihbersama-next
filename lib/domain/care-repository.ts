@@ -14,6 +14,7 @@ import type {
   EventAction,
   Medication,
   MedicationSchedule,
+  ProfileHealthInfo,
   ProfileStatus,
   TaskStatus,
   TimelineItem,
@@ -42,6 +43,17 @@ export interface CareProfileRepository {
   }): Promise<CareProfile>
   updateProfile(id: string, patch: Partial<CareProfile>): Promise<CareProfile>
   archiveProfile(id: string): Promise<void>
+
+  /**
+   * The signed-in user's own health record, or null when they have not set
+   * one up. Null is a real answer here, not a failure - the UI turns it into
+   * the setup prompt.
+   */
+  getOwnHealthProfile(): Promise<CareProfile | null>
+  /** Get-or-create. Safe to retry: it never produces a second record. */
+  ensureOwnHealthProfile(
+    input: { displayName?: string } & ProfileHealthInfo
+  ): Promise<CareProfile>
 }
 
 export interface CareCircleRepository {

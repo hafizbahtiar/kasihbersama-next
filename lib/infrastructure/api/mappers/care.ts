@@ -29,8 +29,17 @@ type ApiProfile = {
   role?: string
   permissions?: Record<string, boolean>
   status: string
+  subject_user_id?: string
   /** ISO "YYYY-MM-DD". Omitted when unknown, never blank. */
   date_of_birth?: string
+  legal_name?: string
+  gender?: string
+  blood_type?: string
+  allergy_summary?: string
+  condition_summary?: string
+  primary_clinic?: string
+  primary_doctor?: string
+  emergency_note?: string
 }
 
 type ApiCircle = {
@@ -170,7 +179,7 @@ export function mapPermissions(
 }
 
 export function mapProfile(api: ApiProfile): CareProfile {
-  // relation and notes are still absent from profileResp — see
+  // relation and notes are still absent from profileResp - see
   // lib/application/care-profile-field-gaps.ts. date_of_birth landed
   // 2026-09-09 and is read here.
   return {

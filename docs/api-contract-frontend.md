@@ -57,8 +57,8 @@ Backend shape (`PaginatedResp`):
 
 Query parameters:
 
-- `page` — positive integer, default `1`
-- `per_page` — 1–100, default `20`
+- `page` - positive integer, default `1`
+- `per_page` - 1–100, default `20`
 
 Client:
 
@@ -71,7 +71,7 @@ Used by care logs, appointments, tasks, vitals, documents, medications, and time
 
 ### Timeline
 
-`GET /care-profiles/{profileId}/timeline` returns the same paginated shape as care logs (`PaginatedResp` of normalized care-log rows). Backend timeline is care logs only today — not a cross-resource aggregation. Mock mode still builds a local multi-kind timeline via `buildTimeline()`.
+`GET /care-profiles/{profileId}/timeline` returns the same paginated shape as care logs (`PaginatedResp` of normalized care-log rows). Backend timeline is care logs only today - not a cross-resource aggregation. Mock mode still builds a local multi-kind timeline via `buildTimeline()`.
 
 ## Invite & claim deep links
 
@@ -102,7 +102,7 @@ Helpers: `lib/application/deep-links.ts`
 ## Care profile DTO gaps
 
 Backend `profileResp` fields: `id`, `display_name`, `subject_user_id`, `role`,
-`permissions`, `status`, plus the health columns added 2026-09-09 —
+`permissions`, `status`, plus the health columns added 2026-09-09 -
 `legal_name`, `date_of_birth`, `gender`, `blood_type`, `allergy_summary`,
 `condition_summary`, `primary_clinic`, `primary_doctor`, `emergency_note`.
 All are optional and omitted when unknown.
@@ -111,8 +111,8 @@ UI fields **not** persisted in API mode (see `lib/application/care-profile-field
 
 | UI field | Status |
 |----------|--------|
-| `relation` | Mock / local only — no column anywhere; needs a migration first |
-| `notes` | Mock / local only — same |
+| `relation` | Mock / local only - no column anywhere; needs a migration first |
+| `notes` | Mock / local only - same |
 | `circleId` | Derived from `GET /care-circles` membership, not on profile DTO |
 
 `dateOfBirth` left this table on 2026-09-09: it is read from `date_of_birth`
@@ -120,7 +120,7 @@ and sent on create and PATCH.
 
 Medications now expose `start_date`, `end_date` and `prescribed_by` in both
 directions. Dates are ISO `YYYY-MM-DD` on the **request as well as** the
-response — the request took RFC3339 until 2026-09-09, so a form that read a
+response - the request took RFC3339 until 2026-09-09, so a form that read a
 medication and wrote it back was rejected on its own data.
 
 An empty date is sent as an **absent key**, never `""`: every one of these

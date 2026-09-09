@@ -309,7 +309,7 @@ function WeekView({
               </button>
               <div className="flex flex-1 flex-col gap-1.5 p-1.5">
                 {items.length === 0 ? (
-                  <p className="px-1 py-2 text-xs text-muted-foreground">—</p>
+                  <p className="px-1 py-2 text-xs text-muted-foreground">-</p>
                 ) : (
                   items.map((item) => (
                     <button
