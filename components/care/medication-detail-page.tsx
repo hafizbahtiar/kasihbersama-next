@@ -29,7 +29,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { DateField, TimeField } from "@/components/ui/date-field"
+import { DatePicker } from "@/components/ui/date-picker"
+import { TimeField } from "@/components/ui/date-field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -308,7 +309,7 @@ export function MedicationDetailPage({
                 <>
                   <Field>
                     <FieldLabel>Mula</FieldLabel>
-                    <DateField
+                    <DatePicker
                       value={startDate}
                       onChange={setStartDate}
                       className="bg-background"
@@ -316,7 +317,7 @@ export function MedicationDetailPage({
                   </Field>
                   <Field>
                     <FieldLabel>Tamat</FieldLabel>
-                    <DateField
+                    <DatePicker
                       value={endDate}
                       onChange={setEndDate}
                       className="bg-background"
@@ -624,7 +625,7 @@ export function MedicationCreatePage() {
               </Field>
               <Field>
                 <FieldLabel>Tarikh mula</FieldLabel>
-                <DateField
+                <DatePicker
                   value={startDate}
                   onChange={setStartDate}
                   className="bg-background"

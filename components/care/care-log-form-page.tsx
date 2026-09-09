@@ -7,7 +7,7 @@ import { useAuth } from "@/components/auth/auth-provider"
 import { CareFormShell } from "@/components/care/care-form-shell"
 import { useCareData } from "@/components/care/care-data-provider"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { DateTimeField } from "@/components/ui/date-field"
+import { DateTimePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -104,7 +104,7 @@ export function CareLogFormPage() {
           </Field>
           <Field>
             <FieldLabel>Masa kejadian</FieldLabel>
-            <DateTimeField
+            <DateTimePicker
               value={occurredAt}
               onChange={setOccurredAt}
               className="bg-background"

@@ -14,7 +14,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import { DateField } from "@/components/ui/date-field"
+import { DatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -202,7 +202,7 @@ export function DocumentFormPage() {
             </Field>
             <Field>
               <FieldLabel>Tarikh dikeluarkan</FieldLabel>
-              <DateField
+              <DatePicker
                 value={issueDate}
                 onChange={setIssueDate}
                 className="bg-background"
@@ -210,7 +210,7 @@ export function DocumentFormPage() {
             </Field>
             <Field data-invalid={Boolean(errors.expiryDate)}>
               <FieldLabel>Tarikh tamat</FieldLabel>
-              <DateField
+              <DatePicker
                 value={expiryDate}
                 onChange={setExpiryDate}
                 className="bg-background"

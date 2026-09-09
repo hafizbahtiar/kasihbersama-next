@@ -12,7 +12,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import { DateTimeField } from "@/components/ui/date-field"
+import { DateTimePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -214,7 +214,7 @@ export function VitalFormPage() {
           </Field>
           <Field data-invalid={Boolean(errors.measuredAt)}>
             <FieldLabel>Masa diukur</FieldLabel>
-            <DateTimeField
+            <DateTimePicker
               value={measuredAt}
               onChange={setMeasuredAt}
               className="bg-background"

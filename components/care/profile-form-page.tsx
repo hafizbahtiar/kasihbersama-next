@@ -13,7 +13,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import { DateField } from "@/components/ui/date-field"
+import { DatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -164,7 +164,7 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
             </Field>
             <Field data-invalid={Boolean(errors.dateOfBirth)}>
               <FieldLabel>Tarikh lahir</FieldLabel>
-              <DateField
+              <DatePicker
                 value={dateOfBirth}
                 onChange={setDateOfBirth}
                 className="bg-background"

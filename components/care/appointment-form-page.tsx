@@ -12,7 +12,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import { DateTimeField } from "@/components/ui/date-field"
+import { DateTimePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toDateTimeLocalValue } from "@/lib/application/care-format"
@@ -107,7 +107,7 @@ export function AppointmentFormPage() {
           </Field>
           <Field data-invalid={Boolean(errors.appointmentAt)}>
             <FieldLabel>Masa</FieldLabel>
-            <DateTimeField
+            <DateTimePicker
               value={appointmentAt}
               onChange={setAppointmentAt}
               className="bg-background"
