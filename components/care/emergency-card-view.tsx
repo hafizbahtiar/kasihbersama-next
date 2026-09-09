@@ -1,9 +1,9 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { QRCodeSVG } from "qrcode.react"
 import {
   IconAlertTriangle,
-  IconDroplet,
   IconEyeQuestion,
   IconNfc,
   IconRotate,
@@ -12,7 +12,6 @@ import {
 import { AsyncStateBanner } from "@/components/care/async-state"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { LogoMark } from "@/components/brand/logo-mark"
-import { Badge } from "@/components/ui/badge"
 import { Button, LinkButton } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getCareRepository } from "@/lib/composition/care-repository"
@@ -143,6 +142,18 @@ function Face({
   )
 }
 
+/**
+ * A card number, from the profile id.
+ *
+ * Grouped in fours because that is how a person reads a code aloud over a
+ * phone, and shortened because the full UUID is neither memorable nor needed -
+ * the app resolves the profile, the human only has to quote it.
+ */
+function cardNumber(profileId: string) {
+  const compact = profileId.replace(/-/g, "").slice(0, 12).toUpperCase()
+  return compact.replace(/(.{4})(?=.)/g, "$1 ")
+}
+
 /** The issuer mark, in the pale chip the raster logo needs to read. */
 function BrandChip({ className }: { className?: string }) {
   return (
@@ -250,6 +261,13 @@ export function EmergencyCardView({
   // and the grey says which parts are not the person's own.
   const blank = isBlank(card)
   const incomplete = hasGaps(card)
+  // Resolved in the browser so the code points at whatever host this is served
+  // from - staging, production or a laptop - rather than a value baked in at
+  // build time that would send a scan to the wrong environment.
+  const cardUrl =
+    typeof window === "undefined"
+      ? ""
+      : `${window.location.origin}/emergency-card?profile=${profileId}`
   const shown = card
   const sample = SAMPLE_EMERGENCY_CARD
 
@@ -283,81 +301,111 @@ export function EmergencyCardView({
           }}
           className="relative aspect-[1.586/1] w-full transition-transform duration-500 ease-out motion-reduce:transition-none"
         >
-          {/* Front */}
+          {/* Front: identity. A physical card puts who this is on the face
+              and what to do about them on the back - clinical detail on the
+              side that faces outward in a wallet is the wrong way round. */}
           <Face style={{ backfaceVisibility: "hidden" }}>
             <div className="flex h-full flex-col justify-between">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <Label>Kad kecemasan</Label>
-                  <p className="mt-1 truncate font-heading text-lg leading-tight tracking-tight">
+                  <p className="mt-1.5 truncate font-heading text-xl leading-tight tracking-tight">
                     {shown.displayName}
                   </p>
-                </div>
-                {/* Secondary when it is the sample: a solid red badge on a
-                    greyed value contradicts what the grey is saying. */}
-                <Badge
-                  variant={shown.bloodType ? "destructive" : "secondary"}
-                  className={cn(
-                    "shrink-0 text-sm",
-                    !shown.bloodType && "italic opacity-70"
-                  )}
-                >
-                  <IconDroplet />
-                  {bloodTypeLabel(shown.bloodType ?? sample.bloodType)}
-                </Badge>
-              </div>
-
-              {/*
-                A slim rule, not a filled panel. Allergies still lead - red
-                mark, first line under the name - but the previous version gave
-                one field a third of an 85.6x54mm card, which is a poster
-                rather than a card. The red is the accent, not the area.
-              */}
-              <div className="flex items-start gap-2.5 border-l-2 border-destructive pl-2.5">
-                <div className="min-w-0 flex-1">
-                  <Label>Alahan</Label>
                   <p
                     className={cn(
-                      "mt-0.5 line-clamp-1 text-sm leading-snug font-medium",
-                      !shown.allergySummary && "text-muted-foreground/70 italic"
+                      "truncate text-xs",
+                      shown.legalName
+                        ? "text-muted-foreground"
+                        : "text-muted-foreground/70 italic"
                     )}
                   >
-                    {shown.allergySummary || sample.allergySummary}
+                    {shown.legalName || sample.legalName}
+                  </p>
+                </div>
+                <BrandChip />
+              </div>
+
+              <div className="grid grid-cols-3 items-end gap-3">
+                <Field
+                  label="Lahir"
+                  value={
+                    shown.dateOfBirth
+                      ? formatDate(shown.dateOfBirth)
+                      : undefined
+                  }
+                  sample={formatDate(sample.dateOfBirth ?? "")}
+                />
+                <Field
+                  label="Jantina"
+                  value={genderLabel(shown.gender)}
+                  sample={genderLabel(sample.gender)}
+                />
+                <div className="min-w-0 space-y-1">
+                  <Label>Darah</Label>
+                  <p
+                    className={cn(
+                      "truncate text-base leading-none font-semibold",
+                      shown.bloodType
+                        ? "text-destructive"
+                        : "text-muted-foreground/70 italic"
+                    )}
+                  >
+                    {bloodTypeLabel(shown.bloodType ?? sample.bloodType)}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-end justify-between gap-3">
-                <div className="grid min-w-0 flex-1 grid-cols-2 gap-3">
-                  <Field
-                    label="Lahir"
-                    value={
-                      shown.dateOfBirth
-                        ? formatDate(shown.dateOfBirth)
-                        : undefined
-                    }
-                  />
-                  <Field label="Nama penuh" value={shown.legalName} />
+              <div className="flex items-end justify-between gap-3 border-t pt-2.5">
+                {/* A card number. Every card people already carry has one, it
+                    is what a clinician reads out over a phone, and it is the
+                    key an NFC tag or QR would resolve. Formatted in blocks
+                    because that is how a person reads a code aloud. */}
+                <div className="min-w-0">
+                  <Label>No. kad</Label>
+                  <p className="truncate font-mono text-[0.7rem] tracking-widest">
+                    {cardNumber(shown.careProfileId)}
+                  </p>
                 </div>
-                <BrandChip />
+                <p className="shrink-0 text-[0.6rem] text-muted-foreground">
+                  Butiran perubatan di belakang
+                </p>
               </div>
             </div>
           </Face>
 
-          {/* Back */}
+          {/* Back: what to do about this person, and how to reach the
+              family. Allergies lead here, where a clinician turns the card
+              over to look. */}
           <Face
             style={{
               backfaceVisibility: "hidden",
               transform: "rotateY(180deg)",
             }}
           >
-            <div className="flex h-full flex-col justify-between">
-              <div className="min-h-0 space-y-2.5 overflow-hidden">
+            <div className="flex h-full gap-3">
+              <div className="flex min-w-0 flex-1 flex-col justify-between">
+                <div className="flex items-start gap-2.5 border-l-2 border-destructive pl-2.5">
+                  <div className="min-w-0 flex-1">
+                    <Label>Alahan</Label>
+                    <p
+                      className={cn(
+                        "mt-0.5 line-clamp-2 text-sm leading-snug font-medium",
+                        !shown.allergySummary &&
+                          "text-muted-foreground/70 italic"
+                      )}
+                    >
+                      {shown.allergySummary || sample.allergySummary}
+                    </p>
+                  </div>
+                </div>
+
                 <Field
                   label="Keadaan kesihatan"
                   value={shown.conditionSummary}
                   sample={sample.conditionSummary}
                 />
+
                 <div className="grid grid-cols-2 gap-3">
                   <Field
                     label="Klinik"
@@ -370,27 +418,27 @@ export function EmergencyCardView({
                     sample={sample.primaryDoctor}
                   />
                 </div>
+
                 <Field
-                  label="Nota"
+                  label="Hubungi"
                   value={shown.emergencyNote}
                   sample={sample.emergencyNote}
                 />
               </div>
 
-              {/*
-                Reserved, not pretending. A physical card with an NFC tag would
-                carry a link straight to this profile - the slot is drawn now
-                so the layout does not change when the tag exists, and it says
-                it is unprovisioned rather than showing a fake code.
-              */}
-              <div className="flex items-end justify-between gap-3 border-t pt-2.5">
-                <span className="flex min-w-0 items-center gap-2 text-muted-foreground">
-                  <IconNfc className="size-4 shrink-0" />
-                  <span className="truncate text-[0.6rem] leading-tight">
-                    Kad NFC fizikal belum tersedia
-                  </span>
+              {/* The QR resolves to this profile in the app. It is useful to a
+                  family member with their own phone today; it is NOT a public
+                  card link a stranger can read, which needs a revocable
+                  card-specific token rather than an app URL. The NFC tag will
+                  carry the same thing when it exists. */}
+              <div className="flex w-20 shrink-0 flex-col items-center justify-between">
+                <span className="rounded-md bg-white p-1 ring-1 ring-foreground/10">
+                  <QRCodeSVG value={cardUrl} size={56} level="M" />
                 </span>
-                <BrandChip />
+                <span className="flex items-center gap-1 text-[0.55rem] leading-tight text-muted-foreground">
+                  <IconNfc className="size-3 shrink-0" />
+                  NFC belum ada
+                </span>
               </div>
             </div>
           </Face>
@@ -412,7 +460,15 @@ export function EmergencyCardView({
         />
       </div>
 
-      {/* Flat, complete, print-only. */}
+      {/*
+        Flat, complete, print-only - and deliberately **without** the sample
+        values the screen card shows.
+        On screen a greyed placeholder is obviously a placeholder. On paper
+        there is no grey, no italic and no alert above it: a printed card
+        reading "Penisilin, kacang" would be read as this person's allergy by
+        whoever is holding it. Empty fields print as nothing, which is the only
+        safe answer.
+      */}
       <div className="hidden space-y-3 print:block">
         <div>
           <Label>Kad kecemasan</Label>
@@ -421,7 +477,7 @@ export function EmergencyCardView({
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Jenis darah" value={shown.bloodType} />
+          <Field label="Jenis darah" value={bloodTypeLabel(shown.bloodType)} />
           <Field
             label="Tarikh lahir"
             value={
@@ -431,10 +487,7 @@ export function EmergencyCardView({
           <Field label="Nama penuh" value={shown.legalName} />
           <Field label="Jantina" value={genderLabel(shown.gender)} />
         </div>
-        <Field
-          label="Alahan"
-          value={shown.allergySummary || "Tiada direkodkan"}
-        />
+        <Field label="Alahan" value={shown.allergySummary} />
         <Field label="Keadaan kesihatan" value={shown.conditionSummary} />
         <div className="grid grid-cols-2 gap-3">
           <Field label="Klinik utama" value={shown.primaryClinic} />
