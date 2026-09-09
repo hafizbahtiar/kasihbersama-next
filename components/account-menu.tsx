@@ -8,6 +8,7 @@ import { useLogout } from "@/components/logout-provider"
 import {
   DropdownMenu,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 
@@ -51,14 +52,22 @@ export function AccountMenu({
 
   return (
     <DropdownMenu placement={placement} className="min-w-56">
-      <div className="px-1.5 py-1.5">
-        <p className="truncate text-sm font-medium">
+      {/*
+        DropdownMenuLabel, not a <div>: this renders inside a react-aria Menu,
+        which is a collection. A plain element in a collection is not a valid
+        node, and the whole menu fails to render rather than just that line -
+        clicking the trigger did nothing at all.
+      */}
+      <DropdownMenuLabel className="py-1.5">
+        <span className="block truncate text-sm font-medium text-foreground">
           {user?.displayName ?? "Pengguna"}
-        </p>
+        </span>
         {user?.email ? (
-          <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+          <span className="block truncate text-xs font-normal">
+            {user.email}
+          </span>
         ) : null}
-      </div>
+      </DropdownMenuLabel>
       <DropdownMenuSeparator />
       <DropdownMenuItem onAction={() => router.push("/settings")}>
         <IconUser />
