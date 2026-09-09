@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Fragment, useState } from "react"
 import NumberFlow from "@number-flow/react"
 import { IconCheck, IconInfoCircle, IconMinus } from "@tabler/icons-react"
 
@@ -10,14 +10,6 @@ import { usePlatform } from "@/components/platform/platform-provider"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   buildComparisonGroups,
@@ -51,6 +43,7 @@ export function ComparePage() {
   const { limits } = usePlatform()
   const [period, setPeriod] = useState<BillingPeriod>("yearly")
   const comparisonGroups = buildComparisonGroups(limits)
+  const columnCount = PRICING_PLANS.length + 1
 
   return (
     <div className="flex flex-col gap-5">
@@ -84,82 +77,91 @@ export function ComparePage() {
       </div>
 
       {/*
-        One table per group, not one table with colSpan section rows.
-        `ui/table` is react-aria's Table - a collection component like Menu, so
-        a Fragment wrapper or a spanning cell is not a valid child and the page
-        fails to render rather than degrading. RAC has no colSpan at all. This
-        is the same mistake as the account menu's plain <div>; the lesson is
-        that in this project a shadcn primitive is usually a collection.
+        Plain HTML table — not react-aria's Table collection. RAC requires
+        globally unique column ids; three compare sections sharing free/family/
+        care_home columns crashed the page. Native table supports colSpan for
+        section headers, which RAC does not.
       */}
-      {comparisonGroups.map((group, groupIndex) => (
-        <section key={group.title} className="space-y-2">
-          <h2 className="font-heading text-sm tracking-tight">{group.title}</h2>
-          <div className="overflow-x-auto">
-            <Table
-              aria-label={`Banding pelan: ${group.title}`}
-              selectionMode="none"
-              className="min-w-[34rem]"
-            >
-              <TableHeader>
-                <TableHead id="label" isRowHeader className="w-[14rem]">
-                  Ciri
-                </TableHead>
-                {PRICING_PLANS.map((plan) => (
-                  <TableHead key={plan.id} id={plan.id} className="text-center">
-                    {/* The price rides along with the first group only; on
-                        every later table the plan name is enough and a
-                        repeated price is noise. */}
-                    {groupIndex === 0 ? (
-                      <span className="flex flex-col items-center gap-1">
-                        <span className="flex items-center gap-2 font-medium text-foreground">
-                          {plan.name}
-                          {plan.id === "free" ? (
-                            <Badge variant="secondary">Sekarang</Badge>
-                          ) : null}
-                        </span>
-                        {priceFor(plan, period) > 0 ? (
-                          <span className="text-xs font-normal text-muted-foreground">
-                            RM
-                            <NumberFlow value={priceFor(plan, period)} /> sebulan
-                          </span>
-                        ) : null}
+      <div className="overflow-x-auto">
+        <table
+          aria-label="Banding pelan"
+          className="w-full min-w-[34rem] caption-bottom text-sm"
+        >
+          <thead className="[&_tr]:border-b">
+            <tr>
+              <th
+                scope="col"
+                className="h-11 w-[14rem] px-4 text-left align-middle font-medium whitespace-nowrap text-foreground"
+              >
+                Ciri
+              </th>
+              {PRICING_PLANS.map((plan) => (
+                <th
+                  key={plan.id}
+                  scope="col"
+                  className="h-11 px-4 text-center align-middle font-medium whitespace-nowrap text-foreground"
+                >
+                  <span className="flex flex-col items-center gap-1">
+                    <span className="flex items-center gap-2 font-medium text-foreground">
+                      {plan.name}
+                      {plan.id === "free" ? (
+                        <Badge variant="secondary">Sekarang</Badge>
+                      ) : null}
+                    </span>
+                    {priceFor(plan, period) > 0 ? (
+                      <span className="text-xs font-normal text-muted-foreground">
+                        RM
+                        <NumberFlow value={priceFor(plan, period)} /> sebulan
                       </span>
-                    ) : (
-                      plan.name
-                    )}
-                  </TableHead>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {group.rows.map((row) => (
-                  <TableRow
-                    key={`${group.title}-${row.label}`}
-                    id={`${group.title}-${row.label}`}
+                    ) : null}
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {comparisonGroups.map((group) => (
+              <Fragment key={group.title}>
+                <tr className="border-b bg-muted/30">
+                  <th
+                    scope="rowgroup"
+                    colSpan={columnCount}
+                    className="px-4 py-2 text-left align-middle font-heading text-sm tracking-tight"
                   >
-                    <TableCell id="label" className="font-medium">
+                    {group.title}
+                  </th>
+                </tr>
+                {group.rows.map((row) => (
+                  <tr
+                    key={`${group.title}-${row.label}`}
+                    className="border-b transition-colors hover:bg-muted/50"
+                  >
+                    <th
+                      scope="row"
+                      className="px-4 py-3 text-left align-middle font-medium whitespace-nowrap"
+                    >
                       {row.label}
-                    </TableCell>
+                    </th>
                     {PRICING_PLANS.map((plan) => (
-                      <TableCell
+                      <td
                         key={plan.id}
-                        id={plan.id}
                         className={cn(
-                          "text-center",
+                          "px-4 py-3 text-center align-middle whitespace-nowrap",
                           plan.highlighted && "bg-primary/5"
                         )}
                       >
                         <span className="inline-flex items-center justify-center">
                           <Cell value={row.values[plan.id]} />
                         </span>
-                      </TableCell>
+                      </td>
                     ))}
-                  </TableRow>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
-        </section>
-      ))}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <Alert>
         <IconInfoCircle />
