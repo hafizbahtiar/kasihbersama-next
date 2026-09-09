@@ -1,10 +1,19 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import type { ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { IconArchive, IconInbox, IconPlus } from "@tabler/icons-react"
+import {
+  IconAlertTriangle,
+  IconArchive,
+  IconInbox,
+  IconPlus,
+  IconUsers,
+} from "@tabler/icons-react"
 
 import { BackButton } from "@/components/back-button"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Separator } from "@/components/ui/separator"
 import { EmailVerifiedGate } from "@/components/auth/email-verified-gate"
 import { ApiFieldGapNotice } from "@/components/care/api-field-gap-notice"
 import { AsyncStateBanner } from "@/components/care/async-state"
@@ -399,9 +408,9 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
             ? ROLE_LABELS[profile.role]
             : `${profile.relation} · ${ROLE_LABELS[profile.role]}`
         }
+        meta={<ProfileStatusBadge value={profile.status} />}
         actions={
           <>
-            <ProfileStatusBadge value={profile.status} />
             <LinkButton
               href={`/care-profiles/${profile.id}/edit`}
               variant="outline"
@@ -508,199 +517,232 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
           />
         </TabsContent>
 
-        <TabsContent id="access" className="flex flex-col gap-5">
-          <DataTable
-            columns={memberColumns}
-            data={members}
-            getRowId={(row) => row.id}
-            isLoading={isRefreshing}
-            searchable
-            searchPlaceholder="Cari ahli..."
-            toolbarStart={
-              <div className="space-y-1">
-                <h2 className="font-heading text-lg tracking-tight">Ahli</h2>
-                <p className="text-sm text-muted-foreground">
-                  Tukar peranan, keizinan, atau keluarkan ahli.
-                </p>
-              </div>
-            }
-            emptyIcon={<IconInbox />}
-            emptyTitle="Tiada ahli"
-            emptyDescription="Jemput ahli untuk berkongsi profil ini."
-          />
+        <TabsContent id="access" className="flex flex-col gap-6">
+          <Alert>
+            <IconUsers />
+            <AlertTitle>Dua cara berbeza untuk memberi akses</AlertTitle>
+            <AlertDescription>
+              <span className="block">
+                <strong>Jemputan</strong> memberi orang lain akses untuk
+                membantu menjaga profil ini, pada peranan yang anda pilih. Anda
+                boleh tukar peranan atau keluarkan mereka bila-bila masa.
+              </span>
+              <span className="mt-2 block">
+                <strong>Tuntutan</strong> menyerahkan profil ini kepada orang
+                yang dijaga sendiri. Ia bukan jemputan biasa &mdash; lihat
+                amaran di bahagian tuntutan sebelum menghantar.
+              </span>
+            </AlertDescription>
+          </Alert>
 
-          {editingMember ? (
-            <PermissionEditor
-              name={editingMember.displayName}
-              role={editingMember.role}
-              permissions={editingMember.permissions}
-              onCancel={() => setEditingMemberId(null)}
-              onSave={(role, permissions) => {
-                void updateMemberRole(
-                  profileId,
-                  editingMember.userId,
-                  role,
-                  permissions
-                ).then(() => setEditingMemberId(null))
-              }}
+          <Section
+            title="Ahli"
+            description="Siapa yang ada akses kepada profil ini sekarang. Tukar peranan, laraskan keizinan, atau keluarkan ahli."
+          >
+            <DataTable
+              columns={memberColumns}
+              data={members}
+              getRowId={(row) => row.id}
+              isLoading={isRefreshing}
+              searchable
+              searchPlaceholder="Cari ahli..."
+              emptyIcon={<IconInbox />}
+              emptyTitle="Tiada ahli"
+              emptyDescription="Jemput ahli untuk berkongsi profil ini."
             />
-          ) : null}
+            {editingMember ? (
+              <PermissionEditor
+                name={editingMember.displayName}
+                role={editingMember.role}
+                permissions={editingMember.permissions}
+                onCancel={() => setEditingMemberId(null)}
+                onSave={(role, permissions) => {
+                  void updateMemberRole(
+                    profileId,
+                    editingMember.userId,
+                    role,
+                    permissions
+                  ).then(() => setEditingMemberId(null))
+                }}
+              />
+            ) : null}
+          </Section>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Jemput ahli</CardTitle>
-                <CardDescription>
-                  E-mel jemputan. Token demo dipaparkan supaya aliran terima
-                  boleh diuji.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel>E-mel</FieldLabel>
-                    <Input
-                      className="h-11 bg-background"
-                      value={inviteEmail}
-                      onChange={(event) => setInviteEmail(fieldValue(event))}
-                      placeholder="nama@contoh.com"
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel>Peranan</FieldLabel>
-                    <Select
-                      className="w-full"
-                      selectedKey={inviteRole}
-                      onSelectionChange={(key) =>
-                        setInviteRole(String(key) as CareRole)
-                      }
-                    >
-                      <SelectTrigger className="h-11 w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CARE_ROLES.map((role) => (
-                          <SelectItem key={role} id={role}>
-                            {ROLE_LABELS[role]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                </FieldGroup>
-              </CardContent>
-              <CardFooter className="justify-end">
-                <PermissionGate permission="can_invite_members">
-                  <EmailVerifiedGate>
-                    <Button
-                      onPress={() => {
-                        if (!inviteEmail.trim()) {
-                          return
-                        }
-                        void inviteMember(
-                          profile.id,
-                          inviteEmail.trim(),
-                          inviteRole
-                        ).then(() => setInviteEmail(""))
-                      }}
-                    >
-                      <IconPlus />
-                      Hantar jemputan
-                    </Button>
-                  </EmailVerifiedGate>
-                </PermissionGate>
-              </CardFooter>
-            </Card>
+          <Separator />
 
-            <PermissionGate
-              feature="profile_claim"
-              permission="can_invite_members"
-            >
+          <Section
+            title="Jemputan"
+            description="Hantar jemputan melalui e-mel, dan jejak yang masih menunggu di bawah."
+          >
+            <div className="grid gap-4 lg:grid-cols-2">
               <Card>
                 <CardHeader>
-                  <CardTitle>Tuntutan profil</CardTitle>
+                  <CardTitle>Jemput ahli</CardTitle>
                   <CardDescription>
-                    Hantar permintaan supaya subjek menuntut profil ini.
+                    E-mel jemputan. Token demo dipaparkan supaya aliran terima
+                    boleh diuji.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Field>
-                    <FieldLabel>E-mel subjek</FieldLabel>
-                    <Input
-                      className="h-11 bg-background"
-                      value={claimEmail}
-                      onChange={(event) => setClaimEmail(fieldValue(event))}
-                      placeholder="subjek@contoh.com"
-                    />
-                  </Field>
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel>E-mel</FieldLabel>
+                      <Input
+                        className="h-11 bg-background"
+                        value={inviteEmail}
+                        onChange={(event) => setInviteEmail(fieldValue(event))}
+                        placeholder="nama@contoh.com"
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Peranan</FieldLabel>
+                      <Select
+                        className="w-full"
+                        selectedKey={inviteRole}
+                        onSelectionChange={(key) =>
+                          setInviteRole(String(key) as CareRole)
+                        }
+                      >
+                        <SelectTrigger className="h-11 w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CARE_ROLES.map((role) => (
+                            <SelectItem key={role} id={role}>
+                              {ROLE_LABELS[role]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  </FieldGroup>
                 </CardContent>
                 <CardFooter className="justify-end">
-                  <EmailVerifiedGate>
-                    <Button
-                      onPress={() => {
-                        if (!claimEmail.trim()) {
-                          return
-                        }
-                        void createClaim(profile.id, claimEmail.trim()).then(
-                          () => setClaimEmail("")
-                        )
-                      }}
-                    >
-                      Cipta tuntutan
-                    </Button>
-                  </EmailVerifiedGate>
+                  <PermissionGate permission="can_invite_members">
+                    <EmailVerifiedGate>
+                      <Button
+                        onPress={() => {
+                          if (!inviteEmail.trim()) {
+                            return
+                          }
+                          void inviteMember(
+                            profile.id,
+                            inviteEmail.trim(),
+                            inviteRole
+                          ).then(() => setInviteEmail(""))
+                        }}
+                      >
+                        <IconPlus />
+                        Hantar jemputan
+                      </Button>
+                    </EmailVerifiedGate>
+                  </PermissionGate>
                 </CardFooter>
               </Card>
-            </PermissionGate>
-          </div>
+            </div>
+            <DataTable
+              columns={inviteColumns}
+              data={invites}
+              getRowId={(row) => row.id}
+              isLoading={isRefreshing}
+              searchable
+              searchPlaceholder="Cari jemputan..."
+              filter={{
+                columnId: "status",
+                label: "Status",
+                options: Object.entries(INVITE_STATUS_LABELS).map(
+                  ([value, label]) => ({ value, label })
+                ),
+              }}
+              emptyIcon={<IconInbox />}
+              emptyTitle="Tiada jemputan"
+              emptyDescription="Hantar jemputan untuk menambah ahli."
+            />
+          </Section>
 
-          <DataTable
-            columns={inviteColumns}
-            data={invites}
-            getRowId={(row) => row.id}
-            isLoading={isRefreshing}
-            searchable
-            searchPlaceholder="Cari jemputan..."
-            filter={{
-              columnId: "status",
-              label: "Status",
-              options: Object.entries(INVITE_STATUS_LABELS).map(
-                ([value, label]) => ({ value, label })
-              ),
-            }}
-            toolbarStart={
-              <h2 className="font-heading text-lg tracking-tight">
-                Jemputan tertunda
-              </h2>
-            }
-            emptyIcon={<IconInbox />}
-            emptyTitle="Tiada jemputan"
-            emptyDescription="Hantar jemputan untuk menambah ahli."
-          />
+          <PermissionGate
+            feature="profile_claim"
+            permission="can_invite_members"
+          >
+            <Separator />
 
-          <DataTable
-            columns={claimColumns}
-            data={claims}
-            getRowId={(row) => row.id}
-            isLoading={isRefreshing}
-            searchable
-            searchPlaceholder="Cari tuntutan..."
-            filter={{
-              columnId: "status",
-              label: "Status",
-              options: Object.entries(CLAIM_STATUS_LABELS).map(
-                ([value, label]) => ({ value, label })
-              ),
-            }}
-            toolbarStart={
-              <h2 className="font-heading text-lg tracking-tight">
-                Tuntutan tertunda
-              </h2>
-            }
-            emptyIcon={<IconInbox />}
-            emptyTitle="Tiada tuntutan"
-            emptyDescription="Cipta tuntutan supaya subjek boleh terima profil ini."
-          />
+            <Section
+              title="Tuntutan profil"
+              description="Serahkan profil ini kepada orang yang dijaga, supaya mereka memilikinya sendiri."
+            >
+              <Alert variant="destructive">
+                <IconAlertTriangle />
+                <AlertTitle>Tuntutan tidak boleh dibatalkan</AlertTitle>
+                <AlertDescription>
+                  Apabila tuntutan diterima, akaun itu menjadi pemilik subjek
+                  profil ini. Peranan tersebut tidak boleh ditukar atau
+                  dikeluarkan selepas itu, walaupun oleh anda. Pastikan e-mel
+                  betul sebelum menghantar.
+                </AlertDescription>
+              </Alert>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <PermissionGate
+                  feature="profile_claim"
+                  permission="can_invite_members"
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Tuntutan profil</CardTitle>
+                      <CardDescription>
+                        Hantar permintaan supaya subjek menuntut profil ini.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Field>
+                        <FieldLabel>E-mel subjek</FieldLabel>
+                        <Input
+                          className="h-11 bg-background"
+                          value={claimEmail}
+                          onChange={(event) => setClaimEmail(fieldValue(event))}
+                          placeholder="subjek@contoh.com"
+                        />
+                      </Field>
+                    </CardContent>
+                    <CardFooter className="justify-end">
+                      <EmailVerifiedGate>
+                        <Button
+                          onPress={() => {
+                            if (!claimEmail.trim()) {
+                              return
+                            }
+                            void createClaim(
+                              profile.id,
+                              claimEmail.trim()
+                            ).then(() => setClaimEmail(""))
+                          }}
+                        >
+                          Cipta tuntutan
+                        </Button>
+                      </EmailVerifiedGate>
+                    </CardFooter>
+                  </Card>
+                </PermissionGate>
+              </div>
+              <DataTable
+                columns={claimColumns}
+                data={claims}
+                getRowId={(row) => row.id}
+                isLoading={isRefreshing}
+                searchable
+                searchPlaceholder="Cari tuntutan..."
+                filter={{
+                  columnId: "status",
+                  label: "Status",
+                  options: Object.entries(CLAIM_STATUS_LABELS).map(
+                    ([value, label]) => ({ value, label })
+                  ),
+                }}
+                emptyIcon={<IconInbox />}
+                emptyTitle="Tiada tuntutan"
+                emptyDescription="Cipta tuntutan supaya subjek boleh terima profil ini."
+              />
+            </Section>
+          </PermissionGate>
         </TabsContent>
 
         <TabsContent id="timeline">
@@ -815,6 +857,37 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
         }}
       />
     </div>
+  )
+}
+
+/**
+ * One heading treatment for a group of related controls.
+ *
+ * The access tab titled its groups two different ways - an h2 with a
+ * paragraph inside DataTable's toolbar in some places, a Card header in
+ * others - so sections that are peers did not read as peers.
+ */
+function Section({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description?: string
+  children: ReactNode
+}) {
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="space-y-1">
+        <h2 className="font-heading text-lg tracking-tight">{title}</h2>
+        {description ? (
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            {description}
+          </p>
+        ) : null}
+      </div>
+      {children}
+    </section>
   )
 }
 
