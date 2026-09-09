@@ -12,6 +12,7 @@ import {
   type CarePermissions,
   type CareProfile,
   type CareSummary,
+  type ProfileHealthInfo,
   type EmergencyCard,
   type CareTask,
   type Medication,
@@ -181,14 +182,51 @@ export function mapPermissions(
   return base
 }
 
+/**
+ * Every key present, values still allowed to be absent.
+ *
+ * `Record` over `keyof` rather than `Required<T>` or a `-?` mapped type:
+ * both of those also strip `undefined` from the value, which would force each
+ * field to be a string the API does not always send. Keyed off
+ * `ProfileHealthInfo`, so adding a field there breaks this mapper until it is
+ * handled.
+ */
+type EveryHealthField = Record<keyof ProfileHealthInfo, string | undefined>
+
+/**
+ * The health columns, mapped exhaustively.
+ *
+ * Typed so that omitting a field does not compile. Without that guard an
+ * omission is legal TypeScript, which is exactly how the entire health block
+ * went missing from `mapProfile`: every field on the domain type is optional,
+ * so dropping all nine compiled cleanly, saved fine, and came back empty on
+ * the next read - the bug reported as "save works, refresh clears the form".
+ */
+function mapHealthInfo(api: ApiProfile): EveryHealthField {
+  return {
+    legalName: api.legal_name,
+    dateOfBirth: api.date_of_birth,
+    gender: api.gender,
+    bloodType: api.blood_type,
+    allergySummary: api.allergy_summary,
+    conditionSummary: api.condition_summary,
+    primaryClinic: api.primary_clinic,
+    primaryDoctor: api.primary_doctor,
+    emergencyNote: api.emergency_note,
+  }
+}
+
 export function mapProfile(api: ApiProfile): CareProfile {
   // relation and notes are still absent from profileResp - see
-  // lib/application/care-profile-field-gaps.ts. date_of_birth landed
-  // 2026-09-09 and is read here.
+  // lib/application/care-profile-field-gaps.ts.
   return {
+    ...mapHealthInfo(api),
     id: api.id,
     displayName: api.display_name,
     relation: "",
+    subjectUserId: api.subject_user_id,
+    // CareProfile.dateOfBirth is a plain string for the forms that bind to it;
+    // the health-info copy above keeps the optional shape.
     dateOfBirth: api.date_of_birth ?? "",
     status: asEnum(api.status, ["active", "archived"] as const, "active"),
     role: asEnum(

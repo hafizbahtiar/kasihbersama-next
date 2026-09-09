@@ -149,8 +149,23 @@ domain penghantar disahkan di Resend.
 
 ### Selesai sesi ini (2026-09-09)
 
-- [x] **Pepijat: set jantina → toast berjaya → medan kosong semula.** Dua punca, satu
-  setiap sisi:
+- [x] **Pepijat: simpan berjaya, refresh borang kosong.** Punca **ketiga**, dan yang
+  sebenarnya menyebabkan data hilang: **`mapProfile` tak memetakan satu pun daripada
+  sembilan medan kesihatan.** Suntingan aku yang sepatutnya menambahnya gagal senyap
+  (`str.replace` tanpa padanan ialah no-op), dan **setiap medan itu opsyenal pada
+  `CareProfile`, jadi menjatuhkan kesembilan-sembilannya adalah TypeScript yang sah** —
+  tiada ralat, tiada amaran. Tulisan sampai ke DB; bacaan membuangnya.
+  - Ia juga menjelaskan lencana "Saya" yang tak pernah muncul: `subjectUserId` hilang
+    daripada mapper yang sama, jadi `isOwnHealthProfile()` selalu `false`.
+  - Pembetulan `seededFor` aku **menyembunyikan** gejala: borang tak lagi diseed semula
+    daripada respons, jadi "nampak okay selepas simpan" berhenti membuktikan apa-apa
+    tentang apa yang backend pulangkan. Itu menjadikan pepijat lebih sukar dilihat, bukan
+    kurang.
+  - **Pengawal masa kompilasi ditambah:** `mapHealthInfo` pulang
+    `Record<keyof ProfileHealthInfo, string | undefined>`, jadi meninggalkan satu medan
+    tak akan compile. Disahkan dengan membuang `gender` dan melihat `tsc` gagal.
+- [x] **Pepijat berkaitan: set jantina → toast berjaya → medan kosong semula.** Dua punca
+  lain, satu setiap sisi:
   - **Backend:** `POST /me/health-profile` memulangkan rekod tersimpan dan **membuang
     medan dalam badan**. Klien yang belum memuatkan rekod menghantar POST dan bukan PATCH,
     jadi tulisan itu hilang di belakang 200. Kini ia menulis medan yang dihantar.
@@ -159,6 +174,33 @@ domain penghantar disahkan di Resend.
     apa-apa yang ditaip semasa muat semula latar belakang dibuang di tengah suntingan.
     Kini ia diseed sekali setiap rekod (`seededFor`), dan Simpan dilumpuhkan sehingga
     bacaan pertama mendarat supaya ia tak menghantar permintaan yang salah.
+- [x] **Kad kecemasan: blok alahan dikecilkan, keadaan kosong menunjukkan contoh.**
+  - Blok alahan dahulunya panel berisi yang mengambil **satu pertiga kad 85.6×54 mm** —
+    itu poster, bukan kad. Kini garis merah nipis di kiri dengan satu baris teks. Alahan
+    masih mendahului; merah itu aksen, bukan luas.
+  - **Kad kosong kini menunjukkan data contoh yang dikelabukan**, bukan berkata "belum
+    diisi". Kad kosong tak mengajar apa-apa: pengguna kali pertama tak dapat bezakan sama
+    ada ciri itu rosak, datanya gagal dimuat, atau apa yang mereka dapat kalau mengisinya.
+    Nilai contoh menjawab ketiga-tiganya sekali pandang.
+  - Nilai contoh sengaja **biasa dan Melayu** ("Penisilin, kacang", "Klinik Kesihatan
+    Bandar Baru") dan bukan "Contoh 1" — tujuannya menunjukkan rupa kad sebenar, dan
+    placeholder yang kelihatan seperti placeholder menunjukkan rupa borang.
+  - **Seluruh muka** dikelabukan, bukan medan demi medan: kad dengan sebahagian baris
+    kelabu dan sebahagian hitam terbaca sebagai separa diisi — satu-satunya perkara yang
+    ia tak boleh katakan. Lencana jenis darah turut ditukar ke `secondary`.
+  - `Alert` shadcn di atas kad menjelaskan ia contoh dan akan bertukar apabila diisi.
+- [x] **Halaman harga jadi interaktif + halaman banding penuh (`/pricing/compare`).**
+  - **Pemilih pelan**: peluncur "Saya menjaga N orang" yang menjawab soalan tajuk halaman
+    itu sendiri. Pelan berbeza pada satu nombor, jadi biar penjaga tetapkan nombor itu dan
+    lihat jawapannya berubah — bukannya membaca tiga senarai ciri untuk menemui perkara
+    yang sama. Diseed daripada bilangan profil sebenar akaun.
+  - Cincin sorotan dan lencana kini **mengikut pemilih itu**, bukan "Paling popular" yang
+    ditulis keras. Lencana berbunyi "Cukup untuk N orang".
+  - Halaman banding: jadual shadcn, baris hanya untuk perkara yang **benar-benar
+    berbeza** — jadual yang dipadatkan dengan baris yang semua pelan kongsi ialah helah
+    lama untuk memanjangkan lajur berbayar, dan penjaga yang membacanya tak belajar apa-apa.
+  - Lajur Percuma dalam jadual itu juga dibaca daripada `/bootstrap`, sama seperti kad
+    harga.
 - [x] **Kad kecemasan dihalusi.** Meminjam perbendaharaan objek fizikal yang orang sudah
   kenal: nisbah 85.6×54 mm, tanda pengeluar di sudut (dalam cip pucat yang logo raster
   itu perlukan untuk terbaca), permukaan senyap dengan satu sumber cahaya lembut.

@@ -4,17 +4,20 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import {
   IconAlertTriangle,
   IconDroplet,
+  IconEyeQuestion,
   IconNfc,
   IconRotate,
 } from "@tabler/icons-react"
 
 import { AsyncStateBanner } from "@/components/care/async-state"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { LogoMark } from "@/components/brand/logo-mark"
+import { Badge } from "@/components/ui/badge"
 import { Button, LinkButton } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getCareRepository } from "@/lib/composition/care-repository"
 import { formatDate } from "@/lib/application/care-format"
-import type { EmergencyCard } from "@/lib/domain/care"
+import { SAMPLE_EMERGENCY_CARD, type EmergencyCard } from "@/lib/domain/care"
 import { ApiError, normalizeApiError } from "@/lib/infrastructure/api/errors"
 import { cn } from "@/lib/utils"
 
@@ -85,16 +88,23 @@ function Face({
   children,
   className,
   style,
+  muted,
 }: {
   children: React.ReactNode
   className?: string
   style?: React.CSSProperties
+  /** The values on this face are samples, not the person's own record. */
+  muted?: boolean
 }) {
   return (
     <div
       style={style}
       className={cn(
         "absolute inset-0 overflow-hidden rounded-2xl bg-card p-4 shadow-xl ring-1 ring-foreground/10",
+        // Sample values are dimmed as a whole face rather than field by field:
+        // a card with some grey lines and some black ones reads as partly
+        // filled in, which is the one thing it must not say.
+        muted && "text-muted-foreground",
         // A single soft light source from the top-left, so the card reads as a
         // surface rather than a coloured rectangle.
         "before:pointer-events-none before:absolute before:-top-16 before:-left-10 before:size-48 before:rounded-full before:bg-primary/10 before:blur-2xl",
@@ -208,9 +218,27 @@ export function EmergencyCardView({
   }
 
   const blank = isBlank(card)
+  // An empty card is rendered with sample values instead of blanks, so a first
+  // look shows what the card is for rather than whether it is broken. The
+  // muted treatment and the alert above it are what keep the sample from being
+  // mistaken for the person's own record.
+  const shown: EmergencyCard = blank
+    ? { ...card, ...SAMPLE_EMERGENCY_CARD }
+    : card
 
   return (
     <div className={cn("w-full max-w-[26rem] space-y-3", className)}>
+      {blank ? (
+        <Alert data-print-hide>
+          <IconEyeQuestion />
+          <AlertTitle>Ini contoh sahaja</AlertTitle>
+          <AlertDescription>
+            Kad ini menunjukkan data contoh supaya anda nampak rupanya. Ia akan
+            bertukar kepada maklumat sebenar sebaik anda mengisinya.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       <div
         ref={frameRef}
         data-print-hide
@@ -227,47 +255,60 @@ export function EmergencyCardView({
           className="relative aspect-[1.586/1] w-full transition-transform duration-500 ease-out motion-reduce:transition-none"
         >
           {/* Front */}
-          <Face style={{ backfaceVisibility: "hidden" }}>
+          <Face muted={blank} style={{ backfaceVisibility: "hidden" }}>
             <div className="flex h-full flex-col justify-between">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <Label>Kad kecemasan</Label>
                   <p className="mt-1 truncate font-heading text-lg leading-tight tracking-tight">
-                    {card.displayName}
+                    {shown.displayName}
                   </p>
                 </div>
-                {card.bloodType ? (
-                  <span className="flex shrink-0 items-center gap-1 rounded-lg bg-destructive px-2 py-1 text-sm font-semibold text-white">
-                    <IconDroplet className="size-3.5" />
-                    {card.bloodType}
-                  </span>
+                {shown.bloodType ? (
+                  // Muted along with the rest when the values are samples: a
+                  // solid red badge on a greyed card contradicts the one thing
+                  // the grey is saying.
+                  <Badge
+                    variant={blank ? "secondary" : "destructive"}
+                    className="shrink-0 text-sm"
+                  >
+                    <IconDroplet />
+                    {shown.bloodType}
+                  </Badge>
                 ) : null}
               </div>
 
-              {blank ? (
-                <p className="text-sm text-muted-foreground">
-                  Maklumat kesihatan belum diisi.
-                </p>
-              ) : (
-                <div className="rounded-lg bg-destructive/10 px-3 py-2 ring-1 ring-destructive/25">
+              {/*
+                A slim rule, not a filled panel. Allergies still lead - red
+                mark, first line under the name - but the previous version gave
+                one field a third of an 85.6x54mm card, which is a poster
+                rather than a card. The red is the accent, not the area.
+              */}
+              <div className="flex items-start gap-2.5 border-l-2 border-destructive pl-2.5">
+                <div className="min-w-0 flex-1">
                   <Label>Alahan</Label>
-                  <p className="mt-1 line-clamp-2 text-sm leading-snug font-medium">
-                    {card.allergySummary || "Tiada direkodkan"}
+                  <p
+                    className={cn(
+                      "mt-0.5 line-clamp-1 text-sm leading-snug font-medium",
+                      blank && "text-muted-foreground"
+                    )}
+                  >
+                    {shown.allergySummary || "Tiada direkodkan"}
                   </p>
                 </div>
-              )}
+              </div>
 
               <div className="flex items-end justify-between gap-3">
                 <div className="grid min-w-0 flex-1 grid-cols-2 gap-3">
                   <Field
                     label="Lahir"
                     value={
-                      card.dateOfBirth
-                        ? formatDate(card.dateOfBirth)
+                      shown.dateOfBirth
+                        ? formatDate(shown.dateOfBirth)
                         : undefined
                     }
                   />
-                  <Field label="Nama penuh" value={card.legalName} />
+                  <Field label="Nama penuh" value={shown.legalName} />
                 </div>
                 <BrandChip />
               </div>
@@ -276,29 +317,24 @@ export function EmergencyCardView({
 
           {/* Back */}
           <Face
+            muted={blank}
             style={{
               backfaceVisibility: "hidden",
               transform: "rotateY(180deg)",
             }}
           >
             <div className="flex h-full flex-col justify-between">
-              {blank ? (
-                <p className="text-sm text-muted-foreground">
-                  Tiada keadaan kesihatan, klinik atau nota direkodkan.
-                </p>
-              ) : (
-                <div className="min-h-0 space-y-2.5 overflow-hidden">
-                  <Field
-                    label="Keadaan kesihatan"
-                    value={card.conditionSummary}
-                  />
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Klinik" value={card.primaryClinic} />
-                    <Field label="Doktor" value={card.primaryDoctor} />
-                  </div>
-                  <Field label="Nota" value={card.emergencyNote} />
+              <div className="min-h-0 space-y-2.5 overflow-hidden">
+                <Field
+                  label="Keadaan kesihatan"
+                  value={shown.conditionSummary}
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Klinik" value={shown.primaryClinic} />
+                  <Field label="Doktor" value={shown.primaryDoctor} />
                 </div>
-              )}
+                <Field label="Nota" value={shown.emergencyNote} />
+              </div>
 
               {/*
                 Reserved, not pretending. A physical card with an NFC tag would
@@ -340,28 +376,30 @@ export function EmergencyCardView({
         <div>
           <Label>Kad kecemasan</Label>
           <p className="font-heading text-2xl tracking-tight">
-            {card.displayName}
+            {shown.displayName}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Jenis darah" value={card.bloodType} />
+          <Field label="Jenis darah" value={shown.bloodType} />
           <Field
             label="Tarikh lahir"
-            value={card.dateOfBirth ? formatDate(card.dateOfBirth) : undefined}
+            value={
+              shown.dateOfBirth ? formatDate(shown.dateOfBirth) : undefined
+            }
           />
-          <Field label="Nama penuh" value={card.legalName} />
-          <Field label="Jantina" value={card.gender} />
+          <Field label="Nama penuh" value={shown.legalName} />
+          <Field label="Jantina" value={shown.gender} />
         </div>
         <Field
           label="Alahan"
-          value={card.allergySummary || "Tiada direkodkan"}
+          value={shown.allergySummary || "Tiada direkodkan"}
         />
-        <Field label="Keadaan kesihatan" value={card.conditionSummary} />
+        <Field label="Keadaan kesihatan" value={shown.conditionSummary} />
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Klinik utama" value={card.primaryClinic} />
-          <Field label="Doktor utama" value={card.primaryDoctor} />
+          <Field label="Klinik utama" value={shown.primaryClinic} />
+          <Field label="Doktor utama" value={shown.primaryDoctor} />
         </div>
-        <Field label="Nota kecemasan" value={card.emergencyNote} />
+        <Field label="Nota kecemasan" value={shown.emergencyNote} />
       </div>
 
       <div data-print-hide className="flex flex-wrap items-center gap-2">

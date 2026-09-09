@@ -543,3 +543,31 @@ export type EmergencyCard = {
   careProfileId: string
   displayName: string
 } & ProfileHealthInfo
+
+/**
+ * A filled-in card, shown greyed out when the real one is empty.
+ *
+ * A blank card teaches nothing: someone opening it for the first time cannot
+ * tell whether the feature is broken, whether their data failed to load, or
+ * what they would get for filling it in. Sample values answer all three at a
+ * glance - as long as they are unmistakably samples, which is what the muted
+ * treatment and the alert above the card are for.
+ *
+ * Deliberately ordinary Malaysian values rather than "Lorem" or "Contoh 1":
+ * the point is to show the shape of a real card, and placeholder-looking
+ * placeholders show the shape of a form instead.
+ */
+export const SAMPLE_EMERGENCY_CARD: Omit<
+  EmergencyCard,
+  "careProfileId" | "displayName"
+> = {
+  legalName: "Siti binti Abdullah",
+  dateOfBirth: "1954-03-12",
+  gender: "Perempuan",
+  bloodType: "O+",
+  allergySummary: "Penisilin, kacang",
+  conditionSummary: "Diabetes jenis 2, darah tinggi",
+  primaryClinic: "Klinik Kesihatan Bandar Baru",
+  primaryDoctor: "Dr. Nurul Huda",
+  emergencyNote: "Hubungi Aisyah 012-345 6789",
+}

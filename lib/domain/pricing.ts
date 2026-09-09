@@ -36,6 +36,148 @@ export type PricingPlan = {
 
 export const YEARLY_MONTHS_CHARGED = 10
 
+/** Profiles each plan allows, for the "how many do you look after?" chooser. */
+export const PLAN_PROFILE_CAPS: Record<PricingPlan["id"], number> = {
+  free: 1,
+  family: 5,
+  // Not literally unlimited in the data model; the number a household would
+  // ever reach. Sized so the chooser can compare it like any other.
+  care_home: 50,
+}
+
+/**
+ * The plan that fits a given number of people.
+ *
+ * The page asks "how many do you look after?" and this answers it, rather than
+ * leaving a carer to compare three feature lists to find out that the only
+ * difference that matters to them is a single number.
+ */
+export function planForProfileCount(count: number): PricingPlan["id"] {
+  if (count <= PLAN_PROFILE_CAPS.free) {
+    return "free"
+  }
+  if (count <= PLAN_PROFILE_CAPS.family) {
+    return "family"
+  }
+  return "care_home"
+}
+
+/**
+ * The full comparison, for the dedicated compare page.
+ *
+ * Rows are what actually differs. A comparison table padded with rows every
+ * plan shares is an old trick for making the paid column look longer, and a
+ * carer reading it learns nothing.
+ */
+export type ComparisonRow = {
+  label: string
+  /** A tick, a cross, or a value per plan. */
+  values: Record<PricingPlan["id"], string | boolean>
+  /** Set when the free column must be read from the server, not from here. */
+  liveFreeValue?: "profiles" | "members" | "upload"
+}
+
+export const COMPARISON_GROUPS: Array<{
+  title: string
+  rows: ComparisonRow[]
+}> = [
+  {
+    title: "Had",
+    rows: [
+      {
+        label: "Profil jagaan",
+        liveFreeValue: "profiles",
+        values: { free: "1", family: "5", care_home: "Tanpa had" },
+      },
+      {
+        label: "Ahli setiap profil",
+        liveFreeValue: "members",
+        values: { free: "2", family: "10", care_home: "Tanpa had" },
+      },
+      {
+        label: "Saiz fail",
+        liveFreeValue: "upload",
+        values: { free: "5 MB", family: "25 MB", care_home: "100 MB" },
+      },
+      {
+        label: "Simpanan dokumen",
+        values: { free: "500 MB", family: "5 GB", care_home: "50 GB" },
+      },
+    ],
+  },
+  {
+    title: "Penjagaan harian",
+    rows: [
+      {
+        label: "Log jagaan dan timeline",
+        values: { free: true, family: true, care_home: true },
+      },
+      {
+        label: "Ubat, jadual dan tanda dos",
+        values: { free: true, family: true, care_home: true },
+      },
+      {
+        label: "Temujanji dan tugasan",
+        values: { free: true, family: true, care_home: true },
+      },
+      {
+        label: "Bacaan vital dan carta trend",
+        values: { free: true, family: true, care_home: true },
+      },
+      {
+        label: "Kad kecemasan",
+        values: { free: true, family: true, care_home: true },
+      },
+      {
+        label: "Ringkasan doktor",
+        values: { free: true, family: true, care_home: true },
+      },
+    ],
+  },
+  {
+    title: "Berkongsi penjagaan",
+    rows: [
+      {
+        label: "Jemput ahli keluarga",
+        values: { free: true, family: true, care_home: true },
+      },
+      {
+        label: "Kumpulan jagaan (beberapa profil)",
+        values: { free: false, family: true, care_home: true },
+      },
+      {
+        label: "Peranan terperinci untuk penjaga upahan",
+        values: { free: false, family: true, care_home: true },
+      },
+      {
+        label: "Sejarah audit penuh",
+        values: { free: false, family: true, care_home: true },
+      },
+    ],
+  },
+  {
+    title: "Rekod dan pematuhan",
+    rows: [
+      {
+        label: "Muat turun data sendiri",
+        values: { free: true, family: true, care_home: true },
+      },
+      {
+        label: "Eksport untuk rekod klinikal",
+        values: { free: false, family: false, care_home: true },
+      },
+      {
+        label: "Log akses",
+        values: { free: false, family: false, care_home: true },
+      },
+      {
+        label: "Sokongan keutamaan",
+        values: { free: false, family: false, care_home: true },
+      },
+    ],
+  },
+]
+
 export const PRICING_PLANS: PricingPlan[] = [
   {
     id: "free",

@@ -7,10 +7,11 @@ import { IconCheck, IconInfoCircle } from "@tabler/icons-react"
 import { useCareData } from "@/components/care/care-data-provider"
 import { PageHeader } from "@/components/care/page-header"
 import { usePlatform } from "@/components/platform/platform-provider"
+import { PlanChooser } from "@/components/pricing/plan-chooser"
 import { UsageAgainstYourLimit } from "@/components/pricing/usage-against-your-limit"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Button, LinkButton } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -22,6 +23,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
   PRICING_PLANS,
+  planForProfileCount,
   priceFor,
   type BillingPeriod,
 } from "@/lib/domain/pricing"
@@ -31,6 +33,12 @@ export function PricingPage() {
   const { limits } = usePlatform()
   const { snapshot } = useCareData()
   const [period, setPeriod] = useState<BillingPeriod>("yearly")
+  // Seeded from what the account actually has, so the page opens on the
+  // carer's own situation rather than on a marketing default.
+  const [count, setCount] = useState(() =>
+    Math.max(1, snapshot.profiles.length)
+  )
+  const suggested = planForProfileCount(count)
 
   return (
     <div className="flex flex-col gap-8">
@@ -46,6 +54,8 @@ export function PricingPage() {
       />
 
       <UsageAgainstYourLimit limits={limits} profiles={snapshot.profiles} />
+
+      <PlanChooser count={count} onCountChange={setCount} />
 
       <div className="flex flex-wrap items-center gap-3">
         <ToggleGroup
@@ -65,6 +75,14 @@ export function PricingPage() {
         <span className="text-sm text-muted-foreground">
           Bayaran tahunan: 2 bulan percuma.
         </span>
+        <LinkButton
+          variant="outline"
+          size="sm"
+          href="/pricing/compare"
+          className="ml-auto"
+        >
+          Banding penuh
+        </LinkButton>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -76,8 +94,13 @@ export function PricingPage() {
             <Card
               key={plan.id}
               className={cn(
-                "flex h-full flex-col",
-                plan.highlighted && "ring-2 ring-primary"
+                "flex h-full flex-col transition-shadow",
+                // The ring follows the chooser, not a hardcoded "most
+                // popular": the plan being recommended is the one that fits
+                // the number this carer just set.
+                plan.id === suggested
+                  ? "ring-2 ring-primary"
+                  : "opacity-80 hover:opacity-100"
               )}
             >
               <CardHeader>
@@ -139,7 +162,7 @@ export function PricingPage() {
                 */}
                 <Button
                   className="w-full"
-                  variant={plan.highlighted ? "default" : "outline"}
+                  variant={plan.id === suggested ? "default" : "outline"}
                   isDisabled={plan.id !== "free"}
                 >
                   {plan.id === "free" ? "Pelan anda sekarang" : "Belum dibuka"}
