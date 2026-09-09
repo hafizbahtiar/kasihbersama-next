@@ -1,0 +1,78 @@
+import type { ResourceRecord } from "@/lib/domain/resource"
+
+export const seedRecords: Record<string, ResourceRecord[]> = {
+  notifications: [
+    {
+      id: "ntf-1",
+      name: "Ubat malam belum diambil",
+      detail: "Amlodipine 5mg untuk Siti Aminah pada 21:00.",
+      time: "10 minit lalu",
+      status: "Baharu",
+      audience: "Pengguna",
+    },
+    {
+      id: "ntf-2",
+      name: "Temujanji esok",
+      detail: "Klinik kesihatan KK Ampang, 12 Sep 2026.",
+      time: "1 jam lalu",
+      status: "Baharu",
+      audience: "Pengguna",
+    },
+    {
+      id: "ntf-3",
+      name: "Bacaan gula direkod",
+      detail: "Ahmad Razak, 6.4 mmol/L.",
+      time: "Hari ini",
+      status: "Dibaca",
+      audience: "Pengguna",
+    },
+    {
+      id: "ntf-4",
+      name: "Stok ubat hampir habis",
+      detail: "Metformin tinggal untuk 4 hari.",
+      time: "Semalam",
+      status: "Baharu",
+      audience: "Pengguna",
+    },
+    {
+      id: "ntf-5",
+      name: "Fisioterapi dijadualkan",
+      detail: "Nurul Huda, Hospital Ampang, 9 Sep 2026.",
+      time: "2 hari lalu",
+      status: "Dibaca",
+      audience: "Pengguna",
+    },
+    {
+      id: "ntf-6",
+      name: "Tugasan tertunda",
+      detail: "Isi borang hospital untuk Omar Abdullah.",
+      time: "3 hari lalu",
+      status: "Dibaca",
+      audience: "Pengguna",
+    },
+    {
+      id: "ntf-a1",
+      name: "Penyelenggaraan sistem",
+      detail: "Aplikasi akan diselenggara pada 10 Sep, 1:00–3:00 pagi.",
+      time: "2 jam lalu",
+      status: "Baharu",
+      audience: "Admin",
+    },
+    {
+      id: "ntf-a2",
+      name: "Pengumuman polisi privasi",
+      detail: "Sila semak kemaskini polisi privasi sebelum 15 Sep.",
+      time: "Semalam",
+      status: "Baharu",
+      audience: "Admin",
+    },
+    {
+      id: "ntf-a3",
+      name: "Sesi latihan penjaga",
+      detail: "Latihan dalam talian, Sabtu 13 Sep, 10:00 pagi.",
+      time: "3 hari lalu",
+      status: "Dibaca",
+      audience: "Admin",
+    },
+  ],
+}
