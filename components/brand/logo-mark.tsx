@@ -1,7 +1,16 @@
-import { LOGO_HEART, LOGO_SEGMENTS } from "@/components/brand/logo-paths"
+import Image from "next/image"
+
 import { cn } from "@/lib/utils"
 
-/** Kasih Bersama — three arcs (circle of care) + heart. */
+/**
+ * Kasih Bersama - two clasped hands forming a heart, with the network of
+ * people it stands for drawn inside it.
+ *
+ * A raster, not the inline SVG that used to live here. The real mark is two
+ * fixed colours - brand teal and gold - so it cannot follow `currentColor` the
+ * way a single-path glyph can, and it must sit on a light surface to read.
+ * Every caller wraps it in a pale chip for that reason.
+ */
 export function LogoMark({
   className,
   title = "Kasih Bersama",
@@ -12,20 +21,38 @@ export function LogoMark({
   decorative?: boolean
 }) {
   return (
-    <svg
-      viewBox="0 0 32 32"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="currentColor"
-      className={cn("block size-8 shrink-0", className)}
-      role={decorative ? undefined : "img"}
+    <Image
+      src="/brand/mark-192.png"
+      alt={decorative ? "" : title}
       aria-hidden={decorative ? true : undefined}
-      aria-label={decorative ? undefined : title}
-    >
-      {!decorative ? <title>{title}</title> : null}
-      {LOGO_SEGMENTS.map((segment, index) => (
-        <path key={index} d={segment} />
-      ))}
-      <path d={LOGO_HEART} />
-    </svg>
+      width={192}
+      height={177}
+      priority
+      className={cn("block h-auto w-full object-contain", className)}
+    />
+  )
+}
+
+/**
+ * The horizontal lockup: mark plus "Kasih Bersama". Use where the name would
+ * otherwise be set as text beside the mark, so the wordmark's own letterforms
+ * carry it instead of the UI font.
+ */
+export function LogoWordmark({
+  className,
+  title = "Kasih Bersama",
+}: {
+  className?: string
+  title?: string
+}) {
+  return (
+    <Image
+      src="/brand/wordmark-1024.png"
+      alt={title}
+      width={1024}
+      height={311}
+      priority
+      className={cn("block h-auto w-auto object-contain", className)}
+    />
   )
 }

@@ -26,9 +26,6 @@ export const metadata: Metadata = {
     default: "Kasih Bersama",
     template: "%s · Kasih Bersama",
   },
-  icons: {
-    icon: [{ url: "/logo.svg", type: "image/svg+xml" }],
-  },
 }
 
 export const viewport: Viewport = {

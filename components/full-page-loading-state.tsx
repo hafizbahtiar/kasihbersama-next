@@ -29,7 +29,9 @@ export function FullPageLoadingState({
             aria-hidden="true"
             className="absolute inset-0 animate-spin rounded-full border-2 border-primary/15 border-t-primary motion-reduce:animate-none"
           />
-          <LogoMark className="size-7 text-primary" decorative />
+          <span className="grid size-9 place-items-center rounded-full bg-white p-1.5 ring-1 ring-border">
+            <LogoMark className="size-full" decorative />
+          </span>
         </div>
         <p className="text-sm text-muted-foreground">{label}</p>
       </div>

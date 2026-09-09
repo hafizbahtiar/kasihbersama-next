@@ -69,7 +69,7 @@ export function AppSidebar() {
               tooltip="Kasih Bersama"
               className="group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
             >
-              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary p-1.5 text-primary-foreground">
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-white p-1 ring-1 ring-border dark:bg-white">
                 <LogoMark className="size-full" decorative />
               </span>
               <span className="flex min-w-0 flex-col leading-tight group-data-[collapsible=icon]:hidden">
