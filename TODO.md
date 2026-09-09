@@ -174,6 +174,42 @@ domain penghantar disahkan di Resend.
     apa-apa yang ditaip semasa muat semula latar belakang dibuang di tengah suntingan.
     Kini ia diseed sekali setiap rekod (`seededFor`), dan Simpan dilumpuhkan sehingga
     bacaan pertama mendarat supaya ia tak menghantar permintaan yang salah.
+- [x] **Halaman `/pricing/compare` gagal dimuat di staging.** `ui/table` ialah **Table
+  react-aria — komponen koleksi**, sama seperti `Menu`. Aku membungkus baris dalam
+  `<Fragment>` dan menggunakan `colSpan` untuk tajuk kumpulan; RAC tiada `colSpan`
+  langsung, dan pembalut sembarangan dalam koleksi menghentikan render — halaman gagal,
+  bukan merosot. **Kesilapan kelas yang sama seperti `<div>` dalam menu akaun**, dan aku
+  tak menyemaknya walaupun sudah terkena sekali.
+  - Kini satu jadual setiap kumpulan, tiada `colSpan`, tiada pembalut — mengikut corak
+    yang `data-table.tsx` sudah buktikan berfungsi dalam app ini.
+  - Pelajaran yang dicatat: dalam projek ini, primitif shadcn selalunya koleksi
+    react-aria. Semak sebelum menganggap ia `<table>`/`<div>` biasa.
+- [x] **Nilai berkod jadi konvensyen, bukan pembetulan sekali.** `RELATION_OPTIONS`
+  ("Ibu", "Bapa") dan `BEFORE_AFTER_MEAL_OPTIONS` ("Sebelum makan") menyimpan kapsyen
+  Melayu sebagai nilai — dan yang kedua **dihantar ke backend**. Kini snake_case dengan
+  label dikenakan semasa render, sama seperti jantina. `TIMEZONE_OPTIONS` dibiarkan: id
+  IANA memang pengecam standard.
+  - Migrasi backend 00017 menormalkan baris `before_after_meal` sedia ada.
+  - Nilai yang tak dikenali **tak dibuang** kali ini (tak seperti jantina): `labelFor`
+    jatuh balik ke nilai mentah, sebab kumpulan darah yang tak dikenali masih berguna
+    kepada paramedik, dan arahan makan bukan kunci carian ke mana-mana.
+- [x] **Jenis darah jadi Select.** Lapan kumpulan darah sahaja wujud, dan salah taip dalam
+  medan ini bahaya klinikal, bukan kosmetik. Nilainya berkod (`o_positive`) dan bukan
+  "O+": `+` ialah ruang dalam query string, jadi hari ia jadi penapis ia rosak senyap.
+- [x] **Kad menunjukkan contoh untuk setiap medan kosong, bukan hanya kad kosong penuh.**
+  Kad dengan tiga nilai sebenar dan empat jurang dahulunya merender jurang itu sebagai
+  **tiada apa-apa**, yang terbaca sebagai rosak — pengguna tak dapat bezakan medan kosong
+  daripada medan yang kad ini tak ada. Setiap slot kosong kini menunjukkan contohnya
+  dalam kelabu condong.
+  - Aku tarik balik keputusan terdahulu aku ("kelabukan seluruh muka, bukan medan demi
+    medan"). Alasannya betul secara abstrak tetapi salah dalam praktik: kad separa isi
+    ialah keadaan biasa, dan menyembunyikan jurang lebih mengelirukan daripada
+    menandakannya.
+  - Alert bertukar ikut keadaan: "Ini contoh sahaja" bila kosong sepenuhnya, "Sebahagian
+    ialah contoh" bila separa.
+- [x] **Jantina jadi kod, bukan label.** Nilai dahulunya rentetan paparan Melayu, yang
+  meletakkan bahasa UI ke dalam lajur perubatan. Rujukan pertumbuhan WHO khusus jantina,
+  jadi medan itu kunci carian dan bukan kapsyen.
 - [x] **Kad kecemasan: blok alahan dikecilkan, keadaan kosong menunjukkan contoh.**
   - Blok alahan dahulunya panel berisi yang mengambil **satu pertiga kad 85.6×54 mm** —
     itu poster, bukan kad. Kini garis merah nipis di kiri dengan satu baris teks. Alahan

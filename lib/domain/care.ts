@@ -271,28 +271,86 @@ export const MEMBER_STATUS_LABELS: Record<MemberStatus, string> = {
   expired: "Tamat tempoh",
 }
 
+/**
+ * Sex, stored as a code and rendered as a label.
+ *
+ * The value used to be the Malay label itself, which put the UI's language
+ * into a medical column. WHO growth references are sex-specific, so the field
+ * is a lookup key rather than a caption - and a key that changes with the
+ * client's language cannot be looked up. Migration 00016 normalised the
+ * column and constrained it to these codes.
+ */
 export const GENDER_OPTIONS = [
-  { value: "Lelaki", label: "Lelaki" },
-  { value: "Perempuan", label: "Perempuan" },
+  { value: "male", label: "Lelaki" },
+  { value: "female", label: "Perempuan" },
 ] as const
 
+export type Gender = (typeof GENDER_OPTIONS)[number]["value"]
+
+export const GENDER_LABELS: Record<Gender, string> = {
+  male: "Lelaki",
+  female: "Perempuan",
+}
+
+/** Falls back to the raw value so a legacy row still renders something. */
+export function genderLabel(value: string | undefined) {
+  if (!value) {
+    return undefined
+  }
+  return GENDER_LABELS[value as Gender] ?? value
+}
+
+/**
+ * Coded values, Malay labels.
+ *
+ * The convention across this file: a `value` is a stable snake_case code the
+ * API stores, a `label` is what a person reads. These lists used to store the
+ * label as the value, which put the UI's language inside the data - the same
+ * defect that made `gender` unusable as a lookup key for the WHO growth
+ * references. Renaming a label should never be a data migration.
+ */
 export const RELATION_OPTIONS = [
-  { value: "Ibu", label: "Ibu" },
-  { value: "Bapa", label: "Bapa" },
-  { value: "Pasangan", label: "Pasangan" },
-  { value: "Anak", label: "Anak" },
-  { value: "Saudara", label: "Saudara" },
-  { value: "Rakan", label: "Rakan" },
-  { value: "Penjaga", label: "Penjaga" },
-  { value: "Lain-lain", label: "Lain-lain" },
+  { value: "mother", label: "Ibu" },
+  { value: "father", label: "Bapa" },
+  { value: "spouse", label: "Pasangan" },
+  { value: "child", label: "Anak" },
+  { value: "sibling", label: "Saudara" },
+  { value: "friend", label: "Rakan" },
+  { value: "guardian", label: "Penjaga" },
+  { value: "other", label: "Lain-lain" },
 ] as const
+
+export type Relation = (typeof RELATION_OPTIONS)[number]["value"]
 
 export const BEFORE_AFTER_MEAL_OPTIONS = [
-  { value: "Sebelum makan", label: "Sebelum makan" },
-  { value: "Selepas makan", label: "Selepas makan" },
-  { value: "Tidak kira", label: "Tidak kira" },
-  { value: "Semasa makan", label: "Semasa makan" },
+  { value: "before_meal", label: "Sebelum makan" },
+  { value: "after_meal", label: "Selepas makan" },
+  { value: "with_meal", label: "Semasa makan" },
+  { value: "any_time", label: "Tidak kira" },
 ] as const
+
+export type BeforeAfterMeal =
+  (typeof BEFORE_AFTER_MEAL_OPTIONS)[number]["value"]
+
+/**
+ * Blood group, coded rather than written as "O+".
+ *
+ * The clinical notation is a fine label but a poor value: `+` is a space in a
+ * query string, so the day this becomes a filter it breaks silently. Coding it
+ * also keeps it in line with every other option list here.
+ */
+export const BLOOD_TYPE_OPTIONS = [
+  { value: "a_positive", label: "A+" },
+  { value: "a_negative", label: "A−" },
+  { value: "b_positive", label: "B+" },
+  { value: "b_negative", label: "B−" },
+  { value: "ab_positive", label: "AB+" },
+  { value: "ab_negative", label: "AB−" },
+  { value: "o_positive", label: "O+" },
+  { value: "o_negative", label: "O−" },
+] as const
+
+export type BloodType = (typeof BLOOD_TYPE_OPTIONS)[number]["value"]
 
 export const TIMEZONE_OPTIONS = [
   { value: "Asia/Kuala_Lumpur", label: "Asia/Kuala_Lumpur (MYT)" },
@@ -563,11 +621,37 @@ export const SAMPLE_EMERGENCY_CARD: Omit<
 > = {
   legalName: "Siti binti Abdullah",
   dateOfBirth: "1954-03-12",
-  gender: "Perempuan",
-  bloodType: "O+",
+  gender: "female",
+  bloodType: "o_positive",
   allergySummary: "Penisilin, kacang",
   conditionSummary: "Diabetes jenis 2, darah tinggi",
   primaryClinic: "Klinik Kesihatan Bandar Baru",
   primaryDoctor: "Dr. Nurul Huda",
   emergencyNote: "Hubungi Aisyah 012-345 6789",
 }
+
+/**
+ * Label for a coded value, falling back to the value itself.
+ *
+ * The fallback is deliberate: rows written before a list was coded still hold
+ * their old string, and showing it is better than showing a blank where a
+ * blood group should be.
+ */
+export function labelFor(
+  options: ReadonlyArray<{ value: string; label: string }>,
+  value: string | undefined
+) {
+  if (!value) {
+    return undefined
+  }
+  return options.find((item) => item.value === value)?.label ?? value
+}
+
+export const bloodTypeLabel = (value: string | undefined) =>
+  labelFor(BLOOD_TYPE_OPTIONS, value)
+
+export const relationLabel = (value: string | undefined) =>
+  labelFor(RELATION_OPTIONS, value)
+
+export const mealTimingLabel = (value: string | undefined) =>
+  labelFor(BEFORE_AFTER_MEAL_OPTIONS, value)

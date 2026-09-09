@@ -168,10 +168,8 @@ export function DocumentFormPage() {
               <FieldLabel>Jenis</FieldLabel>
               <Select
                 className="w-full"
-                selectedKey={documentType}
-                onSelectionChange={(key) =>
-                  setDocumentType(String(key) as DocumentType)
-                }
+                value={documentType}
+                onChange={(key) => setDocumentType(String(key) as DocumentType)}
               >
                 <SelectTrigger size="xl" className="w-full">
                   <SelectValue />

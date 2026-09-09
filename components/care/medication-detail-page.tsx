@@ -278,10 +278,8 @@ export function MedicationDetailPage({
                 <FieldLabel>Sebelum/selepas makan</FieldLabel>
                 <Select
                   className="w-full"
-                  selectedKey={beforeAfterMeal || null}
-                  onSelectionChange={(key) =>
-                    setBeforeAfterMeal(String(key ?? ""))
-                  }
+                  value={beforeAfterMeal || null}
+                  onChange={(key) => setBeforeAfterMeal(String(key ?? ""))}
                   placeholder="Pilih masa makan"
                 >
                   <SelectTrigger size="xl" className="w-full">
@@ -318,8 +316,8 @@ export function MedicationDetailPage({
                 <FieldLabel>Status</FieldLabel>
                 <Select
                   className="w-full"
-                  selectedKey={medication.status}
-                  onSelectionChange={(key) =>
+                  value={medication.status}
+                  onChange={(key) =>
                     updateMedication(medication.id, {
                       status: String(key) as MedicationStatus,
                     })
@@ -393,10 +391,8 @@ export function MedicationDetailPage({
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-3">
             <Select
-              selectedKey={scheduleType}
-              onSelectionChange={(key) =>
-                setScheduleType(String(key) as ScheduleType)
-              }
+              value={scheduleType}
+              onChange={(key) => setScheduleType(String(key) as ScheduleType)}
             >
               <SelectTrigger className="h-9 w-full">
                 <SelectValue />
@@ -416,8 +412,8 @@ export function MedicationDetailPage({
               className="h-9 bg-background"
             />
             <Select
-              selectedKey={timezone}
-              onSelectionChange={(key) => setTimezone(String(key ?? timezone))}
+              value={timezone}
+              onChange={(key) => setTimezone(String(key ?? timezone))}
             >
               <SelectTrigger className="h-9 w-full">
                 <SelectValue />
@@ -612,8 +608,8 @@ export function MedicationCreatePage() {
             <FieldLabel>Sebelum/selepas makan</FieldLabel>
             <Select
               className="w-full"
-              selectedKey={beforeAfterMeal}
-              onSelectionChange={(key) =>
+              value={beforeAfterMeal}
+              onChange={(key) =>
                 setBeforeAfterMeal(String(key ?? beforeAfterMeal))
               }
             >

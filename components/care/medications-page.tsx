@@ -18,7 +18,11 @@ import { Button } from "@/components/ui/button"
 import { usePaginatedCareResource } from "@/hooks/use-paginated-care-resource"
 import { getCareRepository } from "@/lib/composition/care-repository"
 import { isMockDataEnabled } from "@/lib/infrastructure/config"
-import { MEDICATION_STATUS_LABELS, type Medication } from "@/lib/domain/care"
+import {
+  MEDICATION_STATUS_LABELS,
+  mealTimingLabel,
+  type Medication,
+} from "@/lib/domain/care"
 import { messageForApiError } from "@/lib/infrastructure/api/errors"
 
 type MedicationRow = Medication & { pendingCount: number }
@@ -82,7 +86,12 @@ export function MedicationsPage() {
       helper.accessor("startDate", { header: "Mula" }),
     ]
     const tail = [
-      helper.accessor("beforeAfterMeal", { header: "Makanan" }),
+      helper.accessor("beforeAfterMeal", {
+        header: "Makanan",
+        // The column holds a code now; the label is applied here rather than
+        // stored, so renaming it is never a data migration.
+        cell: ({ getValue }) => mealTimingLabel(getValue()) ?? "—",
+      }),
       helper.accessor("pendingCount", { header: "Dos menunggu" }),
       helper.accessor("status", {
         header: "Status",

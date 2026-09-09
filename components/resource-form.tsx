@@ -136,10 +136,8 @@ export function ResourceForm({
                   ) : field.type === "select" ? (
                     <Select
                       className="w-full"
-                      selectedKey={values[field.name] || null}
-                      onSelectionChange={(key) =>
-                        update(field.name, String(key ?? ""))
-                      }
+                      value={values[field.name] || null}
+                      onChange={(key) => update(field.name, String(key ?? ""))}
                       isDisabled={readOnly}
                       placeholder="Pilih"
                     >

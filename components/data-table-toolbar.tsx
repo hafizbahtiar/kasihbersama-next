@@ -86,8 +86,8 @@ export function DataTableToolbar({
         {filter ? (
           <Select
             className="w-[8.5rem] shrink-0 sm:w-40"
-            selectedKey={filterValue}
-            onSelectionChange={(key) => onFilterChange(String(key ?? "all"))}
+            value={filterValue}
+            onChange={(key) => onFilterChange(String(key ?? "all"))}
             aria-label={filter.label}
           >
             <SelectTrigger className="w-full">

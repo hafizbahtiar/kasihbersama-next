@@ -147,8 +147,8 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
               <FieldLabel>Hubungan</FieldLabel>
               <Select
                 className="w-full"
-                selectedKey={relation || null}
-                onSelectionChange={(key) => setRelation(String(key ?? ""))}
+                value={relation || null}
+                onChange={(key) => setRelation(String(key ?? ""))}
                 placeholder="Pilih hubungan"
               >
                 <SelectTrigger size="xl" className="w-full">
@@ -182,8 +182,8 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
               <FieldLabel>Kumpulan</FieldLabel>
               <Select
                 className="w-full"
-                selectedKey={circleId || null}
-                onSelectionChange={(key) => setCircleId(String(key ?? ""))}
+                value={circleId || null}
+                onChange={(key) => setCircleId(String(key ?? ""))}
                 placeholder="Pilih kumpulan"
               >
                 <SelectTrigger size="xl" className="w-full">

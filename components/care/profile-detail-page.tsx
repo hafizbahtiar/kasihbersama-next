@@ -585,8 +585,8 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
                       <FieldLabel>Peranan</FieldLabel>
                       <Select
                         className="w-full"
-                        selectedKey={inviteRole}
-                        onSelectionChange={(key) =>
+                        value={inviteRole}
+                        onChange={(key) =>
                           setInviteRole(String(key) as CareRole)
                         }
                       >
@@ -916,8 +916,8 @@ function PermissionEditor({
           <FieldLabel>Peranan</FieldLabel>
           <Select
             className="w-full"
-            selectedKey={nextRole}
-            onSelectionChange={(key) => setNextRole(String(key) as CareRole)}
+            value={nextRole}
+            onChange={(key) => setNextRole(String(key) as CareRole)}
           >
             <SelectTrigger size="xl" className="w-full">
               <SelectValue />

@@ -84,8 +84,8 @@ export function CareLogFormPage() {
             <FieldLabel>Jenis</FieldLabel>
             <Select
               className="w-full"
-              selectedKey={logType}
-              onSelectionChange={(key) => setLogType(String(key))}
+              value={logType}
+              onChange={(key) => setLogType(String(key))}
             >
               <SelectTrigger size="xl" className="w-full">
                 <SelectValue />
@@ -129,10 +129,8 @@ export function CareLogFormPage() {
             <FieldLabel>Keterlihatan</FieldLabel>
             <Select
               className="w-full"
-              selectedKey={visibility}
-              onSelectionChange={(key) =>
-                setVisibility(String(key) as LogVisibility)
-              }
+              value={visibility}
+              onChange={(key) => setVisibility(String(key) as LogVisibility)}
             >
               <SelectTrigger size="xl" className="w-full">
                 <SelectValue />

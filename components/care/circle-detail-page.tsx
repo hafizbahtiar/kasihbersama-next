@@ -138,8 +138,8 @@ export function CircleDetailPage({ circleId }: { circleId: string }) {
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
               <Select
                 className="w-full sm:w-52"
-                selectedKey={profileToLink || null}
-                onSelectionChange={(key) => setProfileToLink(String(key ?? ""))}
+                value={profileToLink || null}
+                onChange={(key) => setProfileToLink(String(key ?? ""))}
                 placeholder="Pilih profil"
               >
                 <SelectTrigger className="h-8 w-full">

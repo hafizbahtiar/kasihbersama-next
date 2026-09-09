@@ -89,8 +89,8 @@ export function TaskFormPage() {
             <FieldLabel>Tugaskan kepada</FieldLabel>
             <Select
               className="w-full"
-              selectedKey={assigneeId || null}
-              onSelectionChange={(key) => setAssigneeId(String(key ?? ""))}
+              value={assigneeId || null}
+              onChange={(key) => setAssigneeId(String(key ?? ""))}
               placeholder="Pilih ahli"
             >
               <SelectTrigger size="xl" className="w-full">

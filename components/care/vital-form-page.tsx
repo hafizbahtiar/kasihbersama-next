@@ -140,8 +140,8 @@ export function VitalFormPage() {
             <FieldLabel>Jenis</FieldLabel>
             <Select
               className="w-full"
-              selectedKey={readingType}
-              onSelectionChange={(key) => {
+              value={readingType}
+              onChange={(key) => {
                 const next = String(key)
                 setReadingType(next)
                 setUnit(

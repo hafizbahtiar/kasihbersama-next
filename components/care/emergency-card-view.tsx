@@ -17,7 +17,12 @@ import { Button, LinkButton } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getCareRepository } from "@/lib/composition/care-repository"
 import { formatDate } from "@/lib/application/care-format"
-import { SAMPLE_EMERGENCY_CARD, type EmergencyCard } from "@/lib/domain/care"
+import {
+  bloodTypeLabel,
+  genderLabel,
+  SAMPLE_EMERGENCY_CARD,
+  type EmergencyCard,
+} from "@/lib/domain/care"
 import { ApiError, normalizeApiError } from "@/lib/infrastructure/api/errors"
 import { cn } from "@/lib/utils"
 
@@ -29,6 +34,20 @@ const MAX_TILT = 9
  * nothing to show, and a card reading "Tiada direkodkan" five times is worse
  * than one that admits it is empty.
  */
+/** True when at least one field is missing, so the card shows a sample. */
+function hasGaps(card: EmergencyCard) {
+  return [
+    card.bloodType,
+    card.allergySummary,
+    card.conditionSummary,
+    card.dateOfBirth,
+    card.legalName,
+    card.primaryClinic,
+    card.primaryDoctor,
+    card.emergencyNote,
+  ].some((value) => !value || !value.trim())
+}
+
 function isBlank(card: EmergencyCard) {
   return ![
     card.bloodType,
@@ -54,13 +73,23 @@ function Label({ children }: { children: React.ReactNode }) {
 function Field({
   label,
   value,
+  sample,
   className,
 }: {
   label: string
   value?: string
+  /** Shown greyed when `value` is empty, so the field still has a shape. */
+  sample?: string
   className?: string
 }) {
-  if (!value) {
+  // A missing field used to render nothing at all, which left a half-filled
+  // card looking broken rather than incomplete - a person could not tell an
+  // empty field from a field this card does not have. Each empty slot now
+  // shows its sample, dimmed, so the card keeps its shape and the grey says
+  // which parts are not yours.
+  const isSample = !value
+  const shown = value || sample
+  if (!shown) {
     return null
   }
   return (
@@ -68,8 +97,13 @@ function Field({
       <Label>{label}</Label>
       {/* truncate on the card face, wrap in print: the card is a fixed
           rectangle, the paper is not. */}
-      <p className="truncate text-[0.8rem] leading-snug print:overflow-visible print:whitespace-normal">
-        {value}
+      <p
+        className={cn(
+          "truncate text-[0.8rem] leading-snug print:overflow-visible print:whitespace-normal",
+          isSample && "text-muted-foreground/70 italic"
+        )}
+      >
+        {shown}
       </p>
     </div>
   )
@@ -88,23 +122,16 @@ function Face({
   children,
   className,
   style,
-  muted,
 }: {
   children: React.ReactNode
   className?: string
   style?: React.CSSProperties
-  /** The values on this face are samples, not the person's own record. */
-  muted?: boolean
 }) {
   return (
     <div
       style={style}
       className={cn(
         "absolute inset-0 overflow-hidden rounded-2xl bg-card p-4 shadow-xl ring-1 ring-foreground/10",
-        // Sample values are dimmed as a whole face rather than field by field:
-        // a card with some grey lines and some black ones reads as partly
-        // filled in, which is the one thing it must not say.
-        muted && "text-muted-foreground",
         // A single soft light source from the top-left, so the card reads as a
         // surface rather than a coloured rectangle.
         "before:pointer-events-none before:absolute before:-top-16 before:-left-10 before:size-48 before:rounded-full before:bg-primary/10 before:blur-2xl",
@@ -217,24 +244,26 @@ export function EmergencyCardView({
     )
   }
 
+  // Any missing field gets a dimmed sample, not just a wholly empty card.
+  // A card with three real values and four gaps used to render the gaps as
+  // nothing, which reads as broken; showing the sample keeps the card's shape
+  // and the grey says which parts are not the person's own.
   const blank = isBlank(card)
-  // An empty card is rendered with sample values instead of blanks, so a first
-  // look shows what the card is for rather than whether it is broken. The
-  // muted treatment and the alert above it are what keep the sample from being
-  // mistaken for the person's own record.
-  const shown: EmergencyCard = blank
-    ? { ...card, ...SAMPLE_EMERGENCY_CARD }
-    : card
+  const incomplete = hasGaps(card)
+  const shown = card
+  const sample = SAMPLE_EMERGENCY_CARD
 
   return (
     <div className={cn("w-full max-w-[26rem] space-y-3", className)}>
-      {blank ? (
+      {incomplete ? (
         <Alert data-print-hide>
           <IconEyeQuestion />
-          <AlertTitle>Ini contoh sahaja</AlertTitle>
+          <AlertTitle>
+            {blank ? "Ini contoh sahaja" : "Sebahagian ialah contoh"}
+          </AlertTitle>
           <AlertDescription>
-            Kad ini menunjukkan data contoh supaya anda nampak rupanya. Ia akan
-            bertukar kepada maklumat sebenar sebaik anda mengisinya.
+            Teks kelabu condong ialah contoh, bukan maklumat anda. Ia bertukar
+            kepada maklumat sebenar sebaik anda mengisinya.
           </AlertDescription>
         </Alert>
       ) : null}
@@ -255,7 +284,7 @@ export function EmergencyCardView({
           className="relative aspect-[1.586/1] w-full transition-transform duration-500 ease-out motion-reduce:transition-none"
         >
           {/* Front */}
-          <Face muted={blank} style={{ backfaceVisibility: "hidden" }}>
+          <Face style={{ backfaceVisibility: "hidden" }}>
             <div className="flex h-full flex-col justify-between">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -264,18 +293,18 @@ export function EmergencyCardView({
                     {shown.displayName}
                   </p>
                 </div>
-                {shown.bloodType ? (
-                  // Muted along with the rest when the values are samples: a
-                  // solid red badge on a greyed card contradicts the one thing
-                  // the grey is saying.
-                  <Badge
-                    variant={blank ? "secondary" : "destructive"}
-                    className="shrink-0 text-sm"
-                  >
-                    <IconDroplet />
-                    {shown.bloodType}
-                  </Badge>
-                ) : null}
+                {/* Secondary when it is the sample: a solid red badge on a
+                    greyed value contradicts what the grey is saying. */}
+                <Badge
+                  variant={shown.bloodType ? "destructive" : "secondary"}
+                  className={cn(
+                    "shrink-0 text-sm",
+                    !shown.bloodType && "italic opacity-70"
+                  )}
+                >
+                  <IconDroplet />
+                  {bloodTypeLabel(shown.bloodType ?? sample.bloodType)}
+                </Badge>
               </div>
 
               {/*
@@ -290,10 +319,10 @@ export function EmergencyCardView({
                   <p
                     className={cn(
                       "mt-0.5 line-clamp-1 text-sm leading-snug font-medium",
-                      blank && "text-muted-foreground"
+                      !shown.allergySummary && "text-muted-foreground/70 italic"
                     )}
                   >
-                    {shown.allergySummary || "Tiada direkodkan"}
+                    {shown.allergySummary || sample.allergySummary}
                   </p>
                 </div>
               </div>
@@ -317,7 +346,6 @@ export function EmergencyCardView({
 
           {/* Back */}
           <Face
-            muted={blank}
             style={{
               backfaceVisibility: "hidden",
               transform: "rotateY(180deg)",
@@ -328,12 +356,25 @@ export function EmergencyCardView({
                 <Field
                   label="Keadaan kesihatan"
                   value={shown.conditionSummary}
+                  sample={sample.conditionSummary}
                 />
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="Klinik" value={shown.primaryClinic} />
-                  <Field label="Doktor" value={shown.primaryDoctor} />
+                  <Field
+                    label="Klinik"
+                    value={shown.primaryClinic}
+                    sample={sample.primaryClinic}
+                  />
+                  <Field
+                    label="Doktor"
+                    value={shown.primaryDoctor}
+                    sample={sample.primaryDoctor}
+                  />
                 </div>
-                <Field label="Nota" value={shown.emergencyNote} />
+                <Field
+                  label="Nota"
+                  value={shown.emergencyNote}
+                  sample={sample.emergencyNote}
+                />
               </div>
 
               {/*
@@ -388,7 +429,7 @@ export function EmergencyCardView({
             }
           />
           <Field label="Nama penuh" value={shown.legalName} />
-          <Field label="Jantina" value={shown.gender} />
+          <Field label="Jantina" value={genderLabel(shown.gender)} />
         </div>
         <Field
           label="Alahan"

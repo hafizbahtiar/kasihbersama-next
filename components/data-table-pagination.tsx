@@ -99,8 +99,8 @@ export function DataTablePagination({
             Baris setiap halaman
           </span>
           <Select
-            selectedKey={String(pageSize)}
-            onSelectionChange={(key) => {
+            value={String(pageSize)}
+            onChange={(key) => {
               const nextSize = Number(key)
               if (!Number.isNaN(nextSize)) {
                 onPageSizeChange(nextSize)

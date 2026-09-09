@@ -37,8 +37,8 @@ export function ProfileSwitcher({ className }: { className?: string }) {
   return (
     <Select
       className={className}
-      selectedKey={selectedProfileId}
-      onSelectionChange={(key) => {
+      value={selectedProfileId}
+      onChange={(key) => {
         if (typeof key === "string") {
           setSelectedProfileId(key)
         }

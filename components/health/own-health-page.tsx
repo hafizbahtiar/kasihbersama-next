@@ -41,7 +41,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { useOwnHealthProfile } from "@/hooks/use-own-health-profile"
 import { fieldValue } from "@/lib/application/form-value"
-import { GENDER_OPTIONS } from "@/lib/domain/care"
+import { BLOOD_TYPE_OPTIONS, GENDER_OPTIONS } from "@/lib/domain/care"
 import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
 
 type FormState = {
@@ -218,24 +218,34 @@ export function OwnHealthPage() {
                     />
                   </Field>
                   <Field>
-                    <FieldLabel htmlFor="blood-type">Jenis darah</FieldLabel>
-                    <Input
-                      id="blood-type"
-                      size="xl"
-                      className="bg-background"
-                      placeholder="Contoh: O+"
-                      value={form.bloodType}
-                      onChange={(event) => set("bloodType", fieldValue(event))}
-                    />
+                    <FieldLabel>Jenis darah</FieldLabel>
+                    {/* A select, not free text: there are eight blood groups
+                        and a typo in this field is a clinical hazard, not a
+                        cosmetic one. */}
+                    <Select
+                      className="w-full"
+                      value={form.bloodType || null}
+                      onChange={(key) => set("bloodType", String(key ?? ""))}
+                      placeholder="Pilih jenis darah"
+                    >
+                      <SelectTrigger size="xl" className="w-full bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {BLOOD_TYPE_OPTIONS.map((item) => (
+                          <SelectItem key={item.value} id={item.value}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </Field>
                   <Field>
                     <FieldLabel>Jantina</FieldLabel>
                     <Select
                       className="w-full"
-                      selectedKey={form.gender || null}
-                      onSelectionChange={(key) =>
-                        set("gender", String(key ?? ""))
-                      }
+                      value={form.gender || null}
+                      onChange={(key) => set("gender", String(key ?? ""))}
                       placeholder="Pilih jantina"
                     >
                       <SelectTrigger size="xl" className="w-full bg-background">

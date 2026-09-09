@@ -1,6 +1,6 @@
 "use client"
 
-import { Fragment, useState } from "react"
+import { useState } from "react"
 import NumberFlow from "@number-flow/react"
 import { IconCheck, IconInfoCircle, IconMinus } from "@tabler/icons-react"
 
@@ -109,57 +109,68 @@ export function ComparePage() {
         </span>
       </div>
 
-      {/* The table scrolls inside itself; the page never scrolls sideways. */}
-      <div className="overflow-x-auto">
-        <Table className="min-w-[38rem]">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[14rem]">Ciri</TableHead>
-              {PRICING_PLANS.map((plan) => {
-                const price = priceFor(plan, period)
-                return (
+      {/*
+        One table per group, not one table with colSpan section rows.
+        `ui/table` is react-aria's Table - a collection component like Menu, so
+        a Fragment wrapper or a spanning cell is not a valid child and the page
+        fails to render rather than degrading. RAC has no colSpan at all. This
+        is the same mistake as the account menu's plain <div>; the lesson is
+        that in this project a shadcn primitive is usually a collection.
+      */}
+      {COMPARISON_GROUPS.map((group, groupIndex) => (
+        <section key={group.title} className="space-y-2">
+          <h2 className="font-heading text-sm tracking-tight">{group.title}</h2>
+          <div className="overflow-x-auto">
+            <Table
+              aria-label={`Banding pelan: ${group.title}`}
+              selectionMode="none"
+              className="min-w-[34rem]"
+            >
+              <TableHeader>
+                <TableHead isRowHeader className="w-[14rem]">
+                  Ciri
+                </TableHead>
+                {PRICING_PLANS.map((plan) => (
                   <TableHead key={plan.id} className="text-center">
-                    <span className="flex flex-col items-center gap-1">
-                      <span className="flex items-center gap-2 font-medium text-foreground">
-                        {plan.name}
-                        {plan.id === "free" ? (
-                          <Badge variant="secondary">Sekarang</Badge>
-                        ) : null}
+                    {/* The price rides along with the first group only; on
+                        every later table the plan name is enough and a
+                        repeated price is noise. */}
+                    {groupIndex === 0 ? (
+                      <span className="flex flex-col items-center gap-1">
+                        <span className="flex items-center gap-2 font-medium text-foreground">
+                          {plan.name}
+                          {plan.id === "free" ? (
+                            <Badge variant="secondary">Sekarang</Badge>
+                          ) : null}
+                        </span>
+                        <span className="text-xs font-normal text-muted-foreground">
+                          {priceFor(plan, period) === 0 ? (
+                            "Percuma"
+                          ) : (
+                            <>
+                              RM
+                              <NumberFlow value={priceFor(plan, period)} />{" "}
+                              sebulan
+                            </>
+                          )}
+                        </span>
                       </span>
-                      <span className="text-xs text-muted-foreground">
-                        {price === 0 ? (
-                          "Percuma"
-                        ) : (
-                          <>
-                            RM
-                            <NumberFlow value={price} /> sebulan
-                          </>
-                        )}
-                      </span>
-                    </span>
+                    ) : (
+                      plan.name
+                    )}
                   </TableHead>
-                )
-              })}
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            {COMPARISON_GROUPS.map((group) => (
-              <Fragment key={group.title}>
-                <TableRow className="bg-muted/40">
-                  <TableCell
-                    colSpan={PRICING_PLANS.length + 1}
-                    className="text-xs font-medium tracking-widest uppercase"
-                  >
-                    {group.title}
-                  </TableCell>
-                </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
                 {group.rows.map((row) => (
-                  <TableRow key={`${group.title}-${row.label}`}>
-                    <TableCell className="font-medium">{row.label}</TableCell>
+                  <TableRow key={row.label} id={row.label}>
+                    <TableCell id="label" className="font-medium">
+                      {row.label}
+                    </TableCell>
                     {PRICING_PLANS.map((plan) => (
                       <TableCell
                         key={plan.id}
+                        id={plan.id}
                         className={cn(
                           "text-center",
                           plan.highlighted && "bg-primary/5"
@@ -172,11 +183,11 @@ export function ComparePage() {
                     ))}
                   </TableRow>
                 ))}
-              </Fragment>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+              </TableBody>
+            </Table>
+          </div>
+        </section>
+      ))}
 
       <Alert>
         <IconInfoCircle />
