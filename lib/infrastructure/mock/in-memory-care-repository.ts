@@ -188,7 +188,10 @@ export class InMemoryCareRepository implements CareRepository {
     // rather than a second one, so a retry cannot leave the demo with two.
     const existing = await this.getOwnHealthProfile()
     if (existing) {
-      return existing
+      return this.updateProfile(existing.id, {
+        displayName: input.displayName?.trim() || existing.displayName,
+        ...input,
+      })
     }
     const created: CareProfile = {
       id: nextId("profile"),

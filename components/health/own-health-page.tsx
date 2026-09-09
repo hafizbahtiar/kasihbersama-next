@@ -40,8 +40,13 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { useOwnHealthProfile } from "@/hooks/use-own-health-profile"
+import { formatPersonNameInput } from "@/lib/application/format-person-name"
 import { fieldValue } from "@/lib/application/form-value"
-import { BLOOD_TYPE_OPTIONS, GENDER_OPTIONS } from "@/lib/domain/care"
+import {
+  BLOOD_TYPE_OPTIONS,
+  GENDER_OPTIONS,
+  type CareProfile,
+} from "@/lib/domain/care"
 import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
 
 type FormState = {
@@ -54,6 +59,20 @@ type FormState = {
   primaryClinic: string
   primaryDoctor: string
   emergencyNote: string
+}
+
+function formFromProfile(profile: CareProfile): FormState {
+  return {
+    legalName: profile.legalName ?? "",
+    dateOfBirth: profile.dateOfBirth ?? "",
+    gender: profile.gender ?? "",
+    bloodType: profile.bloodType ?? "",
+    allergySummary: profile.allergySummary ?? "",
+    conditionSummary: profile.conditionSummary ?? "",
+    primaryClinic: profile.primaryClinic ?? "",
+    primaryDoctor: profile.primaryDoctor ?? "",
+    emergencyNote: profile.emergencyNote ?? "",
+  }
 }
 
 const empty: FormState = {
@@ -88,17 +107,7 @@ export function OwnHealthPage() {
       return
     }
     seededFor.current = profile.id
-    setForm({
-      legalName: profile.legalName ?? "",
-      dateOfBirth: profile.dateOfBirth ?? "",
-      gender: profile.gender ?? "",
-      bloodType: profile.bloodType ?? "",
-      allergySummary: profile.allergySummary ?? "",
-      conditionSummary: profile.conditionSummary ?? "",
-      primaryClinic: profile.primaryClinic ?? "",
-      primaryDoctor: profile.primaryDoctor ?? "",
-      emergencyNote: profile.emergencyNote ?? "",
-    })
+    setForm(formFromProfile(profile))
   }, [profile])
 
   function set<K extends keyof FormState>(key: K, value: string) {
@@ -114,7 +123,12 @@ export function OwnHealthPage() {
     }
     setIsSaving(true)
     try {
-      await save({ displayName: user?.displayName, ...form })
+      const payload = {
+        ...form,
+        legalName: formatPersonNameInput(form.legalName).trim(),
+      }
+      const saved = await save({ displayName: user?.displayName, ...payload })
+      setForm(formFromProfile(saved))
       toast.success("Maklumat kesihatan disimpan.")
     } catch (cause) {
       toast.error(
@@ -204,7 +218,12 @@ export function OwnHealthPage() {
                     size="xl"
                     className="bg-background"
                     value={form.legalName}
-                    onChange={(event) => set("legalName", fieldValue(event))}
+                    onChange={(event) =>
+                      set(
+                        "legalName",
+                        formatPersonNameInput(fieldValue(event))
+                      )
+                    }
                   />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
