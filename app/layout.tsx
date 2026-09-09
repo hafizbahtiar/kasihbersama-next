@@ -2,6 +2,7 @@ import { Figtree, Geist_Mono, Roboto_Slab } from "next/font/google"
 import type { Metadata, Viewport } from "next"
 
 import "./globals.css"
+import { AriaRouterProvider } from "@/components/aria-router-provider"
 import { AuthProvider } from "@/components/auth/auth-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { I18nProvider } from "@/components/ui/direction"
@@ -58,12 +59,14 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider>
-          <AuthProvider>
-            <I18nProvider locale="ms-MY">
-              {children}
-              <Toaster />
-            </I18nProvider>
-          </AuthProvider>
+          <AriaRouterProvider>
+            <AuthProvider>
+              <I18nProvider locale="ms-MY">
+                {children}
+                <Toaster />
+              </I18nProvider>
+            </AuthProvider>
+          </AriaRouterProvider>
         </ThemeProvider>
       </body>
     </html>
