@@ -1,11 +1,17 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { IconHeartbeat, IconShieldHalf } from "@tabler/icons-react"
+import { useRouter } from "next/navigation"
+import {
+  IconAlertTriangle,
+  IconHeartbeat,
+  IconShieldHalf,
+} from "@tabler/icons-react"
 import { toast } from "sonner"
 
 import { useAuth } from "@/components/auth/auth-provider"
 import { AsyncStateBanner } from "@/components/care/async-state"
+import { useCareProfile } from "@/components/care/care-data-provider"
 import { PageHeader } from "@/components/care/page-header"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -64,7 +70,9 @@ const empty: FormState = {
 }
 
 export function OwnHealthPage() {
+  const router = useRouter()
   const { user } = useAuth()
+  const { setSelectedProfileId } = useCareProfile()
   const { profile, isLoading, error, reload, save } = useOwnHealthProfile()
   const [form, setForm] = useState<FormState>(empty)
   const [isSaving, setIsSaving] = useState(false)
@@ -110,6 +118,25 @@ export function OwnHealthPage() {
       <PageHeader
         title="Kesihatan saya"
         description="Maklumat kesihatan anda sendiri, bukan orang yang anda jaga."
+        actions={
+          profile ? (
+            <Button
+              variant="outline"
+              onPress={() => {
+                // The emergency card page reads the selected care profile, and
+                // your own record is one - so previewing your own card means
+                // selecting it first. Without this you would have to find
+                // yourself in the profile switcher and know which entry is
+                // you, which is exactly the thing that was hard.
+                setSelectedProfileId(profile.id)
+                router.push("/emergency-card")
+              }}
+            >
+              <IconAlertTriangle />
+              Lihat kad kecemasan saya
+            </Button>
+          ) : null
+        }
       />
 
       <AsyncStateBanner

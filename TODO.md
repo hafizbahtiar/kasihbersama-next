@@ -149,6 +149,14 @@ domain penghantar disahkan di Resend.
 
 ### Selesai sesi ini (2026-09-09)
 
+- [x] **Rekod sendiri kini boleh dikenali dan dicapai.** Dua kecacatan yang ditinggalkan
+  bila rekod kesihatan sendiri dibina sebagai profil jagaan:
+  - Penukar profil menyenaraikannya di bawah nama kau sendiri, **tak dapat dibezakan**
+    daripada orang yang kau jaga. Kini berlencana "Saya" — menggunakan pembantu
+    `isOwnHealthProfile` yang aku tambah dan tak pernah guna.
+  - Tiada jalan daripada `/my-health` ke kad kecemasan sendiri: kau terpaksa cari diri
+    sendiri dalam penukar itu dan tahu entri mana kau. Kini ada butang yang memilih
+    profil itu dan terus ke kad.
 - [x] **Kad kecemasan (`/emergency-card`).** Disusun untuk dibaca dalam tekanan, bukan
   dilayari: **alahan** dahulu dan paling besar dalam blok merah — ia satu-satunya medan
   yang mengubah tindakan klinisian dalam minit berikutnya — kemudian jenis darah dan
