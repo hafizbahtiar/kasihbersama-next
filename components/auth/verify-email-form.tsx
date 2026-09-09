@@ -88,7 +88,7 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
             masuk ({user.email}). Minta pautan baharu untuk akaun ini.
           </AlertDescription>
         </Alert>
-        <ResendVerificationButton size="xl" />
+        <ResendVerificationButton size="xl" className="w-full" />
       </div>
     )
   }
@@ -151,7 +151,11 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
           <p className="mb-3 text-sm text-muted-foreground">
             Tiada e-mel, atau pautan sudah tamat tempoh?
           </p>
-          <ResendVerificationButton size="xl" />
+          <ResendVerificationButton
+            size="xl"
+            variant="outline"
+            className="w-full"
+          />
         </div>
       ) : null}
     </form>

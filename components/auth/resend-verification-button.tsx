@@ -2,10 +2,8 @@
 
 import { useState } from "react"
 import type { VariantProps } from "class-variance-authority"
-import { IconMailCheck } from "@tabler/icons-react"
 
 import { useAuth } from "@/components/auth/auth-provider"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button, buttonVariants } from "@/components/ui/button"
 
 /**
@@ -16,18 +14,29 @@ import { Button, buttonVariants } from "@/components/ui/button"
  * was sent at signup, and it expires in 24 hours. Anyone past that window had
  * nowhere to go. This is the send.
  *
+ * Renders a button and nothing else. It briefly also rendered an Alert with
+ * the result, which landed inside the settings card's right-aligned footer -
+ * a row sized for buttons - and stretched it. The confirmation was duplicate
+ * anyway: resendVerification already raises a toast. A control dropped into
+ * someone else's layout gets to be one element.
+ *
+ * No wrapper element either, so it stays a real sibling in a flex row and
+ * inherits the row's gap and alignment instead of nesting away from them.
+ *
  * `size` is a prop, not a constant. It was hardcoded to xl for the auth form,
  * which made the button stand a head taller than the "Saya ada token" link
- * beside it in the settings card. A shared control cannot pick a size that
- * only suits one of the places it appears; the caller knows its own row.
+ * beside it. A shared control cannot pick a size that suits only one of the
+ * places it appears; the caller knows its own row.
  */
 export function ResendVerificationButton({
   className,
   size = "default",
+  variant,
   children = "Hantar e-mel pengesahan",
 }: {
   className?: string
   size?: VariantProps<typeof buttonVariants>["size"]
+  variant?: VariantProps<typeof buttonVariants>["variant"]
   children?: React.ReactNode
 }) {
   const { resendVerification } = useAuth()
@@ -37,8 +46,7 @@ export function ResendVerificationButton({
   async function onPress() {
     setIsSending(true)
     try {
-      const ok = await resendVerification()
-      if (ok) {
+      if (await resendVerification()) {
         setSent(true)
       }
     } finally {
@@ -47,19 +55,14 @@ export function ResendVerificationButton({
   }
 
   return (
-    <div className={className}>
-      <Button onPress={onPress} isDisabled={isSending} size={size}>
-        {isSending ? "Menghantar…" : sent ? "Hantar sekali lagi" : children}
-      </Button>
-      {sent ? (
-        <Alert className="mt-3">
-          <IconMailCheck />
-          <AlertTitle>Pautan dihantar</AlertTitle>
-          <AlertDescription>
-            Sah selama 24 jam. Semak folder spam jika tiada dalam peti masuk.
-          </AlertDescription>
-        </Alert>
-      ) : null}
-    </div>
+    <Button
+      onPress={onPress}
+      isDisabled={isSending}
+      size={size}
+      variant={variant}
+      className={className}
+    >
+      {isSending ? "Menghantar…" : sent ? "Hantar sekali lagi" : children}
+    </Button>
   )
 }

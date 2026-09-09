@@ -223,7 +223,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async resendVerification() {
         try {
           await getAuthRepository().resendVerification()
-          toast.success("E-mel pengesahan dihantar. Semak peti masuk anda.")
+          toast.success("E-mel pengesahan dihantar.", {
+            description:
+              "Pautan sah selama 24 jam. Semak folder spam jika tiada dalam peti masuk.",
+          })
           return true
         } catch (cause) {
           handleAuthError(cause)
