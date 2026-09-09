@@ -1,9 +1,11 @@
 import type { ComponentType, SVGProps } from "react"
 import {
+  IconAlertTriangle,
   IconBell,
   IconCalendarEvent,
   IconCircles,
   IconClipboardHeart,
+  IconFileDescription,
   IconFileText,
   IconHeartbeat,
   IconHome,
@@ -45,6 +47,19 @@ export const primaryNav: AppNavItem[] = [
     title: "Tugasan",
     icon: IconListCheck,
     permission: "can_manage_care_tasks",
+  },
+  {
+    href: "/emergency-card",
+    title: "Kad kecemasan",
+    icon: IconAlertTriangle,
+    permission: "can_view_emergency_card",
+  },
+  {
+    href: "/summaries",
+    title: "Ringkasan doktor",
+    icon: IconFileDescription,
+    feature: "doctor_summary",
+    permission: "can_export_summary",
   },
   {
     href: "/documents",

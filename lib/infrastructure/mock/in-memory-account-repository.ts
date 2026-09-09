@@ -118,6 +118,32 @@ export class InMemoryAccountRepository implements AccountRepository {
     )
   }
 
+  async deleteAccount(currentPassword: string) {
+    this.assertPassword(currentPassword)
+    return {
+      anonymizedAt: new Date().toISOString(),
+      deletedCareProfileIds: [],
+    }
+  }
+
+  async exportAccount() {
+    return JSON.stringify(
+      {
+        generated_at: new Date().toISOString(),
+        account: {
+          id: this.state.user.id,
+          email: this.state.user.email,
+          display_name: this.state.user.displayName,
+          email_verified: this.state.user.emailVerified,
+        },
+        memberships: [],
+        audit_events: [],
+      },
+      null,
+      2
+    )
+  }
+
   private assertPassword(candidate: string) {
     if (candidate !== this.state.password) {
       throw new ApiError("Kata laluan semasa tidak tepat.", {

@@ -271,6 +271,11 @@ export const MEMBER_STATUS_LABELS: Record<MemberStatus, string> = {
   expired: "Tamat tempoh",
 }
 
+export const GENDER_OPTIONS = [
+  { value: "Lelaki", label: "Lelaki" },
+  { value: "Perempuan", label: "Perempuan" },
+] as const
+
 export const RELATION_OPTIONS = [
   { value: "Ibu", label: "Ibu" },
   { value: "Bapa", label: "Bapa" },
@@ -427,3 +432,114 @@ export function isOwnHealthProfile(
 ) {
   return Boolean(userId && profile.subjectUserId === userId)
 }
+
+/**
+ * One recorded administrative action on a care profile.
+ *
+ * `actorDisplayName` is always present: the backend falls back to the name
+ * captured when the row was written, so the trail still answers "who did this"
+ * after that account has been anonymized. `actorUserId` can be absent for the
+ * same reason.
+ */
+export type AuditEvent = {
+  id: string
+  actorUserId?: string
+  actorDisplayName: string
+  eventType: string
+  entityType?: string
+  entityId?: string
+  metadata?: Record<string, unknown>
+  createdAt: string
+}
+
+/**
+ * What produced a summary.
+ *
+ * `assembled` means the API reorganised what the family already wrote and
+ * invented nothing - no model, so no disclaimer beyond naming the source.
+ * `ai` is model output and needs one.
+ */
+export type SummaryGenerator = "assembled" | "ai"
+
+export type SummaryContent = {
+  logs: Array<{
+    occurredAt: string
+    logType: string
+    title: string
+    body?: string
+  }>
+  medications: Array<{
+    name: string
+    dosage?: string
+    instructions?: string
+    beforeAfterMeal?: string
+    prescribedBy?: string
+    startDate?: string
+    endDate?: string
+  }>
+  appointments: Array<{
+    at: string
+    title: string
+    doctorName?: string
+    location?: string
+    status: string
+  }>
+  vitals: Array<{
+    readingType: string
+    readingCount: number
+    unit?: string
+    minValue?: string
+    maxValue?: string
+    latestValue?: string
+    latestAt?: string
+  }>
+  /** The log section hit the server's cap - the briefing is partial. */
+  truncated: boolean
+}
+
+export type CareSummary = {
+  id: string
+  /** ISO "YYYY-MM-DD", both ends inclusive. */
+  periodStart: string
+  periodEnd: string
+  generator: SummaryGenerator
+  content: SummaryContent
+  createdAt: string
+}
+
+/**
+ * Human labels for audit event types. Unknown types fall back to the raw
+ * string rather than being hidden: a trail that silently drops entries it does
+ * not recognise is worse than one showing a slug.
+ */
+export const AUDIT_EVENT_LABELS: Record<string, string> = {
+  member_invited: "Ahli dijemput",
+  invite_revoked: "Jemputan dibatalkan",
+  invite_accepted: "Jemputan diterima",
+  claim_invited: "Tuntutan dihantar",
+  claim_revoked: "Tuntutan dibatalkan",
+  profile_claimed: "Profil dituntut",
+  member_role_changed: "Peranan ditukar",
+  member_removed: "Ahli dikeluarkan",
+  profile_created: "Profil dicipta",
+  profile_updated: "Profil dikemas kini",
+  profile_archived: "Profil diarkibkan",
+  own_health_profile_created: "Rekod kesihatan sendiri dicipta",
+  account_anonymized: "Akaun dipadam",
+}
+
+export function auditEventLabel(eventType: string) {
+  return AUDIT_EVENT_LABELS[eventType] ?? eventType
+}
+
+/**
+ * The break-glass view of a care profile.
+ *
+ * Carries nothing about the family - no role, permissions or status - because
+ * the backend serves it to `emergency_viewer`, a role given almost no other
+ * access. Reading one is recorded in the profile's audit trail.
+ */
+export type EmergencyCard = {
+  careProfileId: string
+  displayName: string
+} & ProfileHealthInfo

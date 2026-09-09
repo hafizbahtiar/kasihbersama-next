@@ -21,6 +21,8 @@ import type { ApiClient } from "@/lib/infrastructure/api/client"
 import { ApiError, isApiError } from "@/lib/infrastructure/api/errors"
 import {
   mapAppointment,
+  mapAuditEvent,
+  mapEmergencyCard,
   mapCareLog,
   mapCareTask,
   mapCircle,
@@ -33,6 +35,7 @@ import {
   mapPaginated,
   mapProfile,
   mapSchedule,
+  mapSummary,
   mapTimelineItem,
   mapVitalReading,
   toListQuery,
@@ -46,8 +49,11 @@ import {
   type ApiMedication,
   type ApiMedicationEvent,
   type ApiMedicationSchedule,
+  type ApiAuditEvent,
+  type ApiEmergencyCard,
   type ApiMember,
   type ApiProfile,
+  type ApiSummary,
   type ApiVitalReading,
 } from "@/lib/infrastructure/api/mappers/care"
 
@@ -406,6 +412,49 @@ export class ApiCareRepository implements CareRepository {
       }
     )
     return mapProfile(response)
+  }
+
+  listAuditEvents(profileId: string, params?: ListParams) {
+    return this.client
+      .request<PaginatedResponse<ApiAuditEvent>>(
+        `${profilePath(profileId)}/audit-events${toListQuery(params)}`
+      )
+      .then((response) => mapPaginated(response, mapAuditEvent))
+  }
+
+  getEmergencyCard(profileId: string) {
+    return this.client
+      .request<ApiEmergencyCard>(`${profilePath(profileId)}/emergency-card`)
+      .then(mapEmergencyCard)
+  }
+
+  createSummary(
+    profileId: string,
+    period: { periodStart: string; periodEnd: string }
+  ) {
+    return this.client
+      .request<ApiSummary>(`${profilePath(profileId)}/summaries/doctor-visit`, {
+        method: "POST",
+        body: JSON.stringify({
+          period_start: period.periodStart,
+          period_end: period.periodEnd,
+        }),
+      })
+      .then(mapSummary)
+  }
+
+  listSummaries(profileId: string, params?: ListParams) {
+    return this.client
+      .request<PaginatedResponse<ApiSummary>>(
+        `${profilePath(profileId)}/summaries${toListQuery(params)}`
+      )
+      .then((response) => mapPaginated(response, mapSummary))
+  }
+
+  getSummary(profileId: string, summaryId: string) {
+    return this.client
+      .request<ApiSummary>(`${profilePath(profileId)}/summaries/${summaryId}`)
+      .then(mapSummary)
   }
 
   async archiveProfile(id: string) {

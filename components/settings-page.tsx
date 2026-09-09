@@ -3,6 +3,7 @@
 import { useState } from "react"
 import {
   IconBell,
+  IconDatabase,
   IconDeviceMobile,
   IconLock,
   IconLogout,
@@ -17,6 +18,10 @@ import { useCareProfile } from "@/components/care/care-data-provider"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useLogout } from "@/components/logout-provider"
 import { PushPermissionHint } from "@/components/notifications/push-onboarding"
+import {
+  DeleteAccountCard,
+  ExportAccountCard,
+} from "@/components/settings/danger-zone"
 import {
   ChangeEmailCard,
   ChangePasswordCard,
@@ -70,6 +75,7 @@ import { cn } from "@/lib/utils"
 const settingsNav = [
   { id: "account", label: "Akaun", icon: IconUser },
   { id: "security", label: "Keselamatan", icon: IconLock },
+  { id: "data", label: "Data & akaun", icon: IconDatabase },
   { id: "notifications", label: "Pemberitahuan", icon: IconBell },
   { id: "devices", label: "Peranti", icon: IconDeviceMobile },
   { id: "session", label: "Sesi", icon: IconLogout },
@@ -276,6 +282,13 @@ export function SettingsPage() {
             <div className="flex flex-col gap-4">
               <ChangePasswordCard />
               <ChangeEmailCard />
+            </div>
+          ) : null}
+
+          {section === "data" ? (
+            <div className="flex flex-col gap-4">
+              <ExportAccountCard />
+              <DeleteAccountCard />
             </div>
           ) : null}
 

@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
 import { EmailVerifiedGate } from "@/components/auth/email-verified-gate"
 import { ApiFieldGapNotice } from "@/components/care/api-field-gap-notice"
+import { ProfileAuditTab } from "@/components/care/profile-audit-tab"
 import { AsyncStateBanner } from "@/components/care/async-state"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useCareData } from "@/components/care/care-data-provider"
@@ -450,6 +451,7 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
             <TabsTrigger id="access">Ahli & akses</TabsTrigger>
             <TabsTrigger id="claims">Tuntutan</TabsTrigger>
             <TabsTrigger id="timeline">Timeline</TabsTrigger>
+            <TabsTrigger id="history">Sejarah</TabsTrigger>
           </TabsList>
         </div>
 
@@ -727,6 +729,10 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
               />
             </Section>
           </PermissionGate>
+        </TabsContent>
+
+        <TabsContent id="history">
+          <ProfileAuditTab profileId={profile.id} />
         </TabsContent>
 
         <TabsContent id="timeline">

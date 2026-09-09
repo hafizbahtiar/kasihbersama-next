@@ -31,6 +31,8 @@ const CODE_MESSAGES: Record<string, string> = {
   forbidden: "Anda tidak dibenarkan melakukan tindakan ini.",
   not_found: "Rekod tidak dijumpai.",
   conflict: "Rekod sudah wujud atau bercanggah.",
+  deletion_blocked:
+    "Selesaikan profil jagaan di bawah sebelum memadam akaun anda.",
   pending_invites:
     "Ada jemputan yang belum dijawab ke e-mel semasa. Terima atau batalkan jemputan itu dahulu.",
   email_taken: "E-mel ini sudah didaftarkan pada akaun lain.",
@@ -111,6 +113,40 @@ export async function parseApiError(response: Response) {
     status: response.status,
     requestId: body?.error.request_id,
     details: body?.error.details,
+  })
+}
+
+/**
+ * The care profiles standing in the way of an account deletion.
+ *
+ * The backend puts them in `error.details.profiles` rather than in the
+ * message, because the user's next action differs per `reason` and prose
+ * cannot be branched on. Returns an empty array for any other error.
+ */
+export function deletionBlockersFromError(error: unknown) {
+  if (!isApiError(error) || error.code !== "deletion_blocked") {
+    return []
+  }
+  const raw = error.details?.profiles
+  if (!Array.isArray(raw)) {
+    return []
+  }
+  return raw.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") {
+      return []
+    }
+    const item = entry as Record<string, unknown>
+    const reason = item.reason
+    if (reason !== "sole_admin" && reason !== "shared_subject") {
+      return []
+    }
+    return [
+      {
+        id: String(item.id ?? ""),
+        displayName: String(item.display_name ?? ""),
+        reason: reason as "sole_admin" | "shared_subject",
+      },
+    ]
   })
 }
 

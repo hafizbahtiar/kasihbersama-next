@@ -242,7 +242,7 @@ export function DocumentsPage() {
           }
         }}
         title="Padam dokumen?"
-        description="Fail akan dibuang daripada profil ini."
+        description="Fail dibuang daripada profil ini dan dipadam dari storan. Tindakan ini kekal."
         confirmLabel="Padam"
         variant="destructive"
         onConfirm={() => {

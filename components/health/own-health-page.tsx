@@ -25,10 +25,18 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { useOwnHealthProfile } from "@/hooks/use-own-health-profile"
 import { fieldValue } from "@/lib/application/form-value"
+import { GENDER_OPTIONS } from "@/lib/domain/care"
 import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
 
 type FormState = {
@@ -183,14 +191,26 @@ export function OwnHealthPage() {
                     />
                   </Field>
                   <Field>
-                    <FieldLabel htmlFor="gender">Jantina</FieldLabel>
-                    <Input
-                      id="gender"
-                      size="xl"
-                      className="bg-background"
-                      value={form.gender}
-                      onChange={(event) => set("gender", fieldValue(event))}
-                    />
+                    <FieldLabel>Jantina</FieldLabel>
+                    <Select
+                      className="w-full"
+                      selectedKey={form.gender || null}
+                      onSelectionChange={(key) =>
+                        set("gender", String(key ?? ""))
+                      }
+                      placeholder="Pilih jantina"
+                    >
+                      <SelectTrigger size="xl" className="w-full bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {GENDER_OPTIONS.map((item) => (
+                          <SelectItem key={item.value} id={item.value}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </Field>
                 </div>
               </FieldGroup>

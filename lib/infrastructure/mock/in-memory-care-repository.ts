@@ -1,5 +1,6 @@
 import type {
   Appointment,
+  AuditEvent,
   CareClaim,
   CareCircle,
   CareDocument,
@@ -7,6 +8,7 @@ import type {
   CareLog,
   CarePermissions,
   CareProfile,
+  CareSummary,
   CareRole,
   CareTask,
   EventAction,
@@ -17,6 +19,34 @@ import type {
   VitalReading,
 } from "@/lib/domain/care"
 import { adminPermissions } from "@/lib/domain/care"
+import { ApiError } from "@/lib/infrastructure/api/errors"
+
+/**
+ * A short trail so the audit screen has something to render in demo mode. Real
+ * rows are written by the backend on every membership change; the mock has no
+ * such writer, and an empty screen would demo "this feature is broken".
+ */
+function seedAuditEvents(snapshot: CareSnapshot) {
+  const now = Date.now()
+  return snapshot.profiles.flatMap((profile, index) => [
+    {
+      id: `audit-${profile.id}-created`,
+      profileId: profile.id,
+      actorDisplayName: "Penjaga",
+      eventType: "profile_created",
+      entityType: "care_profile",
+      createdAt: new Date(now - (index + 3) * 86400000).toISOString(),
+    },
+    {
+      id: `audit-${profile.id}-invited`,
+      profileId: profile.id,
+      actorDisplayName: "Penjaga",
+      eventType: "member_invited",
+      entityType: "profile_invite",
+      createdAt: new Date(now - (index + 1) * 86400000).toISOString(),
+    },
+  ])
+}
 
 /**
  * The mock account's id, matching seedAccountUser. The mock repository has to
@@ -46,11 +76,46 @@ function paginate<T>(items: T[], params?: ListParams): PaginatedResult<T> {
   }
 }
 
+/**
+ * Min/max/latest per reading type, matching what the API's SQL aggregate
+ * returns. A doctor wants the range and the current value, not every row.
+ */
+function summariseMockVitals(readings: VitalReading[]) {
+  const byType = new Map<string, VitalReading[]>()
+  for (const reading of readings) {
+    const list = byType.get(reading.readingType) ?? []
+    list.push(reading)
+    byType.set(reading.readingType, list)
+  }
+  return [...byType.entries()].map(([readingType, list]) => {
+    const numeric = list
+      .map((r) => Number(r.valueNumeric))
+      .filter((n) => Number.isFinite(n))
+    const latest = [...list].sort((a, b) =>
+      a.measuredAt < b.measuredAt ? 1 : -1
+    )[0]
+    return {
+      readingType,
+      readingCount: list.length,
+      unit: latest?.unit || undefined,
+      minValue: numeric.length ? String(Math.min(...numeric)) : undefined,
+      maxValue: numeric.length ? String(Math.max(...numeric)) : undefined,
+      latestValue: latest?.valueNumeric
+        ? String(latest.valueNumeric)
+        : undefined,
+      latestAt: latest?.measuredAt,
+    }
+  })
+}
+
 export class InMemoryCareRepository implements CareRepository {
   private snapshot: CareSnapshot
+  private summaries: Array<{ profileId: string; summary: CareSummary }> = []
+  private auditEvents: Array<AuditEvent & { profileId: string }> = []
 
   constructor(initial: CareSnapshot) {
     this.snapshot = structuredClone(initial)
+    this.auditEvents = seedAuditEvents(initial)
   }
 
   async getSnapshot(profileId?: string) {
@@ -278,6 +343,132 @@ export class InMemoryCareRepository implements CareRepository {
       (item) => !(item.profileId === profileId && item.userId === userId)
     )
     return this.snapshot.members.filter((item) => item.profileId === profileId)
+  }
+
+  async getEmergencyCard(profileId: string) {
+    const profile = this.snapshot.profiles.find((item) => item.id === profileId)
+    if (!profile) {
+      throw new ApiError("Profil tidak dijumpai.", {
+        code: "not_found",
+        status: 404,
+      })
+    }
+    return {
+      careProfileId: profile.id,
+      displayName: profile.displayName,
+      legalName: profile.legalName,
+      dateOfBirth: profile.dateOfBirth || undefined,
+      gender: profile.gender,
+      bloodType: profile.bloodType,
+      allergySummary: profile.allergySummary,
+      conditionSummary: profile.conditionSummary,
+      primaryClinic: profile.primaryClinic,
+      primaryDoctor: profile.primaryDoctor,
+      emergencyNote: profile.emergencyNote,
+    }
+  }
+
+  async listAuditEvents(profileId: string, params?: ListParams) {
+    return paginate(
+      this.auditEvents.filter((item) => item.profileId === profileId),
+      params
+    )
+  }
+
+  /**
+   * Assembles the summary the same way the API does, from the mock's own data.
+   *
+   * A stub returning a canned object would demo the wrong thing: the point of
+   * this feature is that the summary is *your* records reorganised, so a
+   * reviewer has to see their own logs come back in it.
+   */
+  async createSummary(
+    profileId: string,
+    period: { periodStart: string; periodEnd: string }
+  ) {
+    const start = new Date(`${period.periodStart}T00:00:00`)
+    // Inclusive of period_end, matching the API. Exclusive would make a
+    // summary "for today" silently empty.
+    const end = new Date(`${period.periodEnd}T00:00:00`)
+    end.setDate(end.getDate() + 1)
+
+    const inPeriod = (iso: string) => {
+      const at = new Date(iso)
+      return at >= start && at < end
+    }
+
+    const summary: CareSummary = {
+      id: nextId("summary"),
+      periodStart: period.periodStart,
+      periodEnd: period.periodEnd,
+      generator: "assembled",
+      createdAt: new Date().toISOString(),
+      content: {
+        logs: this.snapshot.logs
+          .filter((l) => l.profileId === profileId && inPeriod(l.occurredAt))
+          .map((l) => ({
+            occurredAt: l.occurredAt,
+            logType: l.logType,
+            title: l.title,
+            body: l.body || undefined,
+          })),
+        medications: this.snapshot.medications
+          .filter((m) => m.profileId === profileId && m.status !== "ended")
+          .map((m) => ({
+            name: m.name,
+            dosage: m.dosage || undefined,
+            instructions: m.instructions || undefined,
+            beforeAfterMeal: m.beforeAfterMeal || undefined,
+            prescribedBy: m.prescribedBy || undefined,
+            startDate: m.startDate || undefined,
+            endDate: m.endDate,
+          })),
+        appointments: this.snapshot.appointments
+          .filter(
+            (a) =>
+              a.profileId === profileId &&
+              a.status !== "cancelled" &&
+              inPeriod(a.appointmentAt)
+          )
+          .map((a) => ({
+            at: a.appointmentAt,
+            title: a.title,
+            doctorName: a.doctorName || undefined,
+            location: a.location || undefined,
+            status: a.status,
+          })),
+        vitals: summariseMockVitals(
+          this.snapshot.vitals.filter(
+            (v) => v.profileId === profileId && inPeriod(v.measuredAt)
+          )
+        ),
+        truncated: false,
+      },
+    }
+    this.summaries.unshift({ profileId, summary })
+    return structuredClone(summary)
+  }
+
+  async listSummaries(profileId: string, params?: ListParams) {
+    return paginate(
+      this.summaries
+        .filter((item) => item.profileId === profileId)
+        .map((item) => item.summary),
+      params
+    )
+  }
+
+  async getSummary(profileId: string, summaryId: string) {
+    const found = this.summaries.find(
+      (item) => item.profileId === profileId && item.summary.id === summaryId
+    )
+    if (!found) {
+      throw new ApiError("Ringkasan tidak dijumpai.", {
+        code: "not_found",
+        status: 404,
+      })
+    }
+    return structuredClone(found.summary)
   }
 
   async listCareLogs(profileId: string, params?: ListParams) {

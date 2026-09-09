@@ -49,6 +49,19 @@ export class ApiClient {
     }
   }
 
+  /**
+   * The raw response body, for endpoints whose artefact *is* the text - the
+   * account export, which the user saves to a file. Parsing and re-serialising
+   * it would only risk changing what they receive.
+   */
+  async requestText(path: string, init: ApiRequestInit = {}): Promise<string> {
+    const response = await this.fetch(path, init)
+    if (!response.ok) {
+      throw await parseApiError(response)
+    }
+    return response.text()
+  }
+
   private buildHeaders(init: ApiRequestInit) {
     const headers = new Headers(init.headers)
     applyDefaultApiHeaders(headers)

@@ -56,3 +56,8 @@ export type DocumentDownloadResponse = {
   expires_at: string
   content_disposition: string
 }
+
+export type ApiDeleteAccountResponse = {
+  anonymized_at: string
+  deleted_care_profile_ids?: string[]
+}

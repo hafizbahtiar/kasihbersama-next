@@ -1,5 +1,6 @@
 import type {
   Appointment,
+  AuditEvent,
   AppointmentStatus,
   CareClaim,
   CareCircle,
@@ -10,6 +11,8 @@ import type {
   CarePermissions,
   CareProfile,
   CareRole,
+  CareSummary,
+  EmergencyCard,
   CareTask,
   EventAction,
   Medication,
@@ -237,6 +240,34 @@ export interface CareDocumentRepository {
  * Everything a full care client needs. The API and in-memory implementations
  * both satisfy this, so the composition root stays a single binding.
  */
+/**
+ * The profile's administrative history and its doctor-visit summaries.
+ *
+ * Grouped together because both are admin-side reads over a care profile
+ * rather than care content, and both are gated on a permission most members do
+ * not have - the audit trail on `can_change_roles`, summaries on
+ * `can_export_summary`.
+ */
+export interface CareAdminRepository {
+  listAuditEvents(
+    profileId: string,
+    params?: ListParams
+  ): Promise<PaginatedResult<AuditEvent>>
+
+  /** Rejects with 403 when the caller lacks can_view_emergency_card. */
+  getEmergencyCard(profileId: string): Promise<EmergencyCard>
+
+  createSummary(
+    profileId: string,
+    period: { periodStart: string; periodEnd: string }
+  ): Promise<CareSummary>
+  listSummaries(
+    profileId: string,
+    params?: ListParams
+  ): Promise<PaginatedResult<CareSummary>>
+  getSummary(profileId: string, summaryId: string): Promise<CareSummary>
+}
+
 export interface CareRepository
   extends
     CareSnapshotReader,
@@ -248,6 +279,7 @@ export interface CareRepository
     AppointmentRepository,
     CareTaskRepository,
     VitalRepository,
-    CareDocumentRepository {}
+    CareDocumentRepository,
+    CareAdminRepository {}
 
 export type { AppointmentStatus, TaskStatus }

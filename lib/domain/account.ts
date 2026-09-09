@@ -71,3 +71,31 @@ export type UserSession = {
  * form shows that message.
  */
 export const MIN_PASSWORD_LENGTH = 10
+
+/**
+ * Why a care profile blocks account deletion. The next action differs per
+ * reason, so the UI must not collapse them into one message.
+ */
+export type DeletionBlockReason = "sole_admin" | "shared_subject"
+
+export type DeletionBlocker = {
+  id: string
+  displayName: string
+  reason: DeletionBlockReason
+}
+
+export const DELETION_BLOCK_LABELS: Record<DeletionBlockReason, string> = {
+  sole_admin: "Anda satu-satunya pentadbir",
+  shared_subject: "Profil ini tentang anda dan dikongsi",
+}
+
+export const DELETION_BLOCK_FIXES: Record<DeletionBlockReason, string> = {
+  sole_admin: "Lantik pentadbir lain dahulu.",
+  shared_subject: "Serahkan profil ini atau arkibkannya dahulu.",
+}
+
+export type DeleteAccountResult = {
+  anonymizedAt: string
+  /** Profiles removed along with the account. Never silent. */
+  deletedCareProfileIds: string[]
+}

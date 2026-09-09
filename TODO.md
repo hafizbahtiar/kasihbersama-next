@@ -81,9 +81,23 @@
 - [x] Pagination server-side untuk semua senarai (ubat, temujanji, tugasan, vital, dokumen, ahli) - ahli tiada pagination backend; senarai lain siap
 - [x] Timeline profil dari `GET /care-profiles/{id}/timeline` (gantikan agregasi snapshot tempatan) _(API = log jagaan sahaja; mock kekal agregasi penuh)_
 - [x] Ahli & akses: `GET /care-profiles/{id}/members` (access review), kemas kini peranan melalui API
-- [x] Ubat: schedules & events dari API; padam `prescribedBy` / tarikh mock apabila DTO backend sedia _(jadual/events API; medan mock disembunyikan dalam mod API)_
-- [x] Profil jagaan: persist `relation`, tarikh lahir, nota apabila backend menambah medan DTO _(borang API hanya `display_name`; medan gap disembunyikan)_
-- [ ] Platform: sambung emergency card, doctor summary, audit apabila endpoint backend tersedia _(disahkan 2026-09-09: `summaries/doctor-visit`, `summaries/{id}/pdf-url`, `audit-events` dan emergency card semuanya tiada dalam `server.go` walaupun ada dalam kontrak)_
+- [x] Ubat: schedules & events dari API; `prescribedBy` / `startDate` / `endDate` kini benar-benar disimpan _(DTO backend menerima dan memulangkan ketiga-tiganya sejak 2026-09-09; pagar `!apiMode` dibuang)_
+- [x] Profil jagaan: tarikh lahir kini disimpan melalui API _(`relation` dan `notes` kekal mock — tiada lajur dalam DB; lapan medan kesihatan lain boleh disimpan tetapi borang belum mengumpulnya, lihat bawah)_
+- [x] Platform: doctor summary dan audit disambung 2026-09-09 _(kad platform kini memaut ke halaman sebenar)_
+- [x] Platform: **kad kecemasan** disambung 2026-09-09 (`/emergency-card`)
+- [x] **PDF ringkasan: cetak dari pelayar, bukan endpoint backend** (2026-09-09).
+  `pdf-url` dibuang daripada kontrak. Ringkasan kini ada URL sendiri
+  (`/summaries/{id}`) dengan butang "Cetak / simpan PDF" dan stylesheet cetak dalam
+  `globals.css` yang melucutkan sidebar, header dan toast.
+  - Halaman, bukan sheet: sheet ialah portal atas keseluruhan dokumen, jadi mencetaknya
+    mencetak aplikasi di belakangnya. Ia juga memberi ringkasan alamat yang boleh dibuka
+    semula dan dikongsi.
+  - `SummarySections` dikongsi supaya paparan skrin dan cetakan tak boleh menyimpang —
+    yang menyimpang sentiasa yang tiada siapa lihat sampai doktor memegangnya.
+  - Pemilih cetak disemak terhadap `app/(app)/layout.tsx`: header berada **dalam**
+    `sidebar-inset`, bukan di sebelahnya. Tekaan pertama aku salah.
+  - Sebab menolak PDF sisi pelayan: ia salinan kedua data perubatan at-rest yang
+    `POST /me/delete` tak sentuh.
 - [x] Device: daftar/revoke push token melalui API (bukan mock subscription id) _(revoke/list via API; daftar hanya ios/android di backend)_
 - [x] Buang `ResourceSnapshotProvider` / mock notification seed apabila tiada endpoint legacy diperlukan
 - [x] Selaraskan path repository dengan kontrak (contoh: verify `care-logs` vs `logs` pada semua resource)
@@ -99,7 +113,7 @@
 - [x] Cookie `kb-refresh-token`: selaraskan TTL, `Secure`/`SameSite` untuk production _(TTL via `NEXT_PUBLIC_SESSION_MAX_AGE_DAYS`, `Secure` on HTTPS, `SameSite=Lax`)_
 - [x] Rate limit UX untuk login/signup/forgot (papar mesej `rate_limited` / `locked`)
 - [x] Logout all devices: pastikan semua tab/client state direset selepas `POST /auth/logout-all` _(BroadcastChannel + storage sync, clear profil dipilih)_
-- [ ] Akaun: `POST /me/delete` apabila backend Module 3 sedia _(disahkan 2026-09-09: masih tiada route; tapak pemasaran mengiklankan patuh PDPA, jadi ini lebih dari sekadar nice-to-have)_
+- [x] Akaun: `POST /me/delete` dan `GET /me/export` disambung 2026-09-09 _(Tetapan → Data & akaun)_
 - [x] Ujian aliran: signup → verify → login → refresh → logout → forgot → reset _(skrip: `npm run smoke:auth`)_
 
 ---
@@ -117,12 +131,12 @@ ujian terhadap staging menghasilkan rekod Resend "Verify your KasihBersama email
 dengan `last_event: delivered`. Akaun yang tak menerimanya didaftarkan 11 jam sebelum
 domain penghantar disahkan di Resend.
 
-- [ ] **Tiada UI "hantar semula e-mel pengesahan"**, kerana backend tiada endpointnya.
-  Itu gap sebenar: token hidup 24 jam, dan selepas luput tiada jalan mendapat yang
-  baharu. Halaman `/verify-email` hanya menerima token yang sudah ada di tangan.
-  `EmailVerifiedGate` kemudian menyekat jemputan dan tuntutan untuk akaun sedemikian.
-  Bergantung pada `POST /auth/resend-verification`; bina butang pada
-  `verify-email-form.tsx` sebaik ia wujud.
+- [x] **UI "hantar semula e-mel pengesahan" sudah ada** (2026-09-09).
+  `POST /auth/resend-verification` dibina di backend dan
+  `components/auth/resend-verification-button.tsx` memanggilnya dari `/verify-email` dan
+  dari Tetapan. Backend sengaja **tidak** membatalkan token terdahulu, jadi tekan kali
+  kedua tak membunuh pautan yang sudah ada dalam peti masuk seseorang — itu pepijat
+  sebenar yang berlaku sekali dalam sesi ini.
 
 ### Belum siap kerana backend belum ada surface
 
@@ -135,6 +149,51 @@ domain penghantar disahkan di Resend.
 
 ### Selesai sesi ini (2026-09-09)
 
+- [x] **Kad kecemasan (`/emergency-card`).** Disusun untuk dibaca dalam tekanan, bukan
+  dilayari: **alahan** dahulu dan paling besar dalam blok merah — ia satu-satunya medan
+  yang mengubah tindakan klinisian dalam minit berikutnya — kemudian jenis darah dan
+  tarikh lahir, semuanya satu skrin tanpa tab. Boleh dicetak dengan stylesheet yang sama.
+  - Halaman **memberitahu pembaca bahawa bacaannya direkodkan**. Seseorang yang diberi
+    akses kecemasan patut tahu penontonannya kelihatan kepada keluarga; backend mencatat
+    `emergency_card_viewed` pada setiap bacaan.
+- [x] **Teks pemadaman kini menyebut fail.** Sapuan storan objek backend (`worker.RunPurge`,
+  2026-09-09) tiada permukaan UI — tiada respons API berubah — tetapi dua tempat teks
+  sebelum ini senyap tentang apa yang berlaku kepada fail:
+  - Padam dokumen: "Fail akan dibuang daripada profil ini" → menyatakan ia juga dipadam
+    dari storan dan tindakan itu kekal.
+  - Padam akaun: kini menyatakan dokumen dalam profil yang dipadam turut hilang, dan
+    **mengapa** log jagaan untuk keluarga lain kekal — itu rekod mereka, bukan milik
+    pengguna untuk dipadam. Teks lama membiarkan pengguna meneka.
+- [x] **Tiga endpoint backend baharu kini ada UI.**
+  - **Ringkasan doktor** (`/summaries`): pilih tempoh, ringkasan disediakan, dilihat dalam
+    sheet bersekhen (ubat semasa, julat vital, temujanji, log). Lencana "Dijana AI" hanya
+    muncul untuk `generator === "ai"` — ringkasan `assembled` tak mencipta apa-apa, jadi
+    melabelnya akan membayangkan kaveat yang tak wujud. Mapper menganggap generator yang
+    tak dikenali sebagai `ai`: lalai selamat ialah yang menunjukkan penafian.
+  - **Sejarah** (tab baharu dalam profil jagaan): dipagar `can_change_roles` sama seperti
+    endpointnya, dengan fallback yang **berkata** hanya pentadbir boleh lihat — panel kosong
+    akan terbaca sebagai "tiada apa berlaku".
+  - **Data & akaun** (tab baharu dalam Tetapan): muat turun data sendiri, dan padam akaun.
+    Padam memerlukan kata laluan **dan** menaip PADAM — ini satu-satunya tindakan tanpa
+    undo, dan medan kata laluan sahaja ialah gerak isyarat yang sama seperti menukar nama.
+    409 `deletion_blocked` dipaparkan sebagai senarai profil dengan tindakan pembetulan
+    setiap satu; sebab yang berbeza perlukan langkah yang berbeza.
+  - Eksport dimuat turun melalui `Blob`, bukan `<a href>` terus ke endpoint: API perlukan
+    header Authorization yang pautan biasa tak boleh hantar.
+  - Repositori mock **menyusun** ringkasan daripada data mocknya sendiri, bukan pulang objek
+    tin. Seluruh maksud ciri ini ialah ringkasan itu rekod kau sendiri disusun semula.
+- [x] **Tinggi kawalan borang ialah satu skala, bukan 51 salinan.** `Input` asasnya 32px,
+  jadi setiap borang menulis `h-11` sendiri dalam `className` — **51 tempat**. Kawalan yang
+  *dikarang* dan bukan digaya terus tak dapat mesej itu: kesemua **13** `DatePicker` dalam
+  app ialah medan 32px + butang kalendar 32px berdiri di sebelah kotak teks 44px.
+  `components/ui/control-size.ts` kini memiliki skala itu (`default` 32px untuk krom padat,
+  `xl` 44px untuk borang), dan `Input`, `SelectTrigger`, `InputGroup`, `DateField`,
+  `TimeField`, `DateTimeField`, `DatePicker` dan `DateTimePicker` semuanya mengambilnya.
+  Preseden yang sama sudah ditetapkan untuk `Button` (`size="xl"`) atas sebab yang sama.
+  - `DatePicker` kini menyaiz butang kalendarnya daripada saiz medannya — itu yang
+    memutuskan pasangan tak sepadan.
+  - `InputGroupInput` kini `h-full`: dalam kumpulan, pembalut yang memiliki tinggi.
+  - Sifar `h-11` tinggal di luar skala itu sendiri.
 - [x] **Halaman "Kesihatan saya" (`/my-health`).** Jenis darah, tarikh lahir, alahan,
   keadaan kesihatan, klinik/doktor utama, nota kecemasan — untuk diri sendiri. Backend
   memodelkannya sebagai profil jagaan yang subjeknya diri sendiri, jadi frontend
@@ -213,8 +272,13 @@ domain penghantar disahkan di Resend.
 - [ ] Navigasi client-side belum disahkan pada tahap klik - tiada pelayar dalam sesi itu.
   Semak DevTools → Network: satu fetch `?_rsc=` bermakna berjaya; permintaan dokumen penuh
   bermakna belum.
-- [ ] `smoke:auth` melangkau langkah verify (lihat header skripnya). Ia tak boleh lengkap
-  sehingga endpoint resend wujud.
+- [ ] `smoke:auth` masih melangkau langkah verify (lihat header skripnya). **Tidak lagi
+  tersekat** — `POST /auth/resend-verification` wujud sejak 2026-09-09, jadi skrip itu
+  kini boleh dilengkapkan.
+- [ ] Saiz medan borang belum disahkan dengan mata. Setiap kawalan kini mengambil
+  tingginya daripada `components/ui/control-size.ts`, tetapi itu disahkan pada tahap
+  kompilasi sahaja. Buka satu borang dan sahkan medan teks, pemilih tarikh, butang
+  kalendarnya dan `Select` semuanya sebaris.
 
 ---
 
@@ -274,48 +338,49 @@ borang: cara pengguna tiba, dan apa berlaku selepas simpan.
 
 Disemak terhadap skema DB sebenar, bukan terhadap `care-profile-field-gaps.ts`.
 
-### `care-profile-field-gaps.ts` salah, bukan sekadar tidak lengkap
+### `care-profile-field-gaps.ts` — DIBETULKAN 2026-09-09
 
-- [ ] Ia menyenaraikan jurang sebagai `relation`, `dateOfBirth`, `notes`. Dua daripada
-  tiga nama itu **tiada dalam jadual** `care_profiles`. Yang sebenarnya ada, sudah
-  dimigrasi dan sudah dimuat pada setiap bacaan backend:
+- [x] Fail itu menyenaraikan jurang sebagai `relation`, `dateOfBirth`, `notes`. **Dua
+  daripada tiga nama itu tiada dalam jadual** `care_profiles`, jadi ia menyembunyikan
+  medan yang salah dan memberi gambaran jurang itu kecil. Sembilan lajur yang benar-benar
+  ada (`legal_name`, `date_of_birth`, `gender`, `blood_type`, `allergy_summary`,
+  `condition_summary`, `primary_clinic`, `primary_doctor`, `emergency_note`) kini
+  didedahkan oleh backend dan dibaca oleh mapper. Senarai jurang tinggal `relation` dan
+  `notes` — dua-duanya **tiada lajur di mana-mana**, jadi ia perlu migrasi, bukan
+  perubahan DTO.
 
-      legal_name, date_of_birth, gender, blood_type, allergy_summary,
-      condition_summary, primary_clinic, primary_doctor, emergency_note
+### Borang profil jagaan: lapan medan kesihatan masih belum dikumpul
 
-  Sembilan lajur, dan `ProfileView` backend tak memulangkan satu pun. Fail ini perlu
-  dibetulkan supaya ia menamakan medan yang wujud - kalau tidak ia menyembunyikan
-  medan yang salah dan memberi gambaran jurang itu kecil.
+Sekatan DTO sudah hilang — `createProfileReq`/`updateProfileReq` menerima kesembilan-sembilan
+medan sejak 2026-09-09, dan borang sudah menghantar `date_of_birth`.
 
-### Borang profil menunggu satu perubahan DTO
+- [ ] Borang cipta/sunting **profil jagaan** masih hanya mengumpul nama dan tarikh lahir.
+  Lapan lagi (`legal_name`, `gender`, `blood_type`, `allergy_summary`,
+  `condition_summary`, `primary_clinic`, `primary_doctor`, `emergency_note`) sudah boleh
+  disimpan tetapi tiada medan untuk mengisinya. Halaman `/my-health` sudah mengumpul
+  kesemuanya untuk rekod sendiri — bahagian itu boleh diguna semula sebagai rujukan,
+  atau dikongsi sebagai satu komponen.
+  Nota: hantar medan kosong sebagai **kunci tiada**, bukan `""` — lajur ini di-COALESCE.
 
-- [ ] Borang cipta/sunting profil hanya menghantar `display_name`, sebab itu sahaja yang
-  `updateProfileReq` terima. Sebaik backend mendedahkan sembilan medan itu (perubahan
-  DTO, bukan migrasi - data sudah dalam memori), borang ini boleh mengumpul tarikh
-  lahir, jenis darah, alahan, keadaan, klinik dan doktor.
-  Bergantung pada entri "DTO gaps" dalam TODO backend.
+### Kad kecemasan — SELESAI 2026-09-09
 
-### Kad kecemasan: UI ada, data ada, endpoint tiada
-
-- [ ] `can_view_emergency_card` sudah ditapis dalam `platform-features-section.tsx` dan
-  `lib/domain/care.ts`, dan lajur `emergency_note` sudah dimigrasi - tetapi tiada
-  endpoint menghubungkannya. Bahagian frontend sudah sedia; ia menunggu backend.
+- [x] `GET /care-profiles/{id}/emergency-card` dibina, dan halaman `/emergency-card`
+  menyambungnya. Keputusan bentuk yang tertangguh itu rupanya **sudah ditentukan oleh
+  kod**: `GetProfile` memerlukan `can_view_timeline` sedangkan `emergency_viewer` hanya
+  ada `can_view_emergency_card`, jadi "paparan atas DTO profil" mustahil tanpa
+  melonggarkan bacaan profil untuk peranan paling sempit dalam sistem.
 
 ### Modul kesihatan diri sendiri — SELESAI 2026-09-09
 
 Dibina sebagai profil jagaan yang subjeknya diri sendiri (pilihan pertama di bawah
 menang): `GET/POST /me/health-profile` + halaman `/my-health`.
 
-- [ ] **`tinggi` masih tiada** dalam mana-mana jadual — satu-satunya medan dalam nota asal
-  yang masih perlukan migrasi.
-- [x] ~~Tiada halaman untuk maklumat kesihatan pengguna sendiri (jenis darah, tarikh lahir,
-  tinggi).~~ `/me` memulangkan empat medan sahaja - id, e-mel, nama paparan, status
-  pengesahan - dan `PATCH /me` menerima satu. Settings menunjukkan tepat apa yang ada.
+Keputusan yang diambil: rekod sendiri ialah profil jagaan yang subjeknya diri sendiri,
+bukan lajur baharu pada `users` — jadi ubat, vital, dokumen dan model keizinan berfungsi
+padanya tanpa kerja tambahan. `/me` kekal empat medan (id, e-mel, nama paparan, status
+pengesahan); ia identiti log masuk, bukan rekod klinikal.
 
-  Keputusan reka bentuk ada di sebelah backend: sama ada "kesihatan saya" ialah profil
-  jagaan yang subjeknya diri sendiri (guna semula segalanya yang sedia ada), atau medan
-  baharu pada `users` (menduakan model). Kalau pilihan pertama menang, kerja frontendnya
-  kecil - halaman itu ialah halaman profil jagaan sedia ada.
-
-  Nota: `tinggi` tiada dalam mana-mana jadual, jadi ia perlu migrasi walau apa pun.
+- [ ] **`tinggi` (dan berat) masih tiada** dalam mana-mana jadual — satu-satunya medan
+  dalam nota asal yang masih perlukan migrasi. Putuskan kedua-duanya sekali gus supaya
+  tidak bermigrasi dua kali.
 

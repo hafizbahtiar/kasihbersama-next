@@ -7,6 +7,8 @@ import {
   IconHistory,
 } from "@tabler/icons-react"
 
+import Link from "next/link"
+
 import { PermissionGate } from "@/components/care/permission-gate"
 import { usePlatform } from "@/components/platform/platform-provider"
 import { Badge } from "@/components/ui/badge"
@@ -24,23 +26,27 @@ const platformCards = [
     description: "Paparan pantas maklumat kritikal semasa kecemasan.",
     icon: IconAlertTriangle,
     permission: "can_view_emergency_card" as const,
-    endpointAvailable: false,
+    endpointAvailable: true,
+    href: "/emergency-card",
   },
   {
     id: "doctor_summary",
     title: "Ringkasan doktor",
-    description: "Eksport ringkasan perubatan untuk temujanji.",
+    description: "Kumpulkan rekod satu tempoh untuk dibawa ke temujanji.",
     icon: IconFileDescription,
     feature: "doctor_summary" as const,
     permission: "can_export_summary" as const,
-    endpointAvailable: false,
+    endpointAvailable: true,
+    href: "/summaries",
   },
   {
     id: "audit",
     title: "Audit & sejarah",
     description: "Jejak perubahan dan aktiviti profil jagaan.",
     icon: IconHistory,
-    endpointAvailable: false,
+    permission: "can_change_roles" as const,
+    endpointAvailable: true,
+    href: "/care-profiles",
   },
 ] as const
 
@@ -68,7 +74,7 @@ export function PlatformFeaturesSection() {
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {visibleCards.map((item) => {
-          const card = (
+          const body = (
             <Card key={item.id} className="h-full">
               <CardHeader>
                 <div className="flex items-start justify-between gap-3">
@@ -91,6 +97,21 @@ export function PlatformFeaturesSection() {
               </CardHeader>
             </Card>
           )
+
+          // A card that says "Tersedia" and does nothing when clicked is worse
+          // than one that says it is unavailable: it promises a destination.
+          const card =
+            "href" in item && item.href && item.endpointAvailable ? (
+              <Link
+                key={item.id}
+                href={item.href}
+                className="block rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                {body}
+              </Link>
+            ) : (
+              body
+            )
 
           if ("permission" in item && item.permission) {
             return (

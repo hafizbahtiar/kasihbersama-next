@@ -2,6 +2,7 @@ import {
   CARE_PERMISSIONS,
   CARE_ROLES,
   type Appointment,
+  type AuditEvent,
   type CareClaim,
   type CareCircle,
   type CareDocument,
@@ -10,6 +11,8 @@ import {
   type CareMember,
   type CarePermissions,
   type CareProfile,
+  type CareSummary,
+  type EmergencyCard,
   type CareTask,
   type Medication,
   type MedicationEvent,
@@ -476,4 +479,150 @@ export type {
   ApiMember,
   ApiProfile,
   ApiVitalReading,
+}
+
+export type ApiAuditEvent = {
+  id: string
+  actor_user_id?: string
+  actor_display_name: string
+  event_type: string
+  entity_type?: string
+  entity_id?: string
+  metadata?: Record<string, unknown>
+  created_at: string
+}
+
+export type ApiSummary = {
+  id: string
+  period_start: string
+  period_end: string
+  generator: string
+  content?: ApiSummaryContent
+  created_at: string
+}
+
+type ApiSummaryContent = {
+  logs?: Array<{
+    occurred_at: string
+    log_type: string
+    title: string
+    body?: string
+  }>
+  medications?: Array<{
+    name: string
+    dosage?: string
+    instructions?: string
+    before_after_meal?: string
+    prescribed_by?: string
+    start_date?: string
+    end_date?: string
+  }>
+  appointments?: Array<{
+    at: string
+    title: string
+    doctor_name?: string
+    location?: string
+    status: string
+  }>
+  vitals?: Array<{
+    reading_type: string
+    reading_count: number
+    unit?: string
+    min_value?: string
+    max_value?: string
+    latest_value?: string
+    latest_at?: string
+  }>
+  truncated?: boolean
+}
+
+export function mapAuditEvent(api: ApiAuditEvent): AuditEvent {
+  return {
+    id: api.id,
+    actorUserId: api.actor_user_id,
+    actorDisplayName: api.actor_display_name,
+    eventType: api.event_type,
+    entityType: api.entity_type,
+    entityId: api.entity_id,
+    metadata: api.metadata,
+    createdAt: api.created_at,
+  }
+}
+
+export function mapSummary(api: ApiSummary): CareSummary {
+  const content = api.content ?? {}
+  return {
+    id: api.id,
+    periodStart: api.period_start,
+    periodEnd: api.period_end,
+    // Unknown generators read as "ai": the safe default is the one that shows
+    // a disclaimer, because the failure that matters is presenting model
+    // output as if a person wrote it.
+    generator: api.generator === "assembled" ? "assembled" : "ai",
+    createdAt: api.created_at,
+    content: {
+      logs: (content.logs ?? []).map((l) => ({
+        occurredAt: l.occurred_at,
+        logType: l.log_type,
+        title: l.title,
+        body: l.body,
+      })),
+      medications: (content.medications ?? []).map((m) => ({
+        name: m.name,
+        dosage: m.dosage,
+        instructions: m.instructions,
+        beforeAfterMeal: m.before_after_meal,
+        prescribedBy: m.prescribed_by,
+        startDate: m.start_date,
+        endDate: m.end_date,
+      })),
+      appointments: (content.appointments ?? []).map((a) => ({
+        at: a.at,
+        title: a.title,
+        doctorName: a.doctor_name,
+        location: a.location,
+        status: a.status,
+      })),
+      vitals: (content.vitals ?? []).map((v) => ({
+        readingType: v.reading_type,
+        readingCount: v.reading_count,
+        unit: v.unit,
+        minValue: v.min_value,
+        maxValue: v.max_value,
+        latestValue: v.latest_value,
+        latestAt: v.latest_at,
+      })),
+      truncated: Boolean(content.truncated),
+    },
+  }
+}
+
+export type ApiEmergencyCard = {
+  care_profile_id: string
+  display_name: string
+  legal_name?: string
+  date_of_birth?: string
+  gender?: string
+  blood_type?: string
+  allergy_summary?: string
+  condition_summary?: string
+  primary_clinic?: string
+  primary_doctor?: string
+  emergency_note?: string
+}
+
+export function mapEmergencyCard(api: ApiEmergencyCard): EmergencyCard {
+  return {
+    careProfileId: api.care_profile_id,
+    displayName: api.display_name,
+    legalName: api.legal_name,
+    dateOfBirth: api.date_of_birth,
+    gender: api.gender,
+    bloodType: api.blood_type,
+    allergySummary: api.allergy_summary,
+    conditionSummary: api.condition_summary,
+    primaryClinic: api.primary_clinic,
+    primaryDoctor: api.primary_doctor,
+    emergencyNote: api.emergency_note,
+  }
 }

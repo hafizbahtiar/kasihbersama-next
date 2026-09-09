@@ -1,5 +1,6 @@
 import type { AuthUser } from "@/lib/domain/auth"
 import type {
+  DeleteAccountResult,
   DeviceToken,
   NotificationChannel,
   ProfileNotificationPref,
@@ -38,4 +39,17 @@ export interface AccountRepository {
 
   listSessions(): Promise<UserSession[]>
   revokeSession(sessionId: string): Promise<void>
+
+  /**
+   * Erases the account. Password-gated: this is the most destructive action in
+   * the app.
+   *
+   * Rejects with an ApiError carrying code "deletion_blocked" when a care
+   * profile still needs a decision - read the list with
+   * `deletionBlockersFromError`.
+   */
+  deleteAccount(currentPassword: string): Promise<DeleteAccountResult>
+
+  /** The caller's own data, as a JSON string ready to save to a file. */
+  exportAccount(): Promise<string>
 }

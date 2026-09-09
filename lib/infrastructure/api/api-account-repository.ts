@@ -8,7 +8,10 @@ import type {
   UserSession,
 } from "@/lib/domain/account"
 import type { ApiClient } from "@/lib/infrastructure/api/client"
-import type { MeResponse } from "@/lib/infrastructure/api/types"
+import type {
+  ApiDeleteAccountResponse,
+  MeResponse,
+} from "@/lib/infrastructure/api/types"
 
 type ApiNotificationPref = {
   care_profile_id: string
@@ -162,6 +165,30 @@ export class ApiAccountRepository implements AccountRepository {
         }),
       })
       .then(mapMe)
+  }
+
+  deleteAccount(currentPassword: string) {
+    return this.client
+      .request<ApiDeleteAccountResponse>("/me/delete", {
+        method: "POST",
+        // Same reasoning as the other password-gated verbs: a 401 here means
+        // the password in the body is wrong, not that the session expired.
+        skipRefresh: true,
+        body: JSON.stringify({ current_password: currentPassword }),
+      })
+      .then((response) => ({
+        anonymizedAt: response.anonymized_at,
+        deletedCareProfileIds: response.deleted_care_profile_ids ?? [],
+      }))
+  }
+
+  /**
+   * Returned as text, not a parsed object: it goes straight to a file the user
+   * saves. Parsing and re-serialising it would only risk changing what they
+   * receive.
+   */
+  exportAccount() {
+    return this.client.requestText("/me/export")
   }
 
   listSessions() {
