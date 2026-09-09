@@ -1,6 +1,7 @@
 "use client"
 
-import type { ReactNode } from "react"
+import { useEffect, type ReactNode } from "react"
+import { usePathname } from "next/navigation"
 
 import { AsyncStateBanner } from "@/components/care/async-state"
 import { PageLoadingState } from "@/components/care/page-loading-state"
@@ -8,7 +9,13 @@ import { useCareData } from "@/components/care/care-data-provider"
 import { Spinner } from "@/components/ui/spinner"
 
 export function AppMain({ children }: { children: ReactNode }) {
-  const { isReady, isRefreshing, loadError, refresh } = useCareData()
+  const pathname = usePathname()
+  const { isReady, isRefreshing, loadError, clearLoadError, refresh } =
+    useCareData()
+
+  useEffect(() => {
+    clearLoadError()
+  }, [pathname, clearLoadError])
 
   if (!isReady) {
     return (

@@ -8,8 +8,6 @@ import { useCareData } from "@/components/care/care-data-provider"
 import { PageHeader } from "@/components/care/page-header"
 import { usePlatform } from "@/components/platform/platform-provider"
 import { PlanChooser } from "@/components/pricing/plan-chooser"
-import { UsageAgainstYourLimit } from "@/components/pricing/usage-against-your-limit"
-import { useAccountUsage } from "@/hooks/use-account-usage"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button, LinkButton } from "@/components/ui/button"
@@ -32,7 +30,6 @@ import { cn } from "@/lib/utils"
 
 export function PricingPage() {
   const { limits } = usePlatform()
-  const { usage } = useAccountUsage()
   const { snapshot } = useCareData()
   const [period, setPeriod] = useState<BillingPeriod>("yearly")
   // Seeded from what the account actually has, so the page opens on the
@@ -55,8 +52,6 @@ export function PricingPage() {
         description="Pelan berbeza pada satu perkara: berapa ramai orang anda jaga, dan berapa ramai keluarga berkongsi kerja itu."
       />
 
-      <UsageAgainstYourLimit usage={usage} />
-
       <PlanChooser count={count} onCountChange={setCount} />
 
       <div className="flex flex-wrap items-center gap-3">
@@ -77,6 +72,13 @@ export function PricingPage() {
         <span className="text-sm text-muted-foreground">
           Bayaran tahunan: 2 bulan percuma.
         </span>
+        <LinkButton
+          variant="outline"
+          size="sm"
+          href="/pricing/usage"
+        >
+          Penggunaan anda
+        </LinkButton>
         <LinkButton
           variant="outline"
           size="sm"
@@ -179,9 +181,9 @@ export function PricingPage() {
         <IconInfoCircle />
         <AlertTitle>Harga belum dibuka</AlertTitle>
         <AlertDescription>
-          Pembayaran belum disambungkan. Pelan Percuma di atas ialah had sebenar
-          yang dikuatkuasakan pada akaun anda hari ini; dua lagi menunjukkan ke
-          mana ia menuju.
+          Pembayaran belum disambungkan. Lajur Percuma di bawah menunjukkan
+          katalog had percuma dari pelayan; penggunaan sebenar akaun anda ada
+          di halaman Penggunaan.
         </AlertDescription>
       </Alert>
     </div>

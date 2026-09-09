@@ -73,110 +73,164 @@ export type ComparisonRow = {
   label: string
   /** A tick, a cross, or a value per plan. */
   values: Record<PricingPlan["id"], string | boolean>
-  /** Set when the free column must be read from the server, not from here. */
-  liveFreeValue?: "profiles" | "members" | "upload"
 }
 
-export const COMPARISON_GROUPS: Array<{
+type PlanCatalogueLimits = {
+  profiles: number | "unlimited"
+  members: number | "unlimited"
+  uploadMb: number
+  /** Marketing pool size; not enforced on the server yet. */
+  storageLabel: string
+}
+
+const PAID_PLAN_LIMITS: Record<
+  Exclude<PricingPlan["id"], "free">,
+  PlanCatalogueLimits
+> = {
+  family: {
+    profiles: PLAN_PROFILE_CAPS.family,
+    members: 10,
+    uploadMb: 25,
+    storageLabel: "5 GB",
+  },
+  care_home: {
+    profiles: "unlimited",
+    members: "unlimited",
+    uploadMb: 100,
+    storageLabel: "50 GB",
+  },
+}
+
+function freePlanLimits(server: PlatformLimits): PlanCatalogueLimits {
+  return {
+    profiles: server.maxProfilesFree,
+    members: server.maxMembersFree,
+    uploadMb: server.maxUploadMb,
+    storageLabel: "500 MB",
+  }
+}
+
+function planCatalogueLimits(
+  planId: PricingPlan["id"],
+  server: PlatformLimits
+): PlanCatalogueLimits {
+  if (planId === "free") {
+    return freePlanLimits(server)
+  }
+  return PAID_PLAN_LIMITS[planId]
+}
+
+function formatCountLimit(value: number | "unlimited") {
+  return value === "unlimited" ? "Tanpa had" : String(value)
+}
+
+function formatUploadLimit(uploadMb: number) {
+  return `${uploadMb} MB`
+}
+
+function limitsDisplayStrings(limits: PlanCatalogueLimits) {
+  return {
+    profiles:
+      limits.profiles === "unlimited"
+        ? "Profil tanpa had"
+        : `${limits.profiles} profil jagaan`,
+    members:
+      limits.members === "unlimited"
+        ? "Ahli tanpa had"
+        : `${limits.members} ahli setiap profil`,
+    upload: `Fail sehingga ${limits.uploadMb} MB`,
+  }
+}
+
+/**
+ * Built from the same catalogue numbers as PRICING_PLANS so the compare table
+ * cannot drift from the cards on /pricing.
+ */
+export function buildComparisonGroups(server: PlatformLimits): Array<{
   title: string
   rows: ComparisonRow[]
-}> = [
-  {
-    title: "Had",
-    rows: [
-      {
-        label: "Profil jagaan",
-        liveFreeValue: "profiles",
-        values: { free: "1", family: "5", care_home: "Tanpa had" },
-      },
-      {
-        label: "Ahli setiap profil",
-        liveFreeValue: "members",
-        values: { free: "2", family: "10", care_home: "Tanpa had" },
-      },
-      {
-        label: "Saiz fail",
-        liveFreeValue: "upload",
-        values: { free: "5 MB", family: "25 MB", care_home: "100 MB" },
-      },
-      {
-        label: "Simpanan dokumen",
-        values: { free: "500 MB", family: "5 GB", care_home: "50 GB" },
-      },
-    ],
-  },
-  {
-    title: "Penjagaan harian",
-    rows: [
-      {
-        label: "Log jagaan dan timeline",
-        values: { free: true, family: true, care_home: true },
-      },
-      {
-        label: "Ubat, jadual dan tanda dos",
-        values: { free: true, family: true, care_home: true },
-      },
-      {
-        label: "Temujanji dan tugasan",
-        values: { free: true, family: true, care_home: true },
-      },
-      {
-        label: "Bacaan vital dan carta trend",
-        values: { free: true, family: true, care_home: true },
-      },
-      {
-        label: "Kad kecemasan",
-        values: { free: true, family: true, care_home: true },
-      },
-      {
-        label: "Ringkasan doktor",
-        values: { free: true, family: true, care_home: true },
-      },
-    ],
-  },
-  {
-    title: "Berkongsi penjagaan",
-    rows: [
-      {
-        label: "Jemput ahli keluarga",
-        values: { free: true, family: true, care_home: true },
-      },
-      {
-        label: "Kumpulan jagaan (beberapa profil)",
-        values: { free: false, family: true, care_home: true },
-      },
-      {
-        label: "Peranan terperinci untuk penjaga upahan",
-        values: { free: false, family: true, care_home: true },
-      },
-      {
-        label: "Sejarah audit penuh",
-        values: { free: false, family: true, care_home: true },
-      },
-    ],
-  },
-  {
-    title: "Rekod dan pematuhan",
-    rows: [
-      {
-        label: "Muat turun data sendiri",
-        values: { free: true, family: true, care_home: true },
-      },
-      {
-        label: "Eksport untuk rekod klinikal",
-        values: { free: false, family: false, care_home: true },
-      },
-      {
-        label: "Log akses",
-        values: { free: false, family: false, care_home: true },
-      },
-      {
-        label: "Sokongan keutamaan",
-        values: { free: false, family: false, care_home: true },
-      },
-    ],
-  },
-]
+}> {
+  const limitsFor = (planId: PricingPlan["id"]) =>
+    planCatalogueLimits(planId, server)
+
+  const free = limitsFor("free")
+  const family = limitsFor("family")
+  const careHome = limitsFor("care_home")
+
+  return [
+    {
+      title: "Had",
+      rows: [
+        {
+          label: "Profil jagaan",
+          values: {
+            free: formatCountLimit(free.profiles),
+            family: formatCountLimit(family.profiles),
+            care_home: formatCountLimit(careHome.profiles),
+          },
+        },
+        {
+          label: "Ahli setiap profil",
+          values: {
+            free: formatCountLimit(free.members),
+            family: formatCountLimit(family.members),
+            care_home: formatCountLimit(careHome.members),
+          },
+        },
+        {
+          label: "Saiz fail setiap muat naik",
+          values: {
+            free: formatUploadLimit(free.uploadMb),
+            family: formatUploadLimit(family.uploadMb),
+            care_home: formatUploadLimit(careHome.uploadMb),
+          },
+        },
+        {
+          label: "Simpanan dokumen (pool)",
+          values: {
+            free: free.storageLabel,
+            family: family.storageLabel,
+            care_home: careHome.storageLabel,
+          },
+        },
+      ],
+    },
+    {
+      title: "Berkongsi penjagaan",
+      rows: [
+        {
+          label: "Kumpulan jagaan (beberapa profil)",
+          values: { free: false, family: true, care_home: true },
+        },
+        {
+          label: "Peranan terperinci untuk penjaga upahan",
+          values: { free: false, family: true, care_home: true },
+        },
+        {
+          label: "Sejarah audit penuh",
+          values: { free: false, family: true, care_home: true },
+        },
+      ],
+    },
+    {
+      title: "Rekod dan pematuhan",
+      rows: [
+        {
+          label: "Eksport untuk rekod klinikal",
+          values: { free: false, family: false, care_home: true },
+        },
+        {
+          label: "Log akses",
+          values: { free: false, family: false, care_home: true },
+        },
+        {
+          label: "Sokongan keutamaan",
+          values: { free: false, family: false, care_home: true },
+        },
+      ],
+    },
+  ]
+}
 
 export const PRICING_PLANS: PricingPlan[] = [
   {
@@ -184,11 +238,8 @@ export const PRICING_PLANS: PricingPlan[] = [
     name: "Percuma",
     audience: "Untuk seorang yang anda jaga.",
     monthlyPrice: 0,
-    limits: (server) => ({
-      profiles: `${server.maxProfilesFree} profil jagaan`,
-      members: `${server.maxMembersFree} ahli setiap profil`,
-      upload: `Fail sehingga ${server.maxUploadMb} MB`,
-    }),
+    limits: (server) =>
+      limitsDisplayStrings(freePlanLimits(server)),
     features: [
       "Log jagaan, ubat dan jadual dos",
       "Temujanji dan tugasan",
@@ -203,11 +254,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     audience: "Bila adik-beradik berkongsi penjagaan ibu bapa.",
     monthlyPrice: 19,
     highlighted: true,
-    limits: () => ({
-      profiles: "5 profil jagaan",
-      members: "10 ahli setiap profil",
-      upload: "Fail sehingga 25 MB",
-    }),
+    limits: () => limitsDisplayStrings(PAID_PLAN_LIMITS.family),
     features: [
       "Semua dalam Percuma",
       "Kumpulan jagaan untuk beberapa profil",
@@ -221,11 +268,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     name: "Rumah Jagaan",
     audience: "Untuk pusat jagaan kecil dan penjaga bertauliah.",
     monthlyPrice: 89,
-    limits: () => ({
-      profiles: "Profil tanpa had",
-      members: "Ahli tanpa had",
-      upload: "Fail sehingga 100 MB",
-    }),
+    limits: () => limitsDisplayStrings(PAID_PLAN_LIMITS.care_home),
     features: [
       "Semua dalam Keluarga",
       "Eksport data untuk rekod klinikal",

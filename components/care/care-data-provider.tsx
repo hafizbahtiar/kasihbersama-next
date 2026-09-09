@@ -63,6 +63,7 @@ type CareDataContextValue = CareProfileContextValue & {
   isReady: boolean
   isRefreshing: boolean
   loadError: ApiError | null
+  clearLoadError: () => void
   refresh: () => Promise<void>
   createProfile: (input: {
     displayName: string
@@ -185,6 +186,10 @@ export function CareDataProvider({
     }
   }, [])
 
+  const clearLoadError = useCallback(() => {
+    setLoadError(null)
+  }, [])
+
   const refresh = useCallback(async () => {
     setIsRefreshing(true)
     setLoadError(null)
@@ -233,7 +238,6 @@ export function CareDataProvider({
         const error = isApiError(cause)
           ? cause
           : new ApiError("Tindakan gagal.", { code: "internal", status: 500 })
-        setLoadError(error)
         toast.error(messageForApiError(error))
         throw error
       }
@@ -271,6 +275,7 @@ export function CareDataProvider({
       isReady,
       isRefreshing,
       loadError,
+      clearLoadError,
       refresh,
       async createProfile(input) {
         const profile = await runMutation(() =>
@@ -626,6 +631,7 @@ export function CareDataProvider({
       },
     }
   }, [
+    clearLoadError,
     isReady,
     isRefreshing,
     loadError,

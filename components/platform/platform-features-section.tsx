@@ -12,6 +12,7 @@ import Link from "next/link"
 import { PermissionGate } from "@/components/care/permission-gate"
 import { usePlatform } from "@/components/platform/platform-provider"
 import { useAccountUsage } from "@/hooks/use-account-usage"
+import { LinkButton } from "@/components/ui/button"
 import { planDisplayName } from "@/lib/domain/platform"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -191,6 +192,9 @@ export function PlatformQuotaBanner({
         ) : null}
         <li>Had muat naik fail: {usage.limits.maxUploadMb} MB setiap satu</li>
       </ul>
+      <LinkButton variant="link" size="sm" href="/pricing/usage" className="mt-3 h-auto p-0">
+        Lihat penggunaan penuh
+      </LinkButton>
     </div>
   )
 }

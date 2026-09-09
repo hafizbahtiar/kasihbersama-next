@@ -20,39 +20,12 @@ import {
 } from "@/components/ui/table"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import {
-  COMPARISON_GROUPS,
+  buildComparisonGroups,
   PRICING_PLANS,
   priceFor,
   type BillingPeriod,
-  type ComparisonRow,
-  type PricingPlan,
 } from "@/lib/domain/pricing"
-import type { PlatformLimits } from "@/lib/domain/platform"
 import { cn } from "@/lib/utils"
-
-/**
- * The free column is read from the server wherever the row says to.
- *
- * Those figures are the free-plan catalogue (`limits` on bootstrap), not
- * this account's live caps. A family-plan account still sees "1 profil"
- * in the Percuma column if that is what the env currently advertises.
- */
-function cellValue(
-  row: ComparisonRow,
-  plan: PricingPlan,
-  limits: PlatformLimits
-) {
-  if (plan.id === "free" && row.liveFreeValue) {
-    if (row.liveFreeValue === "profiles") {
-      return String(limits.maxProfilesFree)
-    }
-    if (row.liveFreeValue === "members") {
-      return String(limits.maxMembersFree)
-    }
-    return `${limits.maxUploadMb} MB`
-  }
-  return row.values[plan.id]
-}
 
 function Cell({ value }: { value: string | boolean }) {
   if (value === true) {
@@ -77,6 +50,7 @@ function Cell({ value }: { value: string | boolean }) {
 export function ComparePage() {
   const { limits } = usePlatform()
   const [period, setPeriod] = useState<BillingPeriod>("yearly")
+  const comparisonGroups = buildComparisonGroups(limits)
 
   return (
     <div className="flex flex-col gap-5">
@@ -117,7 +91,7 @@ export function ComparePage() {
         is the same mistake as the account menu's plain <div>; the lesson is
         that in this project a shadcn primitive is usually a collection.
       */}
-      {COMPARISON_GROUPS.map((group, groupIndex) => (
+      {comparisonGroups.map((group, groupIndex) => (
         <section key={group.title} className="space-y-2">
           <h2 className="font-heading text-sm tracking-tight">{group.title}</h2>
           <div className="overflow-x-auto">
@@ -177,7 +151,7 @@ export function ComparePage() {
                         )}
                       >
                         <span className="inline-flex items-center justify-center">
-                          <Cell value={cellValue(row, plan, limits)} />
+                          <Cell value={row.values[plan.id]} />
                         </span>
                       </TableCell>
                     ))}
@@ -193,8 +167,9 @@ export function ComparePage() {
         <IconInfoCircle />
         <AlertTitle>Harga belum dibuka</AlertTitle>
         <AlertDescription>
-          Pembayaran belum disambungkan. Lajur Percuma menunjukkan had sebenar
-          yang dikuatkuasakan pada akaun anda hari ini.
+          Pembayaran belum disambungkan. Lajur Percuma menunjukkan katalog had
+          percuma dari pelayan; penggunaan sebenar akaun anda ada di halaman
+          Penggunaan.
         </AlertDescription>
       </Alert>
 
