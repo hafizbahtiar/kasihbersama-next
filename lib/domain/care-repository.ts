@@ -22,9 +22,17 @@ import type {
 import type { CareSnapshot } from "@/lib/domain/care-snapshot"
 import type { ListParams, PaginatedResult } from "@/lib/domain/pagination"
 
-export interface CareRepository {
+/**
+ * Split by aggregate so a consumer can name the slice it actually uses.
+ * CareRepository below composes them, which is what the two implementations
+ * and the composition root still bind to - the seam is here, at the point of
+ * consumption, not at the point of implementation.
+ */
+export interface CareSnapshotReader {
   getSnapshot(profileId?: string): Promise<CareSnapshot>
+}
 
+export interface CareProfileRepository {
   createProfile(input: {
     displayName: string
     relation?: string
@@ -34,14 +42,18 @@ export interface CareRepository {
   }): Promise<CareProfile>
   updateProfile(id: string, patch: Partial<CareProfile>): Promise<CareProfile>
   archiveProfile(id: string): Promise<void>
+}
 
+export interface CareCircleRepository {
   createCircle(
     input: Omit<CareCircle, "id" | "profileIds" | "archived">
   ): Promise<CareCircle>
   updateCircle(id: string, patch: Partial<CareCircle>): Promise<CareCircle>
   archiveCircle(id: string): Promise<void>
   linkProfileToCircle(profileId: string, circleId: string): Promise<void>
+}
 
+export interface CareMembershipRepository {
   inviteMember(
     profileId: string,
     email: string,
@@ -60,7 +72,9 @@ export interface CareRepository {
     permissions?: CarePermissions
   ): Promise<CareMember[]>
   removeMember(profileId: string, userId: string): Promise<CareMember[]>
+}
 
+export interface CareLogRepository {
   listCareLogs(
     profileId: string,
     params?: ListParams
@@ -80,7 +94,9 @@ export interface CareRepository {
     profileId: string,
     params?: ListParams
   ): Promise<PaginatedResult<TimelineItem>>
+}
 
+export interface MedicationRepository {
   createMedication(
     profileId: string,
     input: Omit<Medication, "id" | "profileId">
@@ -117,7 +133,9 @@ export interface CareRepository {
     action: EventAction,
     note?: string
   ): Promise<void>
+}
 
+export interface AppointmentRepository {
   listAppointments(
     profileId: string,
     params?: ListParams
@@ -132,7 +150,9 @@ export interface CareRepository {
     patch: Partial<Appointment>
   ): Promise<Appointment>
   deleteAppointment(profileId: string, appointmentId: string): Promise<void>
+}
 
+export interface CareTaskRepository {
   listTasks(
     profileId: string,
     params?: ListParams
@@ -147,7 +167,9 @@ export interface CareRepository {
     patch: Partial<CareTask>
   ): Promise<CareTask>
   deleteTask(profileId: string, taskId: string): Promise<void>
+}
 
+export interface VitalRepository {
   listVitals(
     profileId: string,
     params?: ListParams
@@ -162,7 +184,9 @@ export interface CareRepository {
     patch: Partial<VitalReading>
   ): Promise<VitalReading>
   deleteVital(profileId: string, readingId: string): Promise<void>
+}
 
+export interface CareDocumentRepository {
   listDocuments(
     profileId: string,
     params?: ListParams
@@ -196,5 +220,22 @@ export interface CareRepository {
     documentId: string
   ): Promise<{ url: string; filename: string }>
 }
+
+/**
+ * Everything a full care client needs. The API and in-memory implementations
+ * both satisfy this, so the composition root stays a single binding.
+ */
+export interface CareRepository
+  extends
+    CareSnapshotReader,
+    CareProfileRepository,
+    CareCircleRepository,
+    CareMembershipRepository,
+    CareLogRepository,
+    MedicationRepository,
+    AppointmentRepository,
+    CareTaskRepository,
+    VitalRepository,
+    CareDocumentRepository {}
 
 export type { AppointmentStatus, TaskStatus }

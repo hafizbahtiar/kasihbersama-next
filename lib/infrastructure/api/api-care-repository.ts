@@ -91,7 +91,7 @@ function profilePath(profileId: string) {
 }
 
 export class ApiCareRepository implements CareRepository {
-  constructor(private readonly client: ApiClient) { }
+  constructor(private readonly client: ApiClient) {}
 
   async getSnapshot(profileId?: string): Promise<CareSnapshot> {
     const [profiles, circles] = await Promise.all([
@@ -283,7 +283,7 @@ export class ApiCareRepository implements CareRepository {
       // than leaving an empty list to be read as "no data".
       console.warn(
         `care snapshot loaded without: ${degraded.join(", ")}. ` +
-        "Those sections render empty; the rest of the dashboard is live."
+          "Those sections render empty; the rest of the dashboard is live."
       )
     }
 

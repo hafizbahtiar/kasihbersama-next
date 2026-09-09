@@ -1,4 +1,4 @@
-import type { } from "@/lib/domain/care"
+import type {} from "@/lib/domain/care"
 import { adminPermissions, viewerPermissions } from "@/lib/domain/care"
 import type { CareSnapshot } from "@/lib/domain/care-snapshot"
 

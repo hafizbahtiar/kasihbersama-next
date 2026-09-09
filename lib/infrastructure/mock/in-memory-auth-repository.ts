@@ -48,17 +48,17 @@ export class InMemoryAuthRepository implements AuthRepository {
     return MOCK_TOKENS
   }
 
-  async logout(_refreshToken: string) { }
+  async logout(_refreshToken: string) {}
 
-  async logoutAll() { }
+  async logoutAll() {}
 
   async verifyEmail(_token: string) {
     this.user = { ...this.user, emailVerified: true }
   }
 
-  async forgotPassword(_email: string) { }
+  async forgotPassword(_email: string) {}
 
-  async resetPassword(_input: ResetPasswordInput) { }
+  async resetPassword(_input: ResetPasswordInput) {}
 
   async me() {
     return this.user

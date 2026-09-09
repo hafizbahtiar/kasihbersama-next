@@ -21,7 +21,7 @@ export default async function AppLayout({
 }) {
   const mockMode = isMockDataEnabled()
   const resourceSnapshot = mockMode
-    ? await createResourceSnapshot(getResourceRepository())
+    ? await createResourceSnapshot(getResourceRepository(), getCareRepository())
     : null
   const careSnapshot = mockMode
     ? await getCareRepository().getSnapshot()

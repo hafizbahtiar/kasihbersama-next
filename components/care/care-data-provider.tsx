@@ -12,13 +12,10 @@ import {
 import { toast } from "sonner"
 
 import {
-  adminPermissions,
   type Appointment,
   type AppointmentStatus,
-  type CareClaim,
   type CareCircle,
   type CareDocument,
-  type CareInvite,
   type CareLog,
   type CarePermissions,
   type CareProfile,
@@ -33,10 +30,8 @@ import {
 } from "@/lib/domain/care"
 import type { CareSnapshot } from "@/lib/domain/care-snapshot"
 import { emptyCareSnapshot } from "@/lib/domain/care-snapshot"
-import { nextId } from "@/lib/application/care-format"
 import { useBrowserValue } from "@/hooks/use-browser-value"
 import { getCareRepository } from "@/lib/composition/care-repository"
-import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import {
   ApiError,
   isApiError,
@@ -159,7 +154,6 @@ export function CareDataProvider({
   initialSnapshot?: CareSnapshot
   children: ReactNode
 }) {
-  const apiMode = !isMockDataEnabled()
   const repository = useMemo(() => getCareRepository(), [])
   const [snapshot, setSnapshot] = useState(
     initialSnapshot ?? emptyCareSnapshot()
@@ -167,7 +161,7 @@ export function CareDataProvider({
   const [explicitProfileId, setExplicitProfileId] = useState<string | null>(
     null
   )
-  const [isReady, setIsReady] = useState(!apiMode)
+  const [isReady, setIsReady] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [loadError, setLoadError] = useState<ApiError | null>(null)
 
@@ -192,9 +186,6 @@ export function CareDataProvider({
   }, [])
 
   const refresh = useCallback(async () => {
-    if (!apiMode) {
-      return
-    }
     setIsRefreshing(true)
     setLoadError(null)
     try {
@@ -214,18 +205,16 @@ export function CareDataProvider({
       setIsRefreshing(false)
       setIsReady(true)
     }
-  }, [apiMode, repository, selectedProfileId])
+  }, [repository, selectedProfileId])
 
   useEffect(() => {
-    if (apiMode) {
-      // Load-on-mount: the loader flips isLoading synchronously before its first
-      // await, which the compiler rule flags. Safe here - it is one extra render
-      // on mount, and the alternative (deferring the flip) would show a stale
-      // "loaded" frame first.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      void refresh()
-    }
-  }, [apiMode, refresh, selectedProfileId])
+    // Load-on-mount: the loader flips isRefreshing synchronously before its
+    // first await, which the compiler rule flags. Safe here - it is one extra
+    // render on mount, and deferring the flip would show a stale "loaded"
+    // frame first.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void refresh()
+  }, [refresh, selectedProfileId])
 
   const selectedProfile =
     snapshot.profiles.find((item) => item.id === selectedProfileId) ?? null
@@ -235,9 +224,7 @@ export function CareDataProvider({
       try {
         setLoadError(null)
         const result = await action()
-        if (apiMode) {
-          await refresh()
-        }
+        await refresh()
         if (successMessage) {
           toast.success(successMessage)
         }
@@ -251,7 +238,7 @@ export function CareDataProvider({
         throw error
       }
     },
-    [apiMode, refresh]
+    [refresh]
   )
 
   const voidMutation = useCallback(
@@ -286,670 +273,346 @@ export function CareDataProvider({
       loadError,
       refresh,
       async createProfile(input) {
-        if (apiMode) {
-          const profile = await runMutation(() =>
-            repository.createProfile({
-              displayName: input.displayName,
-            })
-          )
-          setSelectedProfileId(profile.id)
-          return profile
-        }
-        const profile: CareProfile = {
-          displayName: input.displayName,
-          relation: input.relation ?? "",
-          dateOfBirth: input.dateOfBirth ?? "",
-          notes: input.notes,
-          id: nextId("cp"),
-          role: "guardian_admin",
-          permissions: adminPermissions(),
-          status: input.status ?? "active",
-        }
-        setSnapshot((current) => ({
-          ...current,
-          profiles: [profile, ...current.profiles],
-        }))
+        const profile = await runMutation(() =>
+          repository.createProfile({
+            displayName: input.displayName,
+          })
+        )
         setSelectedProfileId(profile.id)
         return profile
       },
       updateProfile(id, patch) {
-        if (apiMode) {
-          const message =
-            patch.status === "active"
-              ? "Profil diaktifkan semula."
-              : "Profil disimpan."
-          const apiPatch: Partial<CareProfile> = {}
-          if (patch.displayName !== undefined) {
-            apiPatch.displayName = patch.displayName
-          }
-          if (patch.status !== undefined) {
-            apiPatch.status = patch.status
-          }
-          return voidMutation(
-            () => repository.updateProfile(id, apiPatch),
-            message
-          )
+        const message =
+          patch.status === "active"
+            ? "Profil diaktifkan semula."
+            : "Profil disimpan."
+        const apiPatch: Partial<CareProfile> = {}
+        if (patch.displayName !== undefined) {
+          apiPatch.displayName = patch.displayName
         }
-        setSnapshot((current) => ({
-          ...current,
-          profiles: current.profiles.map((item) =>
-            item.id === id ? { ...item, ...patch } : item
-          ),
-        }))
-        return Promise.resolve()
+        if (patch.status !== undefined) {
+          apiPatch.status = patch.status
+        }
+        return voidMutation(
+          () => repository.updateProfile(id, apiPatch),
+          message
+        )
       },
       archiveProfile(id) {
-        if (apiMode) {
-          return voidMutation(
-            () => repository.archiveProfile(id),
-            "Profil diarkibkan."
-          )
-        }
-        setSnapshot((current) => ({
-          ...current,
-          profiles: current.profiles.map((item) =>
-            item.id === id ? { ...item, status: "archived" } : item
-          ),
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.archiveProfile(id),
+          "Profil diarkibkan."
+        )
       },
       createCircle(input) {
-        if (apiMode) {
-          return runMutation(() => repository.createCircle(input))
-        }
-        const circle: CareCircle = {
-          id: nextId("circle"),
-          profileIds: [],
-          ...input,
-        }
-        setSnapshot((current) => ({
-          ...current,
-          circles: [circle, ...current.circles],
-        }))
-        return Promise.resolve(circle)
+        return runMutation(() => repository.createCircle(input))
       },
       updateCircle(id, patch) {
-        if (apiMode) {
-          return voidMutation(
-            () => repository.updateCircle(id, patch),
-            patch.archived === false
-              ? "Kumpulan diaktifkan semula."
-              : "Kumpulan dikemas kini."
-          )
-        }
-        setSnapshot((current) => ({
-          ...current,
-          circles: current.circles.map((item) =>
-            item.id === id ? { ...item, ...patch } : item
-          ),
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.updateCircle(id, patch),
+          patch.archived === false
+            ? "Kumpulan diaktifkan semula."
+            : "Kumpulan dikemas kini."
+        )
       },
       archiveCircle(id) {
-        if (apiMode) {
-          return voidMutation(
-            () => repository.archiveCircle(id),
-            "Kumpulan diarkibkan."
-          )
-        }
-        setSnapshot((current) => ({
-          ...current,
-          circles: current.circles.map((item) =>
-            item.id === id ? { ...item, archived: true } : item
-          ),
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.archiveCircle(id),
+          "Kumpulan diarkibkan."
+        )
       },
       linkProfileToCircle(profileId, circleId) {
-        if (apiMode) {
-          return voidMutation(
-            () => repository.linkProfileToCircle(profileId, circleId),
-            "Profil dikaitkan."
-          )
-        }
-        setSnapshot((current) => ({
-          ...current,
-          profiles: current.profiles.map((item) =>
-            item.id === profileId ? { ...item, circleId } : item
-          ),
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.linkProfileToCircle(profileId, circleId),
+          "Profil dikaitkan."
+        )
       },
       inviteMember(profileId, email, role) {
-        if (apiMode) {
-          return voidMutation(
-            () => repository.inviteMember(profileId, email, role),
-            "Jemputan dihantar."
-          )
-        }
-        const invite: CareInvite = {
-          id: nextId("inv"),
-          profileId,
-          email,
-          role,
-          status: "pending",
-          token: nextId("invite"),
-          expiresAt: new Date(
-            Date.now() + 7 * 24 * 60 * 60 * 1000
-          ).toISOString(),
-          createdAt: new Date().toISOString(),
-        }
-        setSnapshot((current) => ({
-          ...current,
-          invites: [invite, ...current.invites],
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.inviteMember(profileId, email, role),
+          "Jemputan dihantar."
+        )
       },
       revokeInvite(profileId, inviteId) {
-        if (apiMode) {
-          return voidMutation(
-            () => repository.revokeInvite(profileId, inviteId),
-            "Jemputan dibatalkan."
-          )
-        }
-        setSnapshot((current) => ({
-          ...current,
-          invites: current.invites.map((item) =>
-            item.id === inviteId ? { ...item, status: "revoked" } : item
-          ),
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.revokeInvite(profileId, inviteId),
+          "Jemputan dibatalkan."
+        )
       },
       async acceptInvite(token) {
-        if (apiMode) {
-          try {
-            const nextProfileId = await runMutation(
-              () => repository.acceptInvite(token),
-              "Jemputan diterima."
-            )
-            setSelectedProfileId(nextProfileId)
-            return nextProfileId
-          } catch {
-            return null
-          }
-        }
-        const invite = snapshot.invites.find(
-          (item) => item.token === token && item.status === "pending"
-        )
-        if (!invite) {
+        try {
+          const nextProfileId = await runMutation(
+            () => repository.acceptInvite(token),
+            "Jemputan diterima."
+          )
+          setSelectedProfileId(nextProfileId)
+          return nextProfileId
+        } catch {
           return null
         }
-        setSnapshot((current) => ({
-          ...current,
-          invites: current.invites.map((item) =>
-            item.id === invite.id ? { ...item, status: "accepted" } : item
-          ),
-        }))
-        return invite.profileId
       },
       createClaim(profileId, email) {
-        if (apiMode) {
-          return voidMutation(
-            () => repository.createClaim(profileId, email),
-            "Tuntutan dihantar."
-          )
-        }
-        const claim: CareClaim = {
-          id: nextId("claim"),
-          profileId,
-          email,
-          status: "pending",
-          token: nextId("claimtok"),
-          expiresAt: new Date(
-            Date.now() + 7 * 24 * 60 * 60 * 1000
-          ).toISOString(),
-          createdAt: new Date().toISOString(),
-        }
-        setSnapshot((current) => ({
-          ...current,
-          claims: [claim, ...current.claims],
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.createClaim(profileId, email),
+          "Tuntutan dihantar."
+        )
       },
       revokeClaim(profileId, claimId) {
-        if (apiMode) {
-          return voidMutation(
-            () => repository.revokeClaim(profileId, claimId),
-            "Tuntutan dibatalkan."
-          )
-        }
-        setSnapshot((current) => ({
-          ...current,
-          claims: current.claims.map((item) =>
-            item.id === claimId ? { ...item, status: "revoked" } : item
-          ),
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.revokeClaim(profileId, claimId),
+          "Tuntutan dibatalkan."
+        )
       },
       async acceptClaim(token) {
-        if (apiMode) {
-          try {
-            const nextProfileId = await runMutation(
-              () => repository.acceptClaim(token),
-              "Tuntutan diterima."
-            )
-            setSelectedProfileId(nextProfileId)
-            return nextProfileId
-          } catch {
-            return null
-          }
-        }
-        const claim = snapshot.claims.find(
-          (item) => item.token === token && item.status === "pending"
-        )
-        if (!claim) {
+        try {
+          const nextProfileId = await runMutation(
+            () => repository.acceptClaim(token),
+            "Tuntutan diterima."
+          )
+          setSelectedProfileId(nextProfileId)
+          return nextProfileId
+        } catch {
           return null
         }
-        setSnapshot((current) => ({
-          ...current,
-          claims: current.claims.map((item) =>
-            item.id === claim.id ? { ...item, status: "accepted" } : item
-          ),
-        }))
-        return claim.profileId
       },
       updateMemberRole(profileId, memberUserId, role, permissions) {
-        if (apiMode) {
-          return voidMutation(() =>
-            repository.updateMemberRole(
-              profileId,
-              memberUserId,
-              role,
-              permissions
-            )
+        return voidMutation(() =>
+          repository.updateMemberRole(
+            profileId,
+            memberUserId,
+            role,
+            permissions
           )
-        }
-        setSnapshot((current) => ({
-          ...current,
-          members: current.members.map((item) =>
-            item.userId === memberUserId && item.profileId === profileId
-              ? { ...item, role, permissions: permissions ?? item.permissions }
-              : item
-          ),
-        }))
-        return Promise.resolve()
+        )
       },
       removeMember(profileId, memberUserId) {
-        if (apiMode) {
-          return voidMutation(
-            () => repository.removeMember(profileId, memberUserId),
-            "Ahli dikeluarkan."
-          )
-        }
-        setSnapshot((current) => ({
-          ...current,
-          members: current.members.filter(
-            (item) =>
-              !(item.profileId === profileId && item.userId === memberUserId)
-          ),
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.removeMember(profileId, memberUserId),
+          "Ahli dikeluarkan."
+        )
       },
       addCareLog(log) {
-        if (apiMode && profileId) {
-          return voidMutation(
-            () =>
-              repository.createCareLog(profileId, {
-                logType: log.logType,
-                title: log.title,
-                body: log.body,
-                visibility: log.visibility,
-                occurredAt: log.occurredAt,
-                createdBy: log.createdBy,
-              }),
-            "Log ditambah."
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          logs: [{ id: nextId("log"), ...log }, ...current.logs],
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () =>
+            repository.createCareLog(profileId, {
+              logType: log.logType,
+              title: log.title,
+              body: log.body,
+              visibility: log.visibility,
+              occurredAt: log.occurredAt,
+              createdBy: log.createdBy,
+            }),
+          "Log ditambah."
+        )
       },
       updateCareLog(logId, patch) {
-        if (apiMode && profileId) {
-          return voidMutation(() =>
-            repository.updateCareLog(profileId, logId, patch)
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          logs: current.logs.map((item) =>
-            item.id === logId ? { ...item, ...patch } : item
-          ),
-        }))
-        return Promise.resolve()
+        return voidMutation(() =>
+          repository.updateCareLog(profileId, logId, patch)
+        )
       },
       deleteCareLog(logId) {
-        if (apiMode && profileId) {
-          return voidMutation(
-            () => repository.deleteCareLog(profileId, logId),
-            "Log dipadam."
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          logs: current.logs.filter((item) => item.id !== logId),
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.deleteCareLog(profileId, logId),
+          "Log dipadam."
+        )
       },
       async addMedication(medication) {
-        if (apiMode) {
-          if (!profileId) {
-            return Promise.reject(new Error("Profil tidak dipilih."))
-          }
-          return runMutation(() =>
-            repository.createMedication(profileId, medication)
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        const created = { id: nextId("med"), ...medication }
-        setSnapshot((current) => ({
-          ...current,
-          medications: [created, ...current.medications],
-        }))
-        return created
+        return runMutation(() =>
+          repository.createMedication(profileId, medication)
+        )
       },
       updateMedication(id, patch) {
-        if (apiMode && profileId) {
-          return voidMutation(() =>
-            repository.updateMedication(profileId, id, patch)
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          medications: current.medications.map((item) =>
-            item.id === id ? { ...item, ...patch } : item
-          ),
-        }))
-        return Promise.resolve()
+        return voidMutation(() =>
+          repository.updateMedication(profileId, id, patch)
+        )
       },
       deleteMedication(id) {
-        if (apiMode && profileId) {
-          return voidMutation(
-            () => repository.deleteMedication(profileId, id),
-            "Ubat dipadam."
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          medications: current.medications.filter((item) => item.id !== id),
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.deleteMedication(profileId, id),
+          "Ubat dipadam."
+        )
       },
       addSchedule(schedule) {
-        if (apiMode && profileId) {
-          return voidMutation(() =>
-            repository.createSchedule(
-              profileId,
-              schedule.medicationId,
-              schedule
-            )
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          schedules: [{ id: nextId("sch"), ...schedule }, ...current.schedules],
-        }))
-        return Promise.resolve()
+        return voidMutation(() =>
+          repository.createSchedule(profileId, schedule.medicationId, schedule)
+        )
       },
       updateSchedule(id, patch) {
-        if (apiMode && profileId) {
-          const schedule = snapshot.schedules.find((item) => item.id === id)
-          if (!schedule) {
-            return Promise.resolve()
-          }
-          return voidMutation(() =>
-            repository.updateSchedule(
-              profileId,
-              schedule.medicationId,
-              id,
-              patch
-            )
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          schedules: current.schedules.map((item) =>
-            item.id === id ? { ...item, ...patch } : item
-          ),
-        }))
-        return Promise.resolve()
+        const schedule = snapshot.schedules.find((item) => item.id === id)
+        if (!schedule) {
+          return Promise.resolve()
+        }
+        return voidMutation(() =>
+          repository.updateSchedule(profileId, schedule.medicationId, id, patch)
+        )
       },
       removeSchedule(id) {
-        if (apiMode && profileId) {
-          const schedule = snapshot.schedules.find((item) => item.id === id)
-          if (!schedule) {
-            return Promise.resolve()
-          }
-          return voidMutation(
-            () =>
-              repository.deleteSchedule(profileId, schedule.medicationId, id),
-            "Jadual dipadam."
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          schedules: current.schedules.filter((item) => item.id !== id),
-        }))
-        return Promise.resolve()
+        const schedule = snapshot.schedules.find((item) => item.id === id)
+        if (!schedule) {
+          return Promise.resolve()
+        }
+        return voidMutation(
+          () => repository.deleteSchedule(profileId, schedule.medicationId, id),
+          "Jadual dipadam."
+        )
       },
       actOnEvent(id, action, note) {
-        if (apiMode && profileId) {
-          return voidMutation(
-            () => repository.actOnEvent(profileId, id, action, note),
-            "Dos dikemas kini."
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          events: current.events.map((item) =>
-            item.id === id ? { ...item, actionStatus: action, note } : item
-          ),
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.actOnEvent(profileId, id, action, note),
+          "Dos dikemas kini."
+        )
       },
       addAppointment(appointment) {
-        if (apiMode && profileId) {
-          return voidMutation(
-            () => repository.createAppointment(profileId, appointment),
-            "Temujanji ditambah."
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          appointments: [
-            { id: nextId("apt"), ...appointment },
-            ...current.appointments,
-          ],
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.createAppointment(profileId, appointment),
+          "Temujanji ditambah."
+        )
       },
       updateAppointmentStatus(id, status) {
-        if (apiMode && profileId) {
-          const appointment = snapshot.appointments.find(
-            (item) => item.id === id
-          )
-          if (!appointment) {
-            return Promise.resolve()
-          }
-          return voidMutation(
-            () =>
-              repository.updateAppointment(profileId, id, {
-                ...appointment,
-                status,
-              }),
-            "Status temujanji dikemas kini."
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          appointments: current.appointments.map((item) =>
-            item.id === id ? { ...item, status } : item
-          ),
-        }))
-        return Promise.resolve()
+        const appointment = snapshot.appointments.find((item) => item.id === id)
+        if (!appointment) {
+          return Promise.resolve()
+        }
+        return voidMutation(
+          () =>
+            repository.updateAppointment(profileId, id, {
+              ...appointment,
+              status,
+            }),
+          "Status temujanji dikemas kini."
+        )
       },
       deleteAppointment(id) {
-        if (apiMode && profileId) {
-          return voidMutation(
-            () => repository.deleteAppointment(profileId, id),
-            "Temujanji dipadam."
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          appointments: current.appointments.filter((item) => item.id !== id),
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.deleteAppointment(profileId, id),
+          "Temujanji dipadam."
+        )
       },
       addTask(task) {
-        if (apiMode && profileId) {
-          return voidMutation(
-            () => repository.createTask(profileId, task),
-            "Tugasan ditambah."
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          tasks: [{ id: nextId("task"), ...task }, ...current.tasks],
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.createTask(profileId, task),
+          "Tugasan ditambah."
+        )
       },
       updateTaskStatus(id, status) {
-        if (apiMode && profileId) {
-          const task = snapshot.tasks.find((item) => item.id === id)
-          if (!task) {
-            return Promise.resolve()
-          }
-          const message =
-            status === "completed"
-              ? "Tugasan selesai."
-              : status === "cancelled"
-                ? "Tugasan dibatalkan."
-                : "Status tugasan dikemas kini."
-          return voidMutation(
-            () => repository.updateTask(profileId, id, { ...task, status }),
-            message
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          tasks: current.tasks.map((item) =>
-            item.id === id ? { ...item, status } : item
-          ),
-        }))
-        return Promise.resolve()
+        const task = snapshot.tasks.find((item) => item.id === id)
+        if (!task) {
+          return Promise.resolve()
+        }
+        const message =
+          status === "completed"
+            ? "Tugasan selesai."
+            : status === "cancelled"
+              ? "Tugasan dibatalkan."
+              : "Status tugasan dikemas kini."
+        return voidMutation(
+          () => repository.updateTask(profileId, id, { ...task, status }),
+          message
+        )
       },
       deleteTask(id) {
-        if (apiMode && profileId) {
-          return voidMutation(
-            () => repository.deleteTask(profileId, id),
-            "Tugasan dipadam."
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          tasks: current.tasks.filter((item) => item.id !== id),
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.deleteTask(profileId, id),
+          "Tugasan dipadam."
+        )
       },
       addVital(vital) {
-        if (apiMode && profileId) {
-          return voidMutation(() => repository.createVital(profileId, vital))
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          vitals: [{ id: nextId("vit"), ...vital }, ...current.vitals],
-        }))
-        return Promise.resolve()
+        return voidMutation(() => repository.createVital(profileId, vital))
       },
       deleteVital(id) {
-        if (apiMode && profileId) {
-          return voidMutation(
-            () => repository.deleteVital(profileId, id),
-            "Bacaan vital dipadam."
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          vitals: current.vitals.filter((item) => item.id !== id),
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.deleteVital(profileId, id),
+          "Bacaan vital dipadam."
+        )
       },
       async addDocument(document) {
-        if (apiMode) {
-          if (!profileId) {
-            return Promise.reject(new Error("Profil tidak dipilih."))
-          }
-          return runMutation(
-            () => repository.createDocument(profileId, document),
-            "Dokumen ditambah."
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        const created = { id: nextId("doc"), ...document }
-        setSnapshot((current) => ({
-          ...current,
-          documents: [created, ...current.documents],
-        }))
-        return created
+        return runMutation(
+          () => repository.createDocument(profileId, document),
+          "Dokumen ditambah."
+        )
       },
       updateDocument(id, patch) {
-        if (apiMode && profileId) {
-          return voidMutation(() =>
-            repository.updateDocument(profileId, id, patch)
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          documents: current.documents.map((item) =>
-            item.id === id ? { ...item, ...patch } : item
-          ),
-        }))
-        return Promise.resolve()
+        return voidMutation(() =>
+          repository.updateDocument(profileId, id, patch)
+        )
       },
       removeDocument(id) {
-        if (apiMode && profileId) {
-          return voidMutation(
-            () => repository.deleteDocument(profileId, id),
-            "Dokumen dipadam."
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        setSnapshot((current) => ({
-          ...current,
-          documents: current.documents.filter((item) => item.id !== id),
-        }))
-        return Promise.resolve()
+        return voidMutation(
+          () => repository.deleteDocument(profileId, id),
+          "Dokumen dipadam."
+        )
       },
       async uploadDocument(input) {
-        if (apiMode) {
-          if (!profileId) {
-            return Promise.reject(new Error("Profil tidak dipilih."))
-          }
-          return runMutation(
-            () => repository.uploadDocument(profileId, input.file, input),
-            "Dokumen dimuat naik."
-          )
+        if (!profileId) {
+          return Promise.reject(new Error("Profil tidak dipilih."))
         }
-        const created: CareDocument = {
-          id: nextId("doc"),
-          profileId: profileId ?? "",
-          title: input.title,
-          documentType: input.documentType,
-          filename: input.file.name,
-          mimeType: input.file.type,
-          sizeBytes: input.file.size,
-          issueDate: input.issueDate,
-          expiryDate: input.expiryDate,
-          notes: input.notes,
-          createdAt: new Date().toISOString(),
-          uploadState: "done",
-          uploadProgress: 100,
-        }
-        setSnapshot((current) => ({
-          ...current,
-          documents: [created, ...current.documents],
-        }))
-        return created
+        return runMutation(
+          () => repository.uploadDocument(profileId, input.file, input),
+          "Dokumen dimuat naik."
+        )
       },
       getDocumentDownloadUrl(documentId) {
         if (!profileId) {
@@ -959,7 +622,6 @@ export function CareDataProvider({
       },
     }
   }, [
-    apiMode,
     isReady,
     isRefreshing,
     loadError,

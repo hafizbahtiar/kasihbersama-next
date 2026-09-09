@@ -57,7 +57,7 @@ function mapDeviceToken(api: ApiDeviceToken): DeviceToken {
 }
 
 export class ApiAccountRepository implements AccountRepository {
-  constructor(private readonly client: ApiClient) { }
+  constructor(private readonly client: ApiClient) {}
 
   updateDisplayName(displayName: string) {
     return this.client

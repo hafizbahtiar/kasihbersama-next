@@ -49,7 +49,7 @@ function mapBootstrap(api: ApiBootstrapResponse): BootstrapConfig {
 }
 
 export class ApiPlatformRepository implements PlatformRepository {
-  constructor(private readonly baseUrl: string) { }
+  constructor(private readonly baseUrl: string) {}
 
   async getBootstrap(appBuild: number): Promise<BootstrapConfig> {
     const url = `${this.baseUrl.replace(/\/$/, "")}/api/v1/bootstrap`
