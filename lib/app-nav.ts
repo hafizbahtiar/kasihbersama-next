@@ -3,6 +3,7 @@ import {
   IconAlertTriangle,
   IconBell,
   IconCalendarEvent,
+  IconChartBar,
   IconCircles,
   IconClipboardHeart,
   IconFileDescription,
@@ -77,12 +78,30 @@ export const secondaryNav: AppNavItem[] = [
   { href: "/my-health", title: "Kesihatan saya", icon: IconStethoscope },
   { href: "/notifications", title: "Notifikasi", icon: IconBell },
   { href: "/pricing", title: "Pelan", icon: IconReceipt },
+  { href: "/pricing/usage", title: "Penggunaan", icon: IconChartBar },
   { href: "/settings", title: "Tetapan", icon: IconSettings },
 ]
 
+const allNavItems = [...primaryNav, ...secondaryNav]
+
+/** Longest matching href wins so /pricing/usage does not also light up /pricing. */
+export function isNavActive(pathname: string, href: string) {
+  if (href === "/home") {
+    return pathname === "/home"
+  }
+
+  const matches = allNavItems
+    .map((item) => item.href)
+    .filter(
+      (candidate) =>
+        pathname === candidate || pathname.startsWith(`${candidate}/`)
+    )
+    .sort((a, b) => b.length - a.length)
+
+  return matches[0] === href
+}
+
 export function getAppPageTitle(pathname: string) {
-  const match = [...primaryNav, ...secondaryNav].find(
-    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
-  )
+  const match = allNavItems.find((item) => isNavActive(pathname, item.href))
   return match?.title ?? "Laman utama"
 }

@@ -101,11 +101,11 @@ export function ComparePage() {
               className="min-w-[34rem]"
             >
               <TableHeader>
-                <TableHead isRowHeader className="w-[14rem]">
+                <TableHead id="label" isRowHeader className="w-[14rem]">
                   Ciri
                 </TableHead>
                 {PRICING_PLANS.map((plan) => (
-                  <TableHead key={plan.id} className="text-center">
+                  <TableHead key={plan.id} id={plan.id} className="text-center">
                     {/* The price rides along with the first group only; on
                         every later table the plan name is enough and a
                         repeated price is noise. */}
@@ -117,17 +117,12 @@ export function ComparePage() {
                             <Badge variant="secondary">Sekarang</Badge>
                           ) : null}
                         </span>
-                        <span className="text-xs font-normal text-muted-foreground">
-                          {priceFor(plan, period) === 0 ? (
-                            "Percuma"
-                          ) : (
-                            <>
-                              RM
-                              <NumberFlow value={priceFor(plan, period)} />{" "}
-                              sebulan
-                            </>
-                          )}
-                        </span>
+                        {priceFor(plan, period) > 0 ? (
+                          <span className="text-xs font-normal text-muted-foreground">
+                            RM
+                            <NumberFlow value={priceFor(plan, period)} /> sebulan
+                          </span>
+                        ) : null}
                       </span>
                     ) : (
                       plan.name
@@ -137,7 +132,10 @@ export function ComparePage() {
               </TableHeader>
               <TableBody>
                 {group.rows.map((row) => (
-                  <TableRow key={row.label} id={row.label}>
+                  <TableRow
+                    key={`${group.title}-${row.label}`}
+                    id={`${group.title}-${row.label}`}
+                  >
                     <TableCell id="label" className="font-medium">
                       {row.label}
                     </TableCell>

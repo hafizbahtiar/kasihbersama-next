@@ -11,7 +11,7 @@ import { ProfileSwitcher } from "@/components/care/profile-switcher"
 import { useCareData } from "@/components/care/care-data-provider"
 import { usePlatform } from "@/components/platform/platform-provider"
 import { useCarePermissions } from "@/hooks/use-care-permissions"
-import { primaryNav, secondaryNav } from "@/lib/app-nav"
+import { isNavActive, primaryNav, secondaryNav } from "@/lib/app-nav"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
@@ -29,14 +29,6 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar"
-
-function isNavActive(pathname: string, href: string) {
-  if (href === "/home") {
-    return pathname === "/home"
-  }
-
-  return pathname === href || pathname.startsWith(`${href}/`)
-}
 
 export function AppSidebar() {
   const pathname = usePathname()
