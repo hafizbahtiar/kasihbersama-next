@@ -29,7 +29,11 @@ import {
   parseDateTimeLocal,
   parsePositiveNumber,
 } from "@/lib/application/form-validation"
-import { VITAL_TYPE_OPTIONS } from "@/lib/domain/care"
+import {
+  VITAL_TYPE_OPTIONS,
+  VITAL_UNITS,
+  type VitalType,
+} from "@/lib/domain/care"
 
 export function VitalFormPage() {
   const router = useRouter()
@@ -37,7 +41,7 @@ export function VitalFormPage() {
   const [readingType, setReadingType] = useState("blood_pressure")
   const [valueNumeric, setValueNumeric] = useState("")
   const [valueText, setValueText] = useState("")
-  const [unit, setUnit] = useState("mmHg")
+  const [unit, setUnit] = useState(VITAL_UNITS.blood_pressure)
   const [systolic, setSystolic] = useState("")
   const [diastolic, setDiastolic] = useState("")
   const [measuredAt, setMeasuredAt] = useState(() => toDateTimeLocalValue())
@@ -144,19 +148,11 @@ export function VitalFormPage() {
               onChange={(key) => {
                 const next = String(key)
                 setReadingType(next)
-                setUnit(
-                  next === "blood_pressure"
-                    ? "mmHg"
-                    : next === "blood_glucose"
-                      ? "mmol/L"
-                      : next === "pulse"
-                        ? "bpm"
-                        : next === "weight"
-                          ? "kg"
-                          : next === "temperature"
-                            ? "°C"
-                            : "%"
-                )
+                // A lookup, not a ternary chain. The chain fell through to
+                // "%" for anything it did not name, so adding a reading type
+                // shipped a wrong unit silently - and the server rejects a
+                // growth reading in the wrong unit outright.
+                setUnit(VITAL_UNITS[next as VitalType] ?? "")
               }}
             >
               <SelectTrigger size="xl" className="w-full">

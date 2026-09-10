@@ -505,7 +505,49 @@ export const VITAL_TYPE_OPTIONS = [
   { value: "weight", label: "Berat" },
   { value: "temperature", label: "Suhu" },
   { value: "spo2", label: "SpO2" },
+  // The three growth measurements. Length and height are separate options
+  // rather than one "tinggi", and that is clinical rather than cosmetic: WHO
+  // measures children under two lying down and over two standing, the same
+  // child measures about 0.7 cm differently between them, and the standards
+  // correct for it. One merged option destroys the information the correction
+  // needs, and the correction is silent - the chart would simply be wrong.
+  { value: "length_lying", label: "Panjang (baring)" },
+  { value: "height_standing", label: "Tinggi (berdiri)" },
+  { value: "head_circumference", label: "Lilitan kepala" },
 ] as const
+
+export type VitalType = (typeof VITAL_TYPE_OPTIONS)[number]["value"]
+
+/**
+ * The unit each reading is recorded in.
+ *
+ * Exhaustive over VITAL_TYPE_OPTIONS, so a type added above fails to compile
+ * until it is given one. This replaced a nested ternary that fell through to
+ * "%" for anything it did not recognise - which meant adding a reading type
+ * shipped a wrong unit silently. The server enforces kg and cm on the growth
+ * types (a weight in pounds plots as a confident point in the wrong place), so
+ * the fallback would have produced a 422 on every save of the three types
+ * added here.
+ */
+export const VITAL_UNITS: Record<VitalType, string> = {
+  blood_pressure: "mmHg",
+  blood_glucose: "mmol/L",
+  pulse: "bpm",
+  weight: "kg",
+  temperature: "°C",
+  spo2: "%",
+  length_lying: "cm",
+  height_standing: "cm",
+  head_circumference: "cm",
+}
+
+/** Reading types the growth chart plots, whose unit the server enforces. */
+export const GROWTH_VITAL_TYPES: VitalType[] = [
+  "weight",
+  "length_lying",
+  "height_standing",
+  "head_circumference",
+]
 
 export function emptyPermissions(): CarePermissions {
   return Object.fromEntries(
