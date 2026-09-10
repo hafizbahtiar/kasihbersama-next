@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import { IconPill } from "@tabler/icons-react"
 
 import { useCareData } from "@/components/care/care-data-provider"
+import { Badge } from "@/components/ui/badge"
 import { Button, LinkButton } from "@/components/ui/button"
 import {
   Card,
@@ -61,7 +62,15 @@ export function TodayDosesCard() {
       .slice()
       .sort((a, b) => a.expectedAt.localeCompare(b.expectedAt))
       .slice(0, 6)
-      .map((e) => ({ ...e, name: names.get(e.medicationId) ?? "Ubat" }))
+      .map((e) => ({
+        ...e,
+        name: names.get(e.medicationId) ?? "Ubat",
+        // A dose expected this morning and still unmarked this afternoon is
+        // not the same as one due tonight, and the list showed both
+        // identically. Computed here rather than per row so every row is
+        // judged against one instant.
+        isOverdue: new Date(e.expectedAt) < new Date(),
+      }))
   }, [selectedProfile, snapshot.events, snapshot.medications])
 
   if (!selectedProfile) {
@@ -88,7 +97,12 @@ export function TodayDosesCard() {
             {pending.map((event) => (
               <Item key={event.id} variant="outline">
                 <ItemContent>
-                  <ItemTitle>{event.name}</ItemTitle>
+                  <ItemTitle className="flex items-center gap-2">
+                    {event.name}
+                    {event.isOverdue ? (
+                      <Badge variant="destructive">Tertunggak</Badge>
+                    ) : null}
+                  </ItemTitle>
                   <ItemDescription>
                     {formatDateTime(event.expectedAt)}
                   </ItemDescription>
