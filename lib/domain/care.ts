@@ -66,7 +66,28 @@ export type ProfileHealthInfo = {
   primaryClinic?: string
   primaryDoctor?: string
   emergencyNote?: string
+  /**
+   * Centimetres. A slowly-changing attribute for an adult record; for a child
+   * the growth chart reads length_lying / height_standing vital readings
+   * instead. Weight deliberately has no field here - it is a vital reading
+   * with a measured_at, and a second home for it would disagree with the
+   * latest reading.
+   */
+  heightCm?: number
+  /**
+   * Gestational age at birth, in weeks. Below 37 the growth chart plots the
+   * child at corrected age until roughly two years; without this a baby born
+   * at 32 weeks reads as far behind when they are not.
+   */
+  gestationalAgeWeeks?: number
 }
+
+/**
+ * The health-field names, as a union. Both the read mapper and the write
+ * payload key their exhaustiveness guards off this, so a field added above
+ * fails to compile in both directions until it is handled.
+ */
+export type HealthFieldKey = keyof ProfileHealthInfo
 
 export type CareProfile = {
   id: string
@@ -93,6 +114,35 @@ export type CareCircle = {
   description: string
   profileIds: string[]
   archived?: boolean
+}
+
+/**
+ * Circle membership roles.
+ *
+ * Entirely separate from CareRole and CarePermissions, which govern access to
+ * a care *profile*. A circle owner is not thereby anything on the profiles
+ * linked into that circle, and a profile guardian is not thereby in the
+ * circle. The backend keeps the two models apart (care_circle_members.role vs
+ * access.Checker) and so does this.
+ */
+export type CircleMemberRole = "owner" | "admin" | "member"
+
+export const CIRCLE_MEMBER_ROLE_LABELS: Record<CircleMemberRole, string> = {
+  owner: "Pemilik",
+  admin: "Pentadbir",
+  member: "Ahli",
+}
+
+/** Owners and admins may change who is in a circle; plain members may not. */
+export function canManageCircleMembers(role: CircleMemberRole): boolean {
+  return role === "owner" || role === "admin"
+}
+
+export type CircleMember = {
+  userId: string
+  email: string
+  displayName: string
+  role: CircleMemberRole
 }
 
 export type CareMember = {

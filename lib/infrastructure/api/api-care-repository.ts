@@ -11,6 +11,8 @@ import type {
   Medication,
   MedicationSchedule,
   ProfileHealthInfo,
+  HealthFieldKey,
+  CircleMemberRole,
   VitalReading,
 } from "@/lib/domain/care"
 import type { CareSnapshot } from "@/lib/domain/care-snapshot"
@@ -26,6 +28,7 @@ import {
   mapCareLog,
   mapCareTask,
   mapCircle,
+  mapCircleMember,
   mapClaim,
   mapDocument,
   mapInvite,
@@ -43,6 +46,7 @@ import {
   type ApiCareLog,
   type ApiCareTask,
   type ApiCircle,
+  type ApiCircleMember,
   type ApiClaim,
   type ApiDocument,
   type ApiInvite,
@@ -102,29 +106,56 @@ function medicationEventWindow() {
  * already stored the next time anyone saves the form for another reason.
  */
 /**
+ * The API column name for every health field.
+ *
+ * Exhaustive by construction: `-?` over `HealthFieldKey` means a field added
+ * to `ProfileHealthInfo` fails to compile here until it is given a column.
+ *
+ * The read mapper has had that guard since the health block went missing from
+ * it once - the bug reported as "save works, refresh clears the form". This
+ * path had no such guard, so the mirror bug was available: a field the form
+ * collects and the request never carries, which looks like the server
+ * dropping it.
+ */
+const HEALTH_COLUMN: { [K in HealthFieldKey]-?: string } = {
+  legalName: "legal_name",
+  dateOfBirth: "date_of_birth",
+  gender: "gender",
+  bloodType: "blood_type",
+  allergySummary: "allergy_summary",
+  conditionSummary: "condition_summary",
+  primaryClinic: "primary_clinic",
+  primaryDoctor: "primary_doctor",
+  emergencyNote: "emergency_note",
+  heightCm: "height_cm",
+  gestationalAgeWeeks: "gestational_age_weeks",
+}
+
+/**
  * The health columns as a request body, omitting anything the form left empty.
  *
  * Empty means "not filled in", and every one of these columns is
  * COALESCE-patched server-side, so sending `""` would erase a stored value
  * rather than leave it alone.
+ *
+ * Numbers are not trimmed and not tested for truthiness: `0` is falsy, and
+ * dropping it would turn an out-of-range entry into silence instead of the
+ * 422 the server would answer with. A value the user typed gets sent and
+ * refused, rather than quietly not saved.
  */
 function healthFieldsBody(input: ProfileHealthInfo) {
-  const pairs: Array<[string, string | undefined]> = [
-    ["legal_name", input.legalName],
-    ["date_of_birth", input.dateOfBirth],
-    ["gender", input.gender],
-    ["blood_type", input.bloodType],
-    ["allergy_summary", input.allergySummary],
-    ["condition_summary", input.conditionSummary],
-    ["primary_clinic", input.primaryClinic],
-    ["primary_doctor", input.primaryDoctor],
-    ["emergency_note", input.emergencyNote],
-  ]
-  const body: Record<string, string> = {}
-  for (const [key, value] of pairs) {
+  const body: Record<string, string | number> = {}
+  for (const key of Object.keys(HEALTH_COLUMN) as HealthFieldKey[]) {
+    const value = input[key]
+    if (typeof value === "number") {
+      if (Number.isFinite(value)) {
+        body[HEALTH_COLUMN[key]] = value
+      }
+      continue
+    }
     const trimmed = value?.trim()
     if (trimmed) {
-      body[key] = trimmed
+      body[HEALTH_COLUMN[key]] = trimmed
     }
   }
   return body
@@ -504,6 +535,43 @@ export class ApiCareRepository implements CareRepository {
         body: JSON.stringify({ circle_id: circleId }),
       }
     )
+  }
+
+  /**
+   * All three membership calls return the circle's whole member list, which
+   * is what the backend answers with. Replacing the list beats reconciling a
+   * delta: add-by-email can resolve to a user the caller cannot predict, and
+   * removing the last owner is refused server-side, so the list that comes
+   * back is the only trustworthy account of who is in the circle.
+   */
+  async listCircleMembers(circleId: string) {
+    const response = await this.client.request<ApiCircleMember[]>(
+      `/care-circles/${circleId}/members`
+    )
+    return response.map(mapCircleMember)
+  }
+
+  async addCircleMember(
+    circleId: string,
+    email: string,
+    role: CircleMemberRole
+  ) {
+    const response = await this.client.request<ApiCircleMember[]>(
+      `/care-circles/${circleId}/members`,
+      {
+        method: "POST",
+        body: JSON.stringify({ email, role }),
+      }
+    )
+    return response.map(mapCircleMember)
+  }
+
+  async removeCircleMember(circleId: string, userId: string) {
+    const response = await this.client.request<ApiCircleMember[]>(
+      `/care-circles/${circleId}/members/${userId}`,
+      { method: "DELETE" }
+    )
+    return response.map(mapCircleMember)
   }
 
   async inviteMember(profileId: string, email: string, role: CareRole) {

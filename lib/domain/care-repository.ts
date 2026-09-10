@@ -4,6 +4,8 @@ import type {
   AppointmentStatus,
   CareClaim,
   CareCircle,
+  CircleMember,
+  CircleMemberRole,
   CareDocument,
   CareInvite,
   CareLog,
@@ -66,6 +68,18 @@ export interface CareCircleRepository {
   updateCircle(id: string, patch: Partial<CareCircle>): Promise<CareCircle>
   archiveCircle(id: string): Promise<void>
   linkProfileToCircle(profileId: string, circleId: string): Promise<void>
+  /**
+   * Circle membership. All three return the circle's full member list, which
+   * is what the backend answers with - so a caller replaces its state rather
+   * than reconciling a delta it might get wrong.
+   */
+  listCircleMembers(circleId: string): Promise<CircleMember[]>
+  addCircleMember(
+    circleId: string,
+    email: string,
+    role: CircleMemberRole
+  ): Promise<CircleMember[]>
+  removeCircleMember(circleId: string, userId: string): Promise<CircleMember[]>
 }
 
 export interface CareMembershipRepository {

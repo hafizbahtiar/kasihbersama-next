@@ -13,6 +13,8 @@ import {
   type CareProfile,
   type CareSummary,
   type ProfileHealthInfo,
+  type CircleMember,
+  type HealthFieldKey,
   type EmergencyCard,
   type CareTask,
   type Medication,
@@ -44,6 +46,30 @@ type ApiProfile = {
   primary_clinic?: string
   primary_doctor?: string
   emergency_note?: string
+  height_cm?: number
+  gestational_age_weeks?: number
+}
+
+export type ApiCircleMember = {
+  user_id: string
+  email: string
+  display_name: string
+  role: string
+}
+
+/**
+ * Circle roles are a closed set the backend validates (owner|admin|member).
+ * Anything else is coerced to the least-privileged value rather than trusted:
+ * an unexpected role must not silently grant the ability to change who is in
+ * the circle.
+ */
+export function mapCircleMember(api: ApiCircleMember): CircleMember {
+  return {
+    userId: api.user_id,
+    email: api.email,
+    displayName: api.display_name,
+    role: asEnum(api.role, ["owner", "admin", "member"] as const, "member"),
+  }
 }
 
 type ApiCircle = {
@@ -183,15 +209,32 @@ export function mapPermissions(
 }
 
 /**
- * Every key present, values still allowed to be absent.
+ * Every key present, values still allowed to be absent, each keeping its own
+ * type.
  *
- * `Record` over `keyof` rather than `Required<T>` or a `-?` mapped type:
- * both of those also strip `undefined` from the value, which would force each
- * field to be a string the API does not always send. Keyed off
- * `ProfileHealthInfo`, so adding a field there breaks this mapper until it is
- * handled.
+ * A mapped type with `-?` on the key and `| undefined` back on the value,
+ * rather than `Required<T>` or a plain `-?`: both of those strip `undefined`
+ * from the value, which would force each field to be present in a response
+ * the API does not always send it in.
+ *
+ * It was `Record<keyof ProfileHealthInfo, string | undefined>` until
+ * height_cm and gestational_age_weeks arrived - the first two health fields
+ * that are numbers. `Record` flattened every value to one type, so a numeric
+ * column could only be mapped by lying about it.
+ *
+ * The `HealthFieldKey` alias is load-bearing, not a tidy-up. Written as
+ * `[K in keyof ProfileHealthInfo]` the mapped type is *homomorphic*, and
+ * TypeScript then copies the source's `?` modifiers across - which silently
+ * restores the omission this guard exists to catch, and strips `undefined`
+ * back off the value when `-?` is applied. Going through an alias breaks
+ * homomorphism, so `-?` makes the keys required and `ProfileHealthInfo[K]`
+ * keeps each value's own `| undefined`. Verified both ways: a missing key
+ * fails to compile, an explicitly-undefined value does not.
+ *
+ * Keyed off `ProfileHealthInfo`, so adding a field there breaks this mapper
+ * until it is handled.
  */
-type EveryHealthField = Record<keyof ProfileHealthInfo, string | undefined>
+type EveryHealthField = { [K in HealthFieldKey]-?: ProfileHealthInfo[K] }
 
 /**
  * The health columns, mapped exhaustively.
@@ -213,6 +256,8 @@ function mapHealthInfo(api: ApiProfile): EveryHealthField {
     primaryClinic: api.primary_clinic,
     primaryDoctor: api.primary_doctor,
     emergencyNote: api.emergency_note,
+    heightCm: api.height_cm,
+    gestationalAgeWeeks: api.gestational_age_weeks,
   }
 }
 
@@ -649,6 +694,20 @@ export type ApiEmergencyCard = {
   emergency_note?: string
 }
 
+/**
+ * The emergency card is a narrower read than a profile, and stays that way.
+ *
+ * height_cm and gestational_age_weeks are absent here deliberately, matching
+ * the backend: GetEmergencyCard names its columns one by one so a new column
+ * is a decision rather than something a wildcard swept in. The emergency
+ * measurement that matters is weight, for drug dosing, and that is a vital
+ * reading rather than a column - height alone is half a calculation a
+ * paramedic cannot finish, at the cost of widening what the narrowest role in
+ * the system can read.
+ *
+ * There is no exhaustiveness guard on this mapper for that reason: it is a
+ * subset of ProfileHealthInfo on purpose, not by omission.
+ */
 export function mapEmergencyCard(api: ApiEmergencyCard): EmergencyCard {
   return {
     careProfileId: api.care_profile_id,

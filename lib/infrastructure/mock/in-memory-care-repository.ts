@@ -3,6 +3,8 @@ import type {
   AuditEvent,
   CareClaim,
   CareCircle,
+  CircleMember,
+  CircleMemberRole,
   CareDocument,
   CareInvite,
   CareLog,
@@ -112,6 +114,14 @@ export class InMemoryCareRepository implements CareRepository {
   private snapshot: CareSnapshot
   private summaries: Array<{ profileId: string; summary: CareSummary }> = []
   private auditEvents: Array<AuditEvent & { profileId: string }> = []
+  /**
+   * Circle membership, keyed by circle id. Real state rather than a stub,
+   * because the rule worth exercising in dev is the one the backend enforces:
+   * a circle must keep at least one active owner, so removing the last one is
+   * refused. A stub that always succeeded would let the UI ship without ever
+   * meeting that path.
+   */
+  private circleMembers = new Map<string, CircleMember[]>()
 
   constructor(initial: CareSnapshot) {
     this.snapshot = structuredClone(initial)
@@ -210,6 +220,12 @@ export class InMemoryCareRepository implements CareRepository {
       primaryClinic: input.primaryClinic,
       primaryDoctor: input.primaryDoctor,
       emergencyNote: input.emergencyNote,
+      // Enumerated one by one, so a health field added to the domain type
+      // goes missing here silently - the API path has compile-time guards
+      // against exactly that, this one does not. updateProfile is safe by
+      // contrast: it Object.assigns the whole patch.
+      heightCm: input.heightCm,
+      gestationalAgeWeeks: input.gestationalAgeWeeks,
     }
     this.snapshot.profiles.unshift(created)
     return { ...created }
@@ -238,6 +254,71 @@ export class InMemoryCareRepository implements CareRepository {
 
   async archiveCircle(id: string) {
     await this.updateCircle(id, { archived: true })
+  }
+
+  private membersOf(circleId: string): CircleMember[] {
+    const existing = this.circleMembers.get(circleId)
+    if (existing) {
+      return existing
+    }
+    // A circle its creator is not in cannot be managed by anyone, so seed the
+    // signed-in mock user as owner the first time one is read.
+    const seeded: CircleMember[] = [
+      {
+        userId: MOCK_USER_ID,
+        email: "saya@contoh.my",
+        displayName: "Saya",
+        role: "owner",
+      },
+    ]
+    this.circleMembers.set(circleId, seeded)
+    return seeded
+  }
+
+  async listCircleMembers(circleId: string) {
+    return structuredClone(this.membersOf(circleId))
+  }
+
+  async addCircleMember(
+    circleId: string,
+    email: string,
+    role: CircleMemberRole
+  ) {
+    const members = this.membersOf(circleId)
+    const normalised = email.trim().toLowerCase()
+    const existing = members.find((item) => item.email === normalised)
+    if (existing) {
+      // Re-adding someone changes their role rather than duplicating them,
+      // matching the backend's upsert.
+      existing.role = role
+    } else {
+      members.push({
+        userId: `user-${normalised}`,
+        email: normalised,
+        displayName: normalised.split("@")[0] ?? normalised,
+        role,
+      })
+    }
+    return structuredClone(members)
+  }
+
+  async removeCircleMember(circleId: string, userId: string) {
+    const members = this.membersOf(circleId)
+    const target = members.find((item) => item.userId === userId)
+    if (!target) {
+      throw new Error("Ahli tidak dijumpai.")
+    }
+    const owners = members.filter((item) => item.role === "owner")
+    if (target.role === "owner" && owners.length === 1) {
+      // The backend answers 409 here. A circle with no active owner is one
+      // nobody can rename, archive or manage membership on.
+      throw new Error("Circle mesti ada sekurang-kurangnya seorang pemilik.")
+    }
+    this.circleMembers.set(
+      circleId,
+      members.filter((item) => item.userId !== userId)
+    )
+    return structuredClone(this.circleMembers.get(circleId) ?? [])
   }
 
   async linkProfileToCircle(profileId: string, circleId: string) {
