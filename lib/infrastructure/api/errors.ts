@@ -36,6 +36,17 @@ const CODE_MESSAGES: Record<string, string> = {
   // message that names neither the cause nor the fix.
   quota_exceeded:
     "Anda sudah mencapai had pelan anda. Lihat Penggunaan untuk butiran.",
+  // Deliberately distinct from quota_exceeded, matching the backend. The
+  // server splits these two precisely because the next action differs -
+  // finish or wait out the uploads you started, versus free up space - and
+  // falling through to the 409 fallback ("Rekod bercanggah.") threw that
+  // distinction away at the last step.
+  too_many_pending_uploads:
+    "Terlalu banyak muat naik belum selesai. Tunggu ia siap atau cuba lagi sebentar.",
+  // The most common validation code. Without an entry it fell through to the
+  // 400 fallback, which says the request was invalid without saying what.
+  // Handlers put the specific reason in error.message, so this defers to it.
+  invalid_request: "",
   deletion_blocked:
     "Selesaikan profil jagaan di bawah sebelum memadam akaun anda.",
   pending_invites:
@@ -66,9 +77,16 @@ const STATUS_MESSAGES: Record<number, string> = {
 }
 
 export function messageForApiError(error: ApiError) {
-  return (
-    CODE_MESSAGES[error.code] ?? STATUS_MESSAGES[error.status] ?? error.message
-  )
+  // An empty entry means "the server's own message is better than anything
+  // generic here" - invalid_request carries the specific field or reason.
+  const byCode = CODE_MESSAGES[error.code]
+  if (byCode) {
+    return byCode
+  }
+  if (byCode === "" && error.message) {
+    return error.message
+  }
+  return STATUS_MESSAGES[error.status] ?? error.message
 }
 
 export type FieldErrors = Record<string, string>
@@ -173,4 +191,30 @@ export function normalizeApiError(cause: unknown): ApiError {
     code: "internal",
     status: 500,
   })
+}
+
+/**
+ * The growth chart's 409: preconditions unmet, carrying which ones.
+ *
+ * A distinct type rather than a bare ApiError because the caller acts on the
+ * list - it tells the parent to add a date of birth or a gender, which is a
+ * different screen from "something went wrong". The endpoint answers 409
+ * rather than 200 with a flag because it was told to draw a chart and cannot;
+ * GET /growth/readiness answers 200 with ready:false because being asked
+ * whether a chart can be drawn makes "no" a successful answer.
+ */
+export class GrowthChartNotReadyError extends ApiError {
+  readonly missing: string[]
+
+  constructor(message: string, missing: string[]) {
+    super(message, { code: "not_ready", status: 409 })
+    this.name = "GrowthChartNotReadyError"
+    this.missing = missing
+  }
+}
+
+export function isGrowthChartNotReady(
+  error: unknown
+): error is GrowthChartNotReadyError {
+  return error instanceof GrowthChartNotReadyError
 }
