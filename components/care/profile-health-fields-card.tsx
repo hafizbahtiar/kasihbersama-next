@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { formatPersonNameInput } from "@/lib/application/format-person-name"
 import {
   BLOOD_TYPE_OPTIONS,
   GENDER_OPTIONS,
@@ -66,6 +67,12 @@ export function ProfileHealthFieldsCard({
   const [conditionSummary, setConditionSummary] = useState(
     profile.conditionSummary ?? ""
   )
+  const [legalName, setLegalName] = useState(profile.legalName ?? "")
+  const [primaryClinic, setPrimaryClinic] = useState(profile.primaryClinic ?? "")
+  const [primaryDoctor, setPrimaryDoctor] = useState(profile.primaryDoctor ?? "")
+  const [emergencyNote, setEmergencyNote] = useState(
+    profile.emergencyNote ?? ""
+  )
   const [isSaving, setIsSaving] = useState(false)
 
   function parseNumber(value: string): number | undefined {
@@ -87,6 +94,10 @@ export function ProfileHealthFieldsCard({
         gestationalAgeWeeks: parseNumber(gestationalAgeWeeks),
         allergySummary: allergySummary.trim() || undefined,
         conditionSummary: conditionSummary.trim() || undefined,
+        legalName: formatPersonNameInput(legalName).trim() || undefined,
+        primaryClinic: primaryClinic.trim() || undefined,
+        primaryDoctor: primaryDoctor.trim() || undefined,
+        emergencyNote: emergencyNote.trim() || undefined,
       })
     } catch {
       toast.error("Gagal menyimpan maklumat kesihatan.")
@@ -105,6 +116,20 @@ export function ProfileHealthFieldsCard({
       </CardHeader>
       <CardContent>
         <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="profile-legal-name">
+              Nama penuh (seperti MyKad)
+            </FieldLabel>
+            {/* Uppercased as typed, matching the card it reproduces. */}
+            <Input
+              id="profile-legal-name"
+              value={legalName}
+              disabled={!canEdit}
+              onChange={(event) =>
+                setLegalName(formatPersonNameInput(event.target.value))
+              }
+            />
+          </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
               <FieldLabel>Jantina</FieldLabel>
@@ -199,6 +224,38 @@ export function ProfileHealthFieldsCard({
               value={conditionSummary}
               disabled={!canEdit}
               onChange={(event) => setConditionSummary(event.target.value)}
+            />
+          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor="profile-clinic">Klinik utama</FieldLabel>
+              <Input
+                id="profile-clinic"
+                value={primaryClinic}
+                disabled={!canEdit}
+                onChange={(event) => setPrimaryClinic(event.target.value)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="profile-doctor">Doktor utama</FieldLabel>
+              <Input
+                id="profile-doctor"
+                value={primaryDoctor}
+                disabled={!canEdit}
+                onChange={(event) => setPrimaryDoctor(event.target.value)}
+              />
+            </Field>
+          </div>
+          <Field>
+            <FieldLabel htmlFor="profile-emergency">Nota kecemasan</FieldLabel>
+            {/* This one reaches the emergency card, which emergency_viewer can
+                read without seeing anything else about the family. */}
+            <Textarea
+              id="profile-emergency"
+              className="min-h-20"
+              value={emergencyNote}
+              disabled={!canEdit}
+              onChange={(event) => setEmergencyNote(event.target.value)}
             />
           </Field>
         </FieldGroup>
