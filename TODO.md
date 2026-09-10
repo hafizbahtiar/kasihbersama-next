@@ -140,10 +140,24 @@ domain penghantar disahkan di Resend.
 
 ### Belum siap kerana backend belum ada surface
 
-- [ ] Circle: tambah/buang ahli circle _(`care_circle_members` ada jadual dan lajur
-  peranan, tapi tiada route HTTP - profil boleh dipaut ke circle, orang tidak boleh)_
-- [ ] Circle: kemas kini circle _(`PATCH /care-circles/{id}` tak didaftarkan; hanya
-  create/read/delete)_
+- [x] Circle: tambah/buang ahli circle - **siap 2026-09-10.** Nota lama salah: ketiga-tiga
+  route memang wujud (`GET`/`POST /care-circles/{id}/members`,
+  `DELETE …/members/{userId}`).
+  Disambung penuh: jenis domain (`CircleMember`, `CircleMemberRole`), tiga kaedah pada
+  `CareCircleRepository`, pelaksanaan API + mock, hook `useCircleMembers`, dan seksyen
+  "Ahli kumpulan" pada halaman perincian circle.
+  **Peranan circle ialah model berasingan** daripada keizinan profil - owner/admin/member
+  mentadbir circle itu sendiri dan tidak memberi akses kepada rekod perubatan sesiapa.
+  Salinan UI menyatakannya secara terang supaya tiada siapa menganggap sebaliknya.
+  Ketiga-tiga panggilan memulangkan senarai ahli penuh, jadi UI **menggantikan** keadaan
+  dan bukan mendamaikan delta - penting sebab tambah-ikut-e-mel meleraikan kepada
+  pengguna yang pemanggil tak boleh ramal, tambah semula menukar peranan dan bukan
+  menduakan, dan membuang pemilik terakhir ditolak server (409).
+  Mock menyimpan keadaan ahli sebenar, termasuk penolakan pemilik-terakhir itu - stub
+  yang sentiasa berjaya akan membenarkan UI dihantar tanpa pernah menemui laluan itu.
+- [x] Circle: kemas kini circle - **nota ini sudah lapuk.** `PATCH /care-circles/{id}`
+  memang didaftarkan di backend, dan `updateCircle` sudah wujud dalam
+  `api-care-repository.ts`. Disahkan 2026-09-10.
 - [ ] Medan profil `relation` dan `notes` masih disembunyikan dalam mod API
   _(tiada lajur langsung dalam `care_profiles` - perlu migrasi dahulu, bukan sekadar DTO)_
 
@@ -477,8 +491,8 @@ generik - itu yang menjadikannya berguna pada hari pertama dan bukan satu lagi b
 - [ ] **Umur terkoreksi untuk bayi pramatang** - bayi lahir 32 minggu diplot pada umur
   terkoreksi sehingga lebih kurang 2 tahun. Perlukan umur kandungan semasa lahir, yang
   tiada dalam mana-mana jadual lagi.
-- [ ] **Jadual imunisasi kebangsaan** - dos, umur patut, tarikh diberi. Bentuknya dekat
-  dengan ubat + peristiwa dos yang sudah ada.
+- [x] **Jadual imunisasi kebangsaan** - dos, umur patut, tarikh diberi. `/immunisations`
+  memaparkan buku NIP; rekod dos via dialog; mock cp-7 (Aisyah) + growthSeed.
 - [ ] **Senarai semak perkembangan** ikut julat umur. Bahaya diagnosis sama seperti
   pertumbuhan, malah lebih tajam - "belum" pada satu pencapaian jauh lebih kerap variasi
   normal daripada penemuan.
@@ -489,7 +503,8 @@ Halaman `/pricing` sudah menunjukkan penggunaan profil berbanding had, tetapi ia
 mengiranya daripada senarai yang kebetulan dipegang oleh provider. Itu berjaya untuk satu
 nombor dan takkan bertahan untuk yang kedua.
 
-- [ ] Guna `GET /me/usage` sebaik ia wujud, dan buang pengiraan tempatan itu.
+- [x] Guna `GET /me/usage` - **sudah dilaksana.** `hooks/use-account-usage.ts` membacanya
+  terus; pengiraan tempatan itu sudah tiada. Disahkan 2026-09-10.
 - [ ] **Amaran "hampir sampai had"** di tempat tindakan berlaku - butang cipta profil,
   borang jemput ahli - bukan hanya pada halaman harga. Pengguna yang melanggar had
   mendapati perkara itu pada saat mereka menekan simpan.
@@ -594,7 +609,24 @@ bukan lajur baharu pada `users` - jadi ubat, vital, dokumen dan model keizinan b
 padanya tanpa kerja tambahan. `/me` kekal empat medan (id, e-mel, nama paparan, status
 pengesahan); ia identiti log masuk, bukan rekod klinikal.
 
-- [ ] **`tinggi` (dan berat) masih tiada** dalam mana-mana jadual - satu-satunya medan
-  dalam nota asal yang masih perlukan migrasi. Putuskan kedua-duanya sekali gus supaya
-  tidak bermigrasi dua kali.
+- [x] **`tinggi` sudah ada; `berat` sengaja tidak.** Backend migration 00022 menambah
+  `height_cm`; frontend menyambungnya 2026-09-10 - jenis domain, jenis API, mapper baca,
+  payload tulis, pariti mock, dan medan "Tinggi (cm)" pada `/my-health`.
+  Berat tidak mendapat lajur atas keputusan yang disengajakan: ia sudah bacaan vital
+  dengan `measured_at` dan unit kg dikuatkuasakan. Rumah kedua untuk fakta yang sama akan
+  bercanggah dengan bacaan terkini, tanpa apa-apa dalam skema menyatakan mana yang menang.
+  "Berat semasa" ialah bacaan vital terkini.
+  Julat 20-280 cm dikuatkuasakan oleh backend sahaja, bukan disalin ke borang - satu
+  autoriti, bukan dua yang boleh menyimpang.
+  **Dikecualikan daripada kad kecemasan**, sepadan dengan backend: ukuran kecemasan yang
+  penting ialah berat (untuk dos ubat), dan tinggi seorang diri memberi paramedik separuh
+  pengiraan sambil meluaskan apa yang peranan tersempit boleh baca.
+
+- [ ] **`gestationalAgeWeeks` sudah dipetakan, tetapi belum ada UI.** Ia disambung dalam
+  lapisan data pada 2026-09-10 (backend migration 00019 menambahnya lebih awal). Tanpa
+  medan borang, umur terkoreksi untuk bayi pramatang tak boleh berfungsi dan
+  `/growth/readiness` akan terus melaporkannya hilang.
+  Ia **tidak** tergolong pada `/my-health` - itu rekod dewasa sendiri; umur kehamilan
+  ialah medan anak. Ia perlukan borang medan-kesihatan untuk profil jagaan orang lain,
+  yang belum wujud sama sekali (lihat nota borang profil di bawah).
 
