@@ -467,35 +467,72 @@ Rujukan reka bentuknya ialah **Buku Rekod Kesihatan Bayi dan Kanak-kanak KKM** y
 bapa sudah bawa ke klinik. App ini patut boleh dikenali sebagai buku itu, bukan penjejak
 generik - itu yang menjadikannya berguna pada hari pertama dan bukan satu lagi borang.
 
-- [ ] **Carta pertumbuhan** - berat-ikut-umur, panjang/tinggi-ikut-umur, lilitan kepala,
-  BMI-ikut-umur, dengan pita rujukan WHO di belakang titik kanak-kanak itu. `chart.tsx`
-  sudah ada dalam `components/ui` dan carta trend vital sudah menggunakannya.
-- [ ] **Ukuran ialah bacaan vital, bukan jadual baharu.** `weight` sudah wujud dalam
-  `VITAL_TYPE_OPTIONS`; yang perlu ditambah ialah panjang/tinggi dan lilitan kepala.
-  Nota klinikal yang mesti dihormati borang: bayi diukur **baring** (panjang) dan
-  kanak-kanak **berdiri** (tinggi), dan WHO menganggapnya ukuran berbeza. Satu pilihan
-  "tinggi" sahaja menghilangkan perbezaan itu.
-- [ ] **Jangan beri diagnosis.** Skor-z di bawah −2 SD ada nama klinikal dalam dokumen
-  WHO, dan meletakkan perkataan itu di sebelah bayi seseorang ialah diagnosis yang produk
-  ini tak boleh buat - sekatan yang sama sudah dikenakan pada ringkasan AI. Plot titik
-  terhadap pita dan biarkan pita bercakap. Apa-apa ayat lebih kuat daripada "di bawah
-  julat rujukan - bincang dengan klinik" perlukan kelulusan klinisian.
-- [ ] **Dua medan sedia ada jadi wajib, dan kedua-duanya belum sedia:**
-  - **Tarikh lahir** - paksi-x carta ialah umur, jadi profil tanpa tarikh lahir tak boleh
-    ada carta. UI mesti meminta dan menerangkannya, bukan merender carta kosong.
-  - **Jantina** - rujukan WHO khusus jantina, jadi medan ini bertukar daripada label
-    kepada kunci carian. `GENDER_OPTIONS` menyimpan rentetan paparan Melayu
-    ("Lelaki"/"Perempuan"); ia perlu nilai berkod (`male`/`female`) dengan label
-    dikenakan semasa render. Inilah kos gandingan yang ditandakan semasa select itu
-    ditambah.
-- [ ] **Umur terkoreksi untuk bayi pramatang** - bayi lahir 32 minggu diplot pada umur
-  terkoreksi sehingga lebih kurang 2 tahun. Perlukan umur kandungan semasa lahir, yang
-  tiada dalam mana-mana jadual lagi.
+- [x] **Carta pertumbuhan - UI siap 2026-09-10.** `/growth`, dengan pemilih penunjuk
+  (berat-ikut-umur, panjang/tinggi-ikut-umur, lilitan kepala-ikut-umur).
+  Jalur rujukan dan ukuran anak digabung jadi satu siri berkunci umur, sebab recharts
+  perlukan satu dataset dan kedua-duanya tak berkongsi nilai-x: jalur disampel pada
+  langkah yang server pilih, ukuran mendarat pada hari anak ditimbang. `connectNulls`
+  supaya langkah itu tak terbaca sebagai lengkung putus.
+  Paksi-x dipapar dalam **bulan**; backend memberi hari kerana itu kunci jadual LMS.
+  Titik diplot pada **umur plot**, bukan umur kronologi - bayi 32 minggu diplot pada
+  umur kronologi akan duduk jauh di bawah jalur yang sepatutnya.
+  **Mock menghasilkan lengkung sebenar**, bukan stub. Itu yang membolehkan UI ini dibina
+  dan *dilihat* berfungsi walaupun laluan API masih tersekat pada lesen WHO. Median
+  guna titik sauh sebenar jadi bentuknya jujur - cepat awal, perlahan mendadak - dan
+  garis lurus akan menyembunyikan setiap masalah susun atur yang lengkung sebenar
+  dedahkan. Fail menandakannya `ILUSTRASI PEMBANGUNAN - BUKAN DATA RUJUKAN WHO`.
+  Mock juga menguatkuasakan prasyarat yang sama seperti server, jadi skrin "belum boleh
+  dilukis" itu boleh ditemui dalam pembangunan dan bukan hanya dalam produksi.
+- [x] **Ukuran ialah bacaan vital - tiga jenis ditambah 2026-09-10.** `length_lying`,
+  `height_standing`, `head_circumference` kini dalam `VITAL_TYPE_OPTIONS`. Panjang dan
+  tinggi kekal pilihan berasingan: WHO mengukur bawah-2 baring dan atas-2 berdiri, beza
+  0.7 cm pada anak yang sama, dan pembetulan itu senyap - satu pilihan gabungan cuma
+  menjadikan carta salah.
+  **Puncanya lebih dalam daripada pilihan yang hilang:** unit diterbitkan oleh rantaian
+  ternary yang jatuh ke `"%"` untuk apa-apa yang tak dikenali, dan backend menguatkuasakan
+  `cm`. Menambah tiga pilihan sahaja akan menghasilkan 422 pada setiap simpan. Digantikan
+  dengan `VITAL_UNITS`, `Record` lengkap atas `VitalType`, jadi jenis baharu tanpa unit
+  gagal kompil.
+- [x] **Jangan beri diagnosis - dilaksana pada carta 2026-09-10.** Respons membawa `z`
+  dan jalur sahaja; tiada medan label, kategori atau keterukan. Dua ujian backend memaku
+  ia, satu pada struct dan satu pada JSON bersiri. UI memaparkan penafian "Carta ini
+  bukan diagnosis" dan tiada apa yang boleh dirender sebagai penilaian.
+- [x] **Dua medan wajib - kedua-duanya kini sedia 2026-09-10.** `GENDER_OPTIONS` memang
+  sudah berkod `male`/`female` (nota lama lapuk). Yang benar-benar hilang ialah tempat
+  untuk **menetapkannya pada profil orang lain** - medan kesihatan hanya boleh disunting
+  pada `/my-health`, rekod diri sendiri. Kad "Maklumat kesihatan" pada halaman perincian
+  profil menutupnya: jantina, jenis darah, tinggi, umur kandungan, alahan, keadaan.
+  **Dan ia takkan menyimpan apa-apa tanpa pembaikan kedua:** `updateProfile` dalam
+  provider ada senarai putih yang hanya meneruskan `displayName`, `status`, `dateOfBirth`
+  - setiap medan kesihatan digugurkan senyap sebelum permintaan dihantar.
+- [x] **Umur terkoreksi - siap 2026-09-10.** Backend menghantar `plot_age_days` dan
+  `uses_corrected_age`; carta memplot pada umur plot, dan halaman menyatakannya bila
+  terpakai. `gestationalAgeWeeks` kini boleh dimasukkan melalui kad maklumat kesihatan.
 - [x] **Jadual imunisasi kebangsaan** - dos, umur patut, tarikh diberi. `/immunisations`
   memaparkan buku NIP; rekod dos via dialog; mock cp-7 (Aisyah) + growthSeed.
-- [ ] **Senarai semak perkembangan** ikut julat umur. Bahaya diagnosis sama seperti
-  pertumbuhan, malah lebih tajam - "belum" pada satu pencapaian jauh lebih kerap variasi
-  normal daripada penemuan.
+- [x] **Senarai semak perkembangan - siap 2026-09-10**, backend dan frontend.
+  `/milestones`, dikumpul ikut domain (motor kasar, motor halus, bahasa, sosial), tanda
+  dan buang tanda.
+  **Dua keputusan reka bentuk yang menyandarkan bahaya diagnosis:**
+  - **Umur biasa ialah julat, bukan tarikh akhir.** Backend menyimpan
+    `typical_from_months`/`typical_to_months`, jadi tiada kod hiliran *boleh* mengira
+    "lewat" - tiada tarikh tunggal untuk terlewat terhadapnya. Itu berbeza daripada
+    jadual imunisasi di sebelahnya, yang memang ada `DueMonths` kerana dos lewat
+    memang penemuan.
+  - **Dua status sahaja**, `achieved` dan `not_recorded`. Tiada `overdue`, tiada kiraan
+    siap, tiada peratusan, tiada pengekodan warna pada item belum ditanda. Angka
+    kemajuan mengundang perbandingan, dan julat normal yang luas itulah yang menjadikan
+    perbandingan tak bermakna. Ujian backend memaku kedua-dua jenis view terhadap
+    `Overdue`, `Late`, `Delayed`, `Missed`, `Flagged`, `Risk`, `Score`, `Percent`,
+    `Completed`, `Total`.
+  Pembingkaian "julat normal adalah luas" muncul **sebelum** senarai, bukan selepas -
+  senarai dengan baris belum bertanda terbaca sebagai skor melainkan sesuatu berkata
+  sebaliknya dahulu.
+  Tarikh lahir yang tiada hanya menghilangkan petunjuk umur; senarai tetap dipulangkan.
+  Itu berbeza daripada carta tumbesaran yang menolak, dan sengaja.
+- [ ] **Kandungan senarai masih placeholder.** Ditanda `source: "placeholder"` dan UI
+  memaparkan notis. Sumber sebenar (Buku Rekod KKM, atau rujukan berlesen bebas seperti
+  CDC) ialah keputusan lesen dan kandungan klinikal yang masih terbuka.
 
 ### Pelan dan penggunaan
 
@@ -505,11 +542,27 @@ nombor dan takkan bertahan untuk yang kedua.
 
 - [x] Guna `GET /me/usage` - **sudah dilaksana.** `hooks/use-account-usage.ts` membacanya
   terus; pengiraan tempatan itu sudah tiada. Disahkan 2026-09-10.
-- [ ] **Amaran "hampir sampai had"** di tempat tindakan berlaku - butang cipta profil,
-  borang jemput ahli - bukan hanya pada halaman harga. Pengguna yang melanggar had
-  mendapati perkara itu pada saat mereka menekan simpan.
-- [ ] Bila had berbeza mengikut akaun, lajur Percuma pada `/pricing` mesti terus membaca
-  had **akaun ini**, bukan lalai pelan. Itu janji halaman itu.
+- [x] **Amaran "hampir sampai had" di tempat tindakan - siap 2026-09-10.**
+  `QuotaHint` pada senarai profil (sebelum butang "Tambah profil") dan pada borang jemput
+  ahli (sebelum alamat ditaip).
+  **Ambang mengikut baki, bukan peratusan.** Had profil percuma ialah 1, di mana peratusan
+  tak bermakna - 0 daripada 1 ialah "0%" dan 1 daripada 1 ialah "100%", dan tiada tengah
+  untuk "hampir sampai" menggambarkannya. Satu slot berbaki ialah amaran; sifar ialah
+  mesej berbeza dengan tindakan berbeza.
+  Kuota ahli dibaca **per profil jagaan**, bukan jumlah akaun - itu skop yang backend
+  kuatkuasakan.
+  Usage tak dimuat ≠ tiada had: komponen diam dan bukan meneka nombor.
+- [x] **Lajur Percuma pada `/pricing` membaca had akaun ini - siap 2026-09-10.**
+  Bootstrap menghantar dua set: `limits` (katalog pelan percuma, sama untuk semua) dan
+  `account_limits` (had hidup akaun). Halaman membaca yang pertama.
+  **Nuansanya penting dua arah:** akaun percuma yang hadnya dinaikkan - percubaan atau
+  grandfathering - patut melihat nombor sebenar yang ia dapat, itu janji halaman. Tetapi
+  akaun pada pelan berbayar ada `accountLimits` ditetapkan kepada had pelan itu, dan
+  memaparkannya di bawah "Percuma" akan mengiklankan tier percuma sebagai sesuatu yang ia
+  bukan. Jadi had akaun menggantikan katalog **hanya apabila pelan itu memang percuma**.
+  **Dan satu lagi yang terjumpa di sana:** butang kad berkata "Pelan anda sekarang" pada
+  kad Percuma tanpa mengira pelan sebenar - akaun berbayar diberitahu kad percuma ialah
+  pelan semasanya. Kini dibandingkan dengan `plan` daripada bootstrap.
 
 ## Audit aliran UX (2026-09-09)
 
@@ -520,31 +573,23 @@ borang: cara pengguna tiba, dan apa berlaku selepas simpan.
 
 ### Menyekat pada telefon
 
-- [ ] **Switcher profil desktop sahaja, tapi semua borang bergantung padanya.**
-  `app-header.tsx:55` ialah satu-satunya `ProfileSwitcher` dalam kod, dan ia
-  `hidden sm:flex`. Sidebar tak menunjukkan profil terpilih. Jadi pada telefon
-  kelima-lima borang render penuh, butang hantar `isDisabled` senyap, dan teks
-  bantuannya berkata "Pilih profil jagaan di header dahulu" - kawalan yang tiada
-  pada saiz skrin itu. Ini aplikasi yang digunakan di sisi katil.
-  Perlu: switcher dalam sidebar (ada pada semua saiz), dan borang patut tunjuk
-  `Empty` + "Pilih profil" daripada merender medan yang tak boleh dihantar.
-
-### Dashboard tak boleh diklik
-
-- [ ] **Sifar elemen interaktif.** `grep -cE "href=|onPress=|Button"` pada
-  `dashboard-page.tsx` = 0. Jubin statistik dan dua carta, tiada satu pautan.
-  `buildDashboardStats` mengira `openTaskCount` dan `upcomingAppointmentCount` -
-  tepat perkara yang pengguna mahu klik terus.
-  Perlu: setiap jubin jadi pautan ke senarainya. Perubahan paling murah di sini.
-
-### Tindakan paling kerap, tiga lapis dalam
-
-- [ ] **Menanda dos hanya ada di satu tempat**, `medication-detail-page.tsx:183`.
-  Laluannya: Laman utama → Ubat → buka ubat → cari baris dos → tanda. Tiga
-  navigasi, beberapa kali sehari, untuk tindakan paling kerap dalam aplikasi
-  penjejak ubat. Dan `buildDashboardStats` tak mengira dos tertunggak sama sekali.
-  Perlu: senarai "Dos hari ini" pada dashboard dengan tindakan tanda di situ.
-  Kesan paling besar antara keempat ini.
+- [x] **Switcher profil dalam sidebar - sudah siap.** `app-sidebar.tsx:87`, dengan komen
+  yang merujuk tepat masalah `hidden sm:flex` pada header. Sidebar wujud pada setiap
+  lebar.
+  Separuh kedua juga selesai: kelima-lima borang jagaan yang memerlukan profil terpilih
+  (`appointment`, `care-log`, `document`, `task`, `vital`) memaparkan `SelectProfileEmpty`
+  dan bukan medan yang tak boleh dihantar. Borang circle dan borang cipta profil tidak -
+  dan memang tak sepatutnya, kerana kedua-duanya tak bergantung pada profil terpilih.
+- [x] **Menanda dos pada dashboard - sudah siap** (`today-doses-card.tsx`, commit
+  `2ac8524`), dipasang pada dashboard di atas jubin statistik. Komen dalam fail merakam
+  penaakulan yang sama seperti nota ini.
+  **Ditambah 2026-09-10:** lencana "Tertunggak". Dos yang dijangka pagi tadi dan masih
+  belum ditanda petang ini tidak sama dengan yang akan datang malam nanti, dan senarai
+  memaparkan kedua-duanya secara identik. Dikira sekali dalam memo, bukan setiap baris,
+  supaya setiap baris dinilai terhadap satu detik.
+- [x] **Jubin dashboard sudah berpaut - sudah siap.** Kelima-lima jubin ada `href` dan
+  dibalut `<Link>` dengan keadaan fokus dan hover. Nota lama merekod `grep` = 0; ia kini
+  memadan.
 
 ### Satu borang, satu rekod
 
