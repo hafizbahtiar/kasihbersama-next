@@ -398,6 +398,12 @@ export class ApiCareRepository implements CareRepository {
     return mapProfile(response)
   }
 
+  async unarchiveProfile(id: string) {
+    await this.client.request<void>(`${profilePath(id)}/unarchive`, {
+      method: "POST",
+    })
+  }
+
   async updateProfile(id: string, patch: Partial<CareProfile>) {
     const response = await this.client.request<ApiProfile>(
       `/care-profiles/${id}`,
@@ -519,6 +525,12 @@ export class ApiCareRepository implements CareRepository {
       }
     )
     return mapCircle(response)
+  }
+
+  async unarchiveCircle(id: string) {
+    await this.client.request<void>(`/care-circles/${id}/unarchive`, {
+      method: "POST",
+    })
   }
 
   async archiveCircle(id: string) {

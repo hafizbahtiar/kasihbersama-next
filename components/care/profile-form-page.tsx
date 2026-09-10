@@ -126,7 +126,9 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
         {apiMode ? (
           <ApiFieldGapNotice>
             Hubungan, nota, dan pilihan kumpulan kekal dalam mod mock. Nama dan
-            tarikh lahir disimpan.
+            tarikh lahir disimpan. Jantina, jenis darah dan maklumat kesihatan
+            lain disunting pada halaman profil selepas ia dicipta — jantina
+            diperlukan untuk carta tumbesaran.
           </ApiFieldGapNotice>
         ) : null}
         <Field data-invalid={Boolean(errors.displayName)}>

@@ -180,6 +180,17 @@ export class InMemoryCareRepository implements CareRepository {
     return { ...profile }
   }
 
+  async unarchiveProfile(id: string) {
+    const profile = this.snapshot.profiles.find((item) => item.id === id)
+    if (!profile) {
+      throw new Error("Profil tidak dijumpai.")
+    }
+    if (profile.status !== "archived") {
+      throw new Error("Profil ini tidak diarkibkan.")
+    }
+    profile.status = "active"
+  }
+
   async archiveProfile(id: string) {
     await this.updateProfile(id, { status: "archived" })
   }
@@ -250,6 +261,17 @@ export class InMemoryCareRepository implements CareRepository {
     }
     Object.assign(circle, patch)
     return { ...circle }
+  }
+
+  async unarchiveCircle(id: string) {
+    const circle = this.snapshot.circles.find((item) => item.id === id)
+    if (!circle) {
+      throw new Error("Kumpulan tidak dijumpai.")
+    }
+    if (!circle.archived) {
+      throw new Error("Kumpulan ini tidak diarkibkan.")
+    }
+    circle.archived = false
   }
 
   async archiveCircle(id: string) {

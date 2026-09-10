@@ -18,9 +18,12 @@ import { ApiFieldGapNotice } from "@/components/care/api-field-gap-notice"
 import { ProfileAuditTab } from "@/components/care/profile-audit-tab"
 import { AsyncStateBanner } from "@/components/care/async-state"
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { useAuth } from "@/components/auth/auth-provider"
 import { useCareData } from "@/components/care/care-data-provider"
 import { PageHeader } from "@/components/care/page-header"
 import { PermissionGate } from "@/components/care/permission-gate"
+import { ProfileHealthFieldsCard } from "@/components/care/profile-health-fields-card"
+import { QuotaHint } from "@/components/pricing/quota-hint"
 import {
   ProfileStatusBadge,
   MemberStatusBadge,
@@ -118,7 +121,7 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
   const apiMode = !isMockDataEnabled()
   const {
     snapshot,
-    updateProfile,
+    unarchiveProfile,
     archiveProfile,
     inviteMember,
     revokeInvite,
@@ -129,6 +132,8 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
     setSelectedProfileId,
     isRefreshing,
   } = useCareData()
+  const { user } = useAuth()
+  const currentUserId = user?.id
   const profile = snapshot.profiles.find((item) => item.id === profileId)
   const circle = snapshot.circles.find((item) => item.id === profile?.circleId)
   const members = snapshot.members.filter(
@@ -227,7 +232,11 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
             >
               Peranan
             </TableActionButton>
-            {row.original.userId !== "user-me" ? (
+            {/* The signed-in account, not a literal. This was "user-me" -
+                the mock repository's id - so in API mode it never matched and
+                the control to remove yourself from a profile was offered on
+                your own row. */}
+            {row.original.userId !== currentUserId ? (
               <TableActionButton
                 variant="destructive"
                 onPress={() =>
@@ -245,7 +254,7 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
         ),
       }),
     ])
-  }, [removeMember])
+  }, [removeMember, currentUserId])
 
   const inviteColumns = useMemo(() => {
     const helper = createDataTableColumnHelper<CareInvite>()
@@ -434,7 +443,7 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
               <Button
                 variant="outline"
                 onPress={() => {
-                  void updateProfile(profile.id, { status: "active" })
+                  void unarchiveProfile(profile.id)
                 }}
               >
                 Aktifkan
@@ -456,6 +465,10 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
         </div>
 
         <TabsContent id="overview" className="flex flex-col gap-4">
+          <ProfileHealthFieldsCard
+            profile={profile}
+            canEdit={Boolean(profile.permissions.can_update_profile)}
+          />
           <Card>
             <CardHeader>
               <CardTitle>Maklumat profil</CardTitle>
@@ -576,7 +589,12 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
                     boleh diuji.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  {/* The seat cap is per care profile, so this reads this
+                      profile's count - not the account total. Shown before
+                      the address is typed rather than after the server
+                      refuses it. */}
+                  <QuotaHint kind="members" profileId={profile.id} />
                   <FieldGroup>
                     <Field>
                       <FieldLabel>E-mel</FieldLabel>

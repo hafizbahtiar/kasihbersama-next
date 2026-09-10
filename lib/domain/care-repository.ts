@@ -48,6 +48,12 @@ export interface CareProfileRepository {
   }): Promise<CareProfile>
   updateProfile(id: string, patch: Partial<CareProfile>): Promise<CareProfile>
   archiveProfile(id: string): Promise<void>
+  /**
+   * Restores an archived profile. Its own call rather than a status patch:
+   * the PATCH body carries no status field, and the update query refuses
+   * archived rows outright, so there is no way back through it.
+   */
+  unarchiveProfile(id: string): Promise<void>
 
   /**
    * The signed-in user's own health record, or null when they have not set
@@ -67,6 +73,8 @@ export interface CareCircleRepository {
   ): Promise<CareCircle>
   updateCircle(id: string, patch: Partial<CareCircle>): Promise<CareCircle>
   archiveCircle(id: string): Promise<void>
+  /** Restores an archived circle; PATCH is scoped to active rows. */
+  unarchiveCircle(id: string): Promise<void>
   linkProfileToCircle(profileId: string, circleId: string): Promise<void>
   /**
    * Circle membership. All three return the circle's full member list, which

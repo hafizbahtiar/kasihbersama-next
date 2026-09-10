@@ -27,6 +27,7 @@ import {
   type ProfileStatus,
   type TaskStatus,
   type VitalReading,
+  HealthFieldKey,
 } from "@/lib/domain/care"
 import type { CareSnapshot } from "@/lib/domain/care-snapshot"
 import { emptyCareSnapshot } from "@/lib/domain/care-snapshot"
@@ -74,11 +75,13 @@ type CareDataContextValue = CareProfileContextValue & {
   }) => Promise<CareProfile>
   updateProfile: (id: string, patch: Partial<CareProfile>) => Promise<void>
   archiveProfile: (id: string) => Promise<void>
+  unarchiveProfile: (id: string) => Promise<void>
   createCircle: (
     input: Omit<CareCircle, "id" | "profileIds" | "archived">
   ) => Promise<CareCircle>
   updateCircle: (id: string, patch: Partial<CareCircle>) => Promise<void>
   archiveCircle: (id: string) => Promise<void>
+  unarchiveCircle: (id: string) => Promise<void>
   linkProfileToCircle: (profileId: string, circleId: string) => Promise<void>
   inviteMember: (
     profileId: string,
@@ -147,6 +150,34 @@ function defaultProfileId(profiles: CareProfile[]) {
     ""
   )
 }
+
+/**
+ * Every health field the API accepts on a profile patch.
+ *
+ * A Record over HealthFieldKey, not an array with `satisfies`. The array
+ * form was tried first and does not guard: `satisfies readonly
+ * HealthFieldKey[]` only checks each element *is* a valid key, never that
+ * every key is *present* - so dropping "gender" from it compiled cleanly and
+ * silently stopped forwarding the field. A Record fails to compile until
+ * every key has a value, which is the direction that matters here.
+ */
+const HEALTH_PATCH_KEY_SET: Record<HealthFieldKey, true> = {
+  legalName: true,
+  dateOfBirth: true,
+  gender: true,
+  bloodType: true,
+  allergySummary: true,
+  conditionSummary: true,
+  primaryClinic: true,
+  primaryDoctor: true,
+  emergencyNote: true,
+  heightCm: true,
+  gestationalAgeWeeks: true,
+}
+
+const HEALTH_PATCH_KEYS = Object.keys(
+  HEALTH_PATCH_KEY_SET
+) as HealthFieldKey[]
 
 export function CareDataProvider({
   initialSnapshot,
@@ -288,23 +319,39 @@ export function CareDataProvider({
         return profile
       },
       updateProfile(id, patch) {
-        const message =
-          patch.status === "active"
-            ? "Profil diaktifkan semula."
-            : "Profil disimpan."
+        // Reactivating is unarchiveProfile, not a status patch: the API's
+        // PATCH body has never carried a status field, so the branch that
+        // used to say "Profil diaktifkan semula." here was reporting a save
+        // that never left the client.
+        const message = "Profil disimpan."
+        // Forwarded key by key because relation, notes and circleId are
+        // mock-only shapes the API does not accept. The health fields used to
+        // be missing from this list, so a form could collect a gender or a
+        // blood type, report success, and send nothing - the same
+        // "save works, refresh clears the form" failure the mapper layer
+        // already guards against, one layer up.
+        //
+        // HEALTH_PATCH_KEYS is exhaustive over HealthFieldKey, so a field
+        // added to the domain type fails to compile until it is forwarded.
         const apiPatch: Partial<CareProfile> = {}
         if (patch.displayName !== undefined) {
           apiPatch.displayName = patch.displayName
         }
-        if (patch.status !== undefined) {
-          apiPatch.status = patch.status
-        }
-        if (patch.dateOfBirth !== undefined) {
-          apiPatch.dateOfBirth = patch.dateOfBirth
+        for (const key of HEALTH_PATCH_KEYS) {
+          const value = patch[key]
+          if (value !== undefined) {
+            Object.assign(apiPatch, { [key]: value })
+          }
         }
         return voidMutation(
           () => repository.updateProfile(id, apiPatch),
           message
+        )
+      },
+      unarchiveProfile(id) {
+        return voidMutation(
+          () => repository.unarchiveProfile(id),
+          "Profil diaktifkan semula."
         )
       },
       archiveProfile(id) {
@@ -317,11 +364,19 @@ export function CareDataProvider({
         return runMutation(() => repository.createCircle(input))
       },
       updateCircle(id, patch) {
+        // The archived:false branch that used to live here reported
+        // "Kumpulan diaktifkan semula." while sending nothing - the PATCH
+        // body carries no status and its query is scoped to active rows. That
+        // toast is what kept the bug invisible. Restoring is unarchiveCircle.
         return voidMutation(
           () => repository.updateCircle(id, patch),
-          patch.archived === false
-            ? "Kumpulan diaktifkan semula."
-            : "Kumpulan dikemas kini."
+          "Kumpulan dikemas kini."
+        )
+      },
+      unarchiveCircle(id) {
+        return voidMutation(
+          () => repository.unarchiveCircle(id),
+          "Kumpulan diaktifkan semula."
         )
       },
       archiveCircle(id) {

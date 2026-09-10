@@ -29,7 +29,7 @@ export function CircleDetailPage({ circleId }: { circleId: string }) {
     snapshot,
     linkProfileToCircle,
     archiveCircle,
-    updateCircle,
+    unarchiveCircle,
     isRefreshing,
   } = useCareData()
   const circle = snapshot.circles.find((item) => item.id === circleId)
@@ -102,7 +102,7 @@ export function CircleDetailPage({ circleId }: { circleId: string }) {
             <Button
               variant="outline"
               onPress={() => {
-                void updateCircle(circle.id, { archived: false })
+                void unarchiveCircle(circle.id)
               }}
             >
               Aktifkan
