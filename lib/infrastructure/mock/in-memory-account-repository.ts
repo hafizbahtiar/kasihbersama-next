@@ -148,7 +148,7 @@ export class InMemoryAccountRepository implements AccountRepository {
   async getUsage(): Promise<AccountUsage> {
     return {
       plan: "free",
-      limits: { maxProfiles: 3, maxMembers: 8, maxUploadMb: 25 },
+      limits: { maxProfiles: 3, maxMembers: 8, maxUploadMb: 25, maxStorageMb: 500 },
       profiles: { used: 0 },
       storage: { usedBytes: 0 },
       members: [],

@@ -105,8 +105,8 @@ export type DeleteAccountResult = {
 /**
  * Current counts against this account's live limits (`GET /me/usage`).
  *
- * Profile `used` excludes the own-health record. Storage is live R2 bytes,
- * not Postgres care data, and has no cap yet.
+ * Profile `used` excludes the own-health record. Storage is live R2 bytes
+ * against `limits.maxStorageMb`.
  */
 export type AccountUsage = {
   plan: PlanId
@@ -114,6 +114,7 @@ export type AccountUsage = {
     maxProfiles: number
     maxMembers: number
     maxUploadMb: number
+    maxStorageMb: number
   }
   profiles: { used: number }
   storage: { usedBytes: number }

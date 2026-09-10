@@ -40,11 +40,13 @@ function UsageMeter({
   used,
   cap,
   atCapMessage,
+  valueLabel,
 }: {
   label: string
   used: number
   cap: number
   atCapMessage?: string
+  valueLabel?: string
 }) {
   if (cap <= 0) {
     return null
@@ -57,7 +59,9 @@ function UsageMeter({
       <Progress value={percent} className="gap-1.5">
         <div className="flex items-center justify-between gap-3">
           <ProgressLabel>{label}</ProgressLabel>
-          <ProgressValue>{() => `${used} daripada ${cap}`}</ProgressValue>
+          <ProgressValue>
+            {() => valueLabel ?? `${used} daripada ${cap}`}
+          </ProgressValue>
         </div>
       </Progress>
       {atCap && atCapMessage ? (
@@ -132,13 +136,17 @@ export function UsagePage() {
                 pangkalan data tidak dikira di sini.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="font-heading text-2xl tracking-tight">
-                {formatBytes(usage.storage.usedBytes)}
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Had muat naik setiap fail: {usage.limits.maxUploadMb} MB.
-                Had jumlah storan belum diperkenalkan.
+            <CardContent className="space-y-4">
+              <UsageMeter
+                label="Storan awan"
+                used={usage.storage.usedBytes}
+                cap={usage.limits.maxStorageMb * 1024 * 1024}
+                valueLabel={`${formatBytes(usage.storage.usedBytes)} daripada ${usage.limits.maxStorageMb} MB`}
+                atCapMessage="Muat naik baharu akan ditolak sehingga storan kosong atau pelan dinaik taraf."
+              />
+              <p className="text-sm text-muted-foreground">
+                Had setiap fail: {usage.limits.maxUploadMb} MB. Had jumlah storan:{" "}
+                {usage.limits.maxStorageMb} MB.
               </p>
             </CardContent>
           </Card>

@@ -92,6 +92,7 @@ type ApiUsageResponse = {
     max_profiles: number
     max_members: number
     max_upload_mb: number
+    max_storage_mb: number
   }
   profiles: { used: number }
   storage: { used_bytes: number }
@@ -109,6 +110,7 @@ function mapUsage(api: ApiUsageResponse): AccountUsage {
       maxProfiles: api.limits.max_profiles,
       maxMembers: api.limits.max_members,
       maxUploadMb: api.limits.max_upload_mb,
+      maxStorageMb: api.limits.max_storage_mb,
     },
     profiles: { used: api.profiles.used },
     storage: { usedBytes: api.storage.used_bytes },
