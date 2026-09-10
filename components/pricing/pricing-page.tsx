@@ -29,7 +29,23 @@ import {
 import { cn } from "@/lib/utils"
 
 export function PricingPage() {
-  const { limits } = usePlatform()
+  const { limits, accountLimits, plan } = usePlatform()
+
+  /**
+   * The free column reads *this account's* caps when the account is actually
+   * on the free plan, and the catalogue otherwise.
+   *
+   * The distinction matters both ways. A free account whose caps were raised
+   * - a trial, or grandfathering - should see the number it really gets, which
+   * is the promise this page makes. But an account on a paid plan has
+   * accountLimits set to that plan's caps, and showing those under "Percuma"
+   * would advertise the free tier as something it is not.
+   */
+  const freeColumnLimits =
+    plan === "free" && accountLimits ? accountLimits : limits
+
+  /** A visitor with no session is on nothing, which reads as free here. */
+  const currentPlan = plan ?? "free"
   const { snapshot } = useCareData()
   const [period, setPeriod] = useState<BillingPeriod>("yearly")
   // Seeded from what the account actually has, so the page opens on the
@@ -90,29 +106,31 @@ export function PricingPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        {PRICING_PLANS.map((plan) => {
-          const price = priceFor(plan, period)
-          const planLimits = plan.limits(limits)
+        {PRICING_PLANS.map((planItem) => {
+          const price = priceFor(planItem, period)
+          const planLimits = planItem.limits(
+            planItem.id === "free" ? freeColumnLimits : limits
+          )
 
           return (
             <Card
-              key={plan.id}
+              key={planItem.id}
               className={cn(
                 "flex h-full flex-col transition-shadow",
                 // The ring follows the chooser, not a hardcoded "most
                 // popular": the plan being recommended is the one that fits
                 // the number this carer just set.
-                plan.id === suggested
+                planItem.id === suggested
                   ? "ring-2 ring-primary"
                   : "opacity-80 hover:opacity-100"
               )}
             >
               <CardHeader>
                 <div className="flex items-center justify-between gap-2">
-                  <CardTitle>{plan.name}</CardTitle>
-                  {plan.highlighted ? <Badge>Paling sesuai</Badge> : null}
+                  <CardTitle>{planItem.name}</CardTitle>
+                  {planItem.highlighted ? <Badge>Paling sesuai</Badge> : null}
                 </div>
-                <CardDescription>{plan.audience}</CardDescription>
+                <CardDescription>{planItem.audience}</CardDescription>
 
                 <p className="pt-2">
                   {price === 0 ? (
@@ -149,7 +167,7 @@ export function PricingPage() {
                   <li className="text-muted-foreground">{planLimits.upload}</li>
                 </ul>
                 <ul className="space-y-2 border-t pt-4 text-sm">
-                  {plan.features.map((feature) => (
+                  {planItem.features.map((feature) => (
                     <li key={feature} className="flex gap-2">
                       <IconCheck className="mt-0.5 size-4 shrink-0 text-primary" />
                       <span className="text-muted-foreground">{feature}</span>
@@ -166,10 +184,16 @@ export function PricingPage() {
                 */}
                 <Button
                   className="w-full"
-                  variant={plan.id === suggested ? "default" : "outline"}
-                  isDisabled={plan.id !== "free"}
+                  variant={planItem.id === suggested ? "default" : "outline"}
+                  isDisabled={planItem.id !== currentPlan}
                 >
-                  {plan.id === "free" ? "Pelan anda sekarang" : "Belum dibuka"}
+                  {/* Against the account's actual plan, not a hardcoded
+                      "free". An account on a paid plan was being told the
+                      free card was its current one. Unauthenticated falls
+                      back to free, which is what a visitor is on. */}
+                  {planItem.id === currentPlan
+                    ? "Pelan anda sekarang"
+                    : "Belum dibuka"}
                 </Button>
               </CardFooter>
             </Card>

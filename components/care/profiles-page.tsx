@@ -9,6 +9,7 @@ import { ProfileStatusBadge } from "@/components/care/status-badges"
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Button } from "@/components/ui/button"
+import { QuotaHint } from "@/components/pricing/quota-hint"
 import {
   PROFILE_STATUS_LABELS,
   ROLE_LABELS,
@@ -89,7 +90,10 @@ export function ProfilesPage() {
   }, [router, setSelectedProfileId])
 
   return (
-    <DataTable
+    <div className="flex flex-col gap-4">
+      {/* Before the button, not after the refusal. */}
+      <QuotaHint kind="profiles" />
+      <DataTable
       columns={columns}
       data={rows}
       getRowId={(row) => row.id}
@@ -130,7 +134,8 @@ export function ProfilesPage() {
           <IconPlus />
           Tambah profil
         </Button>
-      }
-    />
+        }
+      />
+    </div>
   )
 }
