@@ -26,6 +26,10 @@ export const CARE_PERMISSIONS = [
   "can_view_emergency_card",
   "can_manage_appointments",
   "can_manage_care_tasks",
+  // Gates the email addresses in the member list, separately from seeing who
+  // is on the profile at all. caregiver_limited - a hired carer - is the role
+  // it exists to exclude; family roles keep it.
+  "can_view_member_contacts",
 ] as const
 
 export type CarePermission = (typeof CARE_PERMISSIONS)[number]
@@ -307,6 +311,7 @@ export const PERMISSION_LABELS: Record<CarePermission, string> = {
   can_update_profile: "Sunting profil",
   can_view_emergency_card: "Lihat kad kecemasan",
   can_manage_appointments: "Urus temujanji",
+  can_view_member_contacts: "Lihat e-mel ahli",
   can_manage_care_tasks: "Urus tugasan",
 }
 
