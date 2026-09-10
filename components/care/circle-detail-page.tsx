@@ -7,6 +7,7 @@ import { IconEye, IconInbox } from "@tabler/icons-react"
 import { BackButton } from "@/components/back-button"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { PageHeader } from "@/components/care/page-header"
+import { CircleMembersSection } from "@/components/care/circle-members-section"
 import { ProfileStatusBadge } from "@/components/care/status-badges"
 import { useCareData } from "@/components/care/care-data-provider"
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
@@ -172,6 +173,11 @@ export function CircleDetailPage({ circleId }: { circleId: string }) {
         emptyIcon={<IconInbox />}
         emptyTitle="Belum ada profil"
         emptyDescription="Pilih profil aktif untuk dikaitkan dengan kumpulan ini."
+      />
+
+      <CircleMembersSection
+        circleId={circle.id}
+        archived={Boolean(circle.archived)}
       />
 
       <ConfirmDialog
