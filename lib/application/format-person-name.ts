@@ -1,4 +1,4 @@
-/** Title-case each word while typing a person's legal name. */
+/** Uppercase a MyKad legal name as typed — IC format is all caps. */
 export function formatPersonNameInput(value: string) {
-  return value.replace(/(^|\s)(\S)/g, (_, space, char) => space + char.toUpperCase())
+  return value.toUpperCase()
 }
