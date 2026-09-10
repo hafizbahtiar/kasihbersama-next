@@ -16,6 +16,7 @@ import {
   IconSettings,
   IconStethoscope,
   IconUsers,
+  IconVaccine,
 } from "@tabler/icons-react"
 
 import type { CarePermission } from "@/lib/domain/care"
@@ -36,6 +37,12 @@ export const primaryNav: AppNavItem[] = [
   { href: "/care-profiles", title: "Profil jagaan", icon: IconUsers },
   { href: "/circles", title: "Kumpulan", icon: IconCircles },
   { href: "/medications", title: "Ubat", icon: IconPill },
+  {
+    href: "/immunisations",
+    title: "Imunisasi",
+    icon: IconVaccine,
+    permission: "can_view_timeline",
+  },
   { href: "/appointments", title: "Temujanji", icon: IconCalendarEvent },
   { href: "/care-logs", title: "Log jagaan", icon: IconClipboardHeart },
   {

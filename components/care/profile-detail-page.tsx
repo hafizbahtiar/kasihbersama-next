@@ -487,6 +487,13 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
               >
                 Urus kumpulan
               </LinkButton>
+              <LinkButton
+                href="/immunisations"
+                variant="outline"
+                onPress={() => setSelectedProfileId(profile.id)}
+              >
+                Buku imunisasi
+              </LinkButton>
               <Button
                 onPress={() => {
                   setSelectedProfileId(profile.id)

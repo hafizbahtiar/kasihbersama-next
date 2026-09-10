@@ -83,13 +83,25 @@ export const careSeed: CareSnapshot = {
       permissions: adminPermissions(),
       notes: "Jadual ubat jantung perlu diikuti.",
     },
+    {
+      id: "cp-7",
+      displayName: "Aisyah",
+      relation: "Anak",
+      dateOfBirth: "2024-01-15",
+      gender: "female",
+      status: "active",
+      circleId: "circle-1",
+      role: "guardian_admin",
+      permissions: adminPermissions(),
+      notes: "Buku imunisasi NIP — demo kanak-kanak.",
+    },
   ],
   circles: [
     {
       id: "circle-1",
       name: "Keluarga Ampang",
       description: "Penjagaan harian di rumah Ampang.",
-      profileIds: ["cp-1", "cp-2", "cp-5"],
+      profileIds: ["cp-1", "cp-2", "cp-5", "cp-7"],
     },
     {
       id: "circle-2",
