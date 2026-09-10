@@ -54,11 +54,27 @@ type FormState = {
   dateOfBirth: string
   gender: string
   bloodType: string
+  /** Held as a string because that is what the input holds; parsed on submit. */
+  heightCm: string
   allergySummary: string
   conditionSummary: string
   primaryClinic: string
   primaryDoctor: string
   emergencyNote: string
+}
+
+/**
+ * Parses the height input, returning undefined for anything that is not a
+ * usable number. Range is left to the server (CHECK 20-280 cm in migration
+ * 00022) so there is one authority for it rather than two that can drift.
+ */
+function parseHeightCm(value: string): number | undefined {
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return undefined
+  }
+  const parsed = Number(trimmed)
+  return Number.isFinite(parsed) ? parsed : undefined
 }
 
 function formFromProfile(profile: CareProfile): FormState {
@@ -67,6 +83,7 @@ function formFromProfile(profile: CareProfile): FormState {
     dateOfBirth: profile.dateOfBirth ?? "",
     gender: profile.gender ?? "",
     bloodType: profile.bloodType ?? "",
+    heightCm: profile.heightCm != null ? String(profile.heightCm) : "",
     allergySummary: profile.allergySummary ?? "",
     conditionSummary: profile.conditionSummary ?? "",
     primaryClinic: profile.primaryClinic ?? "",
@@ -80,6 +97,7 @@ const empty: FormState = {
   dateOfBirth: "",
   gender: "",
   bloodType: "",
+  heightCm: "",
   allergySummary: "",
   conditionSummary: "",
   primaryClinic: "",
@@ -126,6 +144,11 @@ export function OwnHealthPage() {
       const payload = {
         ...form,
         legalName: formatPersonNameInput(form.legalName).trim(),
+        // The only numeric health field. Empty means "not filled in", which
+        // must reach the server as absent rather than as 0 - every health
+        // column is COALESCE-patched, so a 0 would overwrite a stored height
+        // and would fail the 20-280 CHECK on the way.
+        heightCm: parseHeightCm(form.heightCm),
       }
       const saved = await save({ displayName: user?.displayName, ...payload })
       setForm(formFromProfile(saved))
@@ -278,6 +301,25 @@ export function OwnHealthPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="height-cm">Tinggi (cm)</FieldLabel>
+                    {/* Centimetres, stated in the label rather than assumed.
+                        The backend enforces 20-280, which is a plausibility
+                        bound against a value typed in metres or millimetres -
+                        1.6 or 1600 would otherwise store as a confident wrong
+                        number. Weight is not here on purpose: it is a vital
+                        reading with a measured_at, recorded under Bacaan
+                        vital, not a standing attribute of the person. */}
+                    <Input
+                      id="height-cm"
+                      inputMode="decimal"
+                      size="xl"
+                      className="bg-background"
+                      placeholder="Contoh: 158.5"
+                      value={form.heightCm}
+                      onChange={(event) => set("heightCm", event.target.value)}
+                    />
                   </Field>
                 </div>
               </FieldGroup>
