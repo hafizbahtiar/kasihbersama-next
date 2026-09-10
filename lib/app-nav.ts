@@ -16,6 +16,8 @@ import {
   IconSettings,
   IconStethoscope,
   IconUsers,
+  IconChartLine,
+  IconProgressCheck,
   IconVaccine,
 } from "@tabler/icons-react"
 
@@ -37,6 +39,18 @@ export const primaryNav: AppNavItem[] = [
   { href: "/care-profiles", title: "Profil jagaan", icon: IconUsers },
   { href: "/circles", title: "Kumpulan", icon: IconCircles },
   { href: "/medications", title: "Ubat", icon: IconPill },
+  {
+    href: "/growth",
+    title: "Carta tumbesaran",
+    icon: IconChartLine,
+    permission: "can_view_timeline",
+  },
+  {
+    href: "/milestones",
+    title: "Perkembangan",
+    icon: IconProgressCheck,
+    permission: "can_view_timeline",
+  },
   {
     href: "/immunisations",
     title: "Imunisasi",
