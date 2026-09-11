@@ -44,6 +44,10 @@ export const primaryNav: AppNavItem[] = [
     title: "Carta tumbesaran",
     icon: IconChartLine,
     permission: "can_view_timeline",
+    // Hidden while the feature is off. The route answers 404 in that state,
+    // which the client can only render as "Rekod tidak dijumpai" - a message
+    // that describes neither the cause nor anything the user can do.
+    feature: "growth_chart",
   },
   {
     href: "/milestones",

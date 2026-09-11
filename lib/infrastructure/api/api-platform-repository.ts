@@ -31,6 +31,7 @@ function mapFeatures(raw: Record<string, boolean>): PlatformFeatures {
     profile_claim: Boolean(raw.profile_claim),
     document_upload: Boolean(raw.document_upload),
     caregiver_mode: Boolean(raw.caregiver_mode),
+    growth_chart: Boolean(raw.growth_chart),
   }
 }
 

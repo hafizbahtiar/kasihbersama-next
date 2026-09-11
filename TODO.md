@@ -22,6 +22,25 @@ compile.
   decision. The WHO growth tables are the standing example of why guessing it is
   expensive.
 
+## Found in use, 2026-09-11
+
+Both came from actually opening the app, and neither would have surfaced from
+reading code - which is the argument for the section below.
+
+- [x] **Growth chart said "Rekod tidak dijumpai."** The route is gated behind
+  `FEATURE_GROWTH_CHART`, which answers 404 when off - indistinguishable from a missing
+  record at the transport layer, so the client rendered the generic not-found message.
+  Bootstrap now advertises `growth_chart`, the nav entry hides while it is off, and the
+  page says plainly that the feature is waiting on WHO data if reached by URL.
+- [x] **No date-of-birth field existed anywhere in API mode.** It sat inside the create
+  form's `{!apiMode ? ...}` block, and the health-fields card did not carry it - while the
+  form was still *sending* `date_of_birth` on save, so the value posted was always empty.
+  Both the immunisation book and the growth chart require it, so their preconditions could
+  never be met through any screen. The field is now outside that block and on the health
+  card.
+  The notice above it also claimed "tarikh lahir disimpan", which was not true in the mode
+  it was shown in.
+
 ## Needs a browser, not a code read
 
 These were all concluded by reading source. No browser was available in the sessions that

@@ -127,8 +127,7 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
           <ApiFieldGapNotice>
             Hubungan, nota, dan pilihan kumpulan kekal dalam mod mock. Nama dan
             tarikh lahir disimpan. Jantina, jenis darah dan maklumat kesihatan
-            lain disunting pada halaman profil selepas ia dicipta — jantina
-            diperlukan untuk carta tumbesaran.
+            lain disunting pada halaman profil selepas ia dicipta.
           </ApiFieldGapNotice>
         ) : null}
         <Field data-invalid={Boolean(errors.displayName)}>
@@ -141,6 +140,22 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
           />
           {errors.displayName ? (
             <FieldError>{errors.displayName}</FieldError>
+          ) : null}
+        </Field>
+        {/* Outside the mock-only block below: the API has always accepted
+            date_of_birth, and this form was already sending it - it just never
+            gave anyone a field to fill in, so the value sent was always empty.
+            Both the immunisation book and the growth chart require it. */}
+        <Field data-invalid={Boolean(errors.dateOfBirth)}>
+          <FieldLabel>Tarikh lahir</FieldLabel>
+          <DatePicker
+            size="xl"
+            value={dateOfBirth}
+            onChange={setDateOfBirth}
+            className="bg-background"
+          />
+          {errors.dateOfBirth ? (
+            <FieldError>{errors.dateOfBirth}</FieldError>
           ) : null}
         </Field>
         {!apiMode ? (
@@ -166,18 +181,6 @@ export function ProfileFormPage({ profileId }: { profileId?: string }) {
               </Select>
               {errors.relation ? (
                 <FieldError>{errors.relation}</FieldError>
-              ) : null}
-            </Field>
-            <Field data-invalid={Boolean(errors.dateOfBirth)}>
-              <FieldLabel>Tarikh lahir</FieldLabel>
-              <DatePicker
-                size="xl"
-                value={dateOfBirth}
-                onChange={setDateOfBirth}
-                className="bg-background"
-              />
-              {errors.dateOfBirth ? (
-                <FieldError>{errors.dateOfBirth}</FieldError>
               ) : null}
             </Field>
             <Field>

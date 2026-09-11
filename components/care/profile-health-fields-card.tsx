@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { DatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -51,6 +52,7 @@ export function ProfileHealthFieldsCard({
   canEdit: boolean
 }) {
   const { updateProfile } = useCareData()
+  const [dateOfBirth, setDateOfBirth] = useState(profile.dateOfBirth ?? "")
   const [gender, setGender] = useState(profile.gender ?? "")
   const [bloodType, setBloodType] = useState(profile.bloodType ?? "")
   const [heightCm, setHeightCm] = useState(
@@ -88,6 +90,7 @@ export function ProfileHealthFieldsCard({
     setIsSaving(true)
     try {
       await updateProfile(profile.id, {
+        dateOfBirth: dateOfBirth || undefined,
         gender: gender || undefined,
         bloodType: bloodType || undefined,
         heightCm: parseNumber(heightCm),
@@ -111,7 +114,8 @@ export function ProfileHealthFieldsCard({
       <CardHeader>
         <CardTitle>Maklumat kesihatan</CardTitle>
         <CardDescription>
-          Jantina dan tarikh lahir diperlukan untuk carta tumbesaran.
+          Tarikh lahir dan jantina diperlukan untuk buku imunisasi dan carta
+          tumbesaran.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -131,6 +135,19 @@ export function ProfileHealthFieldsCard({
             />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
+            <Field>
+              <FieldLabel>Tarikh lahir</FieldLabel>
+              {/* Lived only on the create/edit form, and only in mock mode -
+                  so in real use there was no way to set it at all, and both
+                  the immunisation book and the growth chart require it. They
+                  reported their precondition unmet forever with no screen to
+                  fix it on. */}
+              <DatePicker
+                value={dateOfBirth}
+                onChange={setDateOfBirth}
+                className="bg-background"
+              />
+            </Field>
             <Field>
               <FieldLabel>Jantina</FieldLabel>
               <Select

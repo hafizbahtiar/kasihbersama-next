@@ -7,6 +7,7 @@ import { GrowthChartWidget } from "@/components/care/growth-chart-widget"
 import { PageHeader } from "@/components/care/page-header"
 import { SelectProfileEmpty } from "@/components/care/select-profile-empty"
 import { useCareProfile } from "@/components/care/care-data-provider"
+import { usePlatform } from "@/components/platform/platform-provider"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { LinkButton } from "@/components/ui/button"
@@ -37,6 +38,7 @@ import {
 
 export function GrowthChartPage() {
   const { selectedProfile } = useCareProfile()
+  const { isFeatureEnabled } = usePlatform()
   const [indicator, setIndicator] =
     useState<GrowthIndicator>("weight_for_age")
   const { chart, notReady, isLoading, error, reload } = useGrowthChart(
@@ -46,6 +48,28 @@ export function GrowthChartPage() {
 
   if (!selectedProfile) {
     return <SelectProfileEmpty />
+  }
+
+  // Reachable by typing the URL even while the nav entry is hidden. The
+  // endpoint answers 404 when the feature is off, which is indistinguishable
+  // from a missing record at the transport layer - so say plainly what is
+  // happening rather than showing "Rekod tidak dijumpai".
+  if (!isFeatureEnabled("growth_chart")) {
+    return (
+      <div className="flex flex-col gap-4">
+        <PageHeader
+          title="Carta tumbesaran"
+          description="Belum tersedia."
+        />
+        <Alert>
+          <AlertTitle>Carta tumbesaran belum dibuka</AlertTitle>
+          <AlertDescription>
+            Ciri ini menunggu data rujukan WHO. Buku imunisasi dan senarai
+            semak perkembangan berfungsi seperti biasa.
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
   }
 
   const outOfRange = chart?.points.filter((point) => point.z === null) ?? []

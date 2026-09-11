@@ -1,5 +1,9 @@
 export type PlatformFeature =
-  "doctor_summary" | "profile_claim" | "document_upload" | "caregiver_mode"
+  | "doctor_summary"
+  | "profile_claim"
+  | "document_upload"
+  | "caregiver_mode"
+  | "growth_chart"
 
 export type PlatformFeatures = Record<PlatformFeature, boolean>
 
@@ -26,6 +30,7 @@ export type BootstrapConfig = {
 }
 
 export const DEFAULT_PLATFORM_FEATURES: PlatformFeatures = {
+  growth_chart: false,
   doctor_summary: false,
   profile_claim: false,
   document_upload: false,

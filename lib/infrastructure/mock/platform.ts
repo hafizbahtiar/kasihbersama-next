@@ -11,6 +11,9 @@ export const mockBootstrap: BootstrapConfig = {
     profile_claim: true,
     document_upload: true,
     caregiver_mode: true,
+    // On in mock mode: the fixture curves make the chart worth looking at,
+    // which is the whole reason they exist.
+    growth_chart: true,
   },
   limits: {
     maxUploadMb: 25,
