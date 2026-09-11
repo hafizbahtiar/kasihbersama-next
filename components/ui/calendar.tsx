@@ -32,7 +32,11 @@ import {
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 
 const cellVariants = cva(
-  "group/day relative mt-2 aspect-square h-full w-full cursor-default rounded-(--cell-radius) p-0 text-center select-none [&:is(:last-child>[data-selected=true])>div]:rounded-r-(--cell-radius)",
+  // No margin here: the cell renders as a table-cell, where CSS ignores
+  // margins outright, so the `mt-2` this used to carry produced no spacing at
+  // all while reading as though it did. Row spacing comes from the grid's
+  // border-spacing below, which table layout does honour.
+  "group/day relative aspect-square h-full w-full cursor-default rounded-(--cell-radius) p-0 text-center select-none [&:is(:last-child>[data-selected=true])>div]:rounded-r-(--cell-radius)",
   {
     variants: {
       showWeekNumber: {
@@ -177,7 +181,7 @@ function CalendarInner({
             )}
           </div>
           <CalendarGrid
-            className="w-full border-collapse"
+            className="w-full border-separate border-spacing-y-1"
             offset={{ months: i }}
           >
             <AriaCalendarGridHeader>
