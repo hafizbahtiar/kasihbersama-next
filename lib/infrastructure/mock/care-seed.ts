@@ -93,7 +93,7 @@ export const careSeed: CareSnapshot = {
       circleId: "circle-1",
       role: "guardian_admin",
       permissions: adminPermissions(),
-      notes: "Buku imunisasi NIP — demo kanak-kanak.",
+      notes: "Buku imunisasi NIP - demo kanak-kanak.",
     },
   ],
   circles: [

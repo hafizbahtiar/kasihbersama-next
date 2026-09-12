@@ -134,7 +134,7 @@ function RecordImmunisationDialogForm({
           {mode === "edit" ? "Sunting rekod imunisasi" : "Rekod dos imunisasi"}
         </DialogTitle>
         <DialogDescription>
-          {item.vaccine} — {item.label}
+          {item.vaccine} - {item.label}
         </DialogDescription>
       </DialogHeader>
       <FieldGroup>

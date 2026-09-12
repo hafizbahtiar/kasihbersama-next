@@ -53,11 +53,11 @@ export function ImmunisationsPage() {
     return helper.columns([
       helper.accessor("vaccine", { header: "Vaksin" }),
       helper.accessor("label", { header: "Dos" }),
-      helper.accessor((row) => row.dueDate ?? "—", {
+      helper.accessor((row) => row.dueDate ?? "-", {
         id: "dueDate",
         header: "Tarikh patut",
         cell: ({ row }) =>
-          row.original.dueDate ? formatDate(row.original.dueDate) : "—",
+          row.original.dueDate ? formatDate(row.original.dueDate) : "-",
       }),
       helper.accessor("status", {
         header: "Status",
@@ -66,18 +66,18 @@ export function ImmunisationsPage() {
         ),
       }),
       helper.accessor(
-        (row) => row.record?.givenAt ?? "—",
+        (row) => row.record?.givenAt ?? "-",
         {
           id: "givenAt",
           header: "Tarikh diberi",
           cell: ({ row }) =>
             row.original.record?.givenAt
               ? formatDate(row.original.record.givenAt)
-              : "—",
+              : "-",
         }
       ),
       helper.accessor(
-        (row) => row.record?.note ?? row.regionNote ?? "—",
+        (row) => row.record?.note ?? row.regionNote ?? "-",
         {
           id: "note",
           header: "Nota",
@@ -237,10 +237,10 @@ export function ImmunisationsPage() {
         title="Padam rekod imunisasi?"
         description={
           deleteTarget
-            ? `${deleteTarget.vaccine} — ${deleteTarget.label} pada ${
+            ? `${deleteTarget.vaccine} - ${deleteTarget.label} pada ${
                 deleteTarget.record?.givenAt
                   ? formatDate(deleteTarget.record.givenAt)
-                  : "—"
+                  : "-"
               }. Dos akan kembali ke status menunggu atau lewat.`
             : "Rekod ini akan dipadam."
         }

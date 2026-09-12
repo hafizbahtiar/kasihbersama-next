@@ -12,7 +12,7 @@ import type { AccountUsage } from "@/lib/domain/account"
 import { planDisplayName } from "@/lib/domain/platform"
 
 /**
- * Your usage against the limits the server enforces — from GET /me/usage,
+ * Your usage against the limits the server enforces - from GET /me/usage,
  * not a count of whatever profile list the client happens to hold.
  */
 export function UsageAgainstYourLimit({

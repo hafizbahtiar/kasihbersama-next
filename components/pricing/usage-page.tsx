@@ -82,7 +82,7 @@ export function UsagePage() {
       <BackButton href="/pricing" />
       <PageHeader
         title="Penggunaan anda"
-        description="Nombor dari pelayan — sama seperti yang menolak profil atau jemputan baharu apabila had dicapai."
+        description="Nombor dari pelayan - sama seperti yang menolak profil atau jemputan baharu apabila had dicapai."
       />
 
       {isLoading ? (
@@ -110,7 +110,7 @@ export function UsagePage() {
               <CardHeader>
                 <CardTitle>Ahli setiap profil</CardTitle>
                 <CardDescription>
-                  Ahli aktif dan jemputan belum dijawab — sama seperti semasa
+                  Ahli aktif dan jemputan belum dijawab - sama seperti semasa
                   menolak jemputan baharu.
                 </CardDescription>
               </CardHeader>

@@ -1,7 +1,7 @@
 /**
  * Malaysian National Immunisation Programme (NIP) reference doses.
  *
- * Mirrors `internal/app/growth/immunisation_schedule.go` — static, versioned
+ * Mirrors `internal/app/growth/immunisation_schedule.go` - static, versioned
  * in git. Bump SCHEDULE_VERSION when KKM updates the schedule.
  */
 export const SCHEDULE_VERSION = "nip-2020"

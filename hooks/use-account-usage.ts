@@ -6,7 +6,7 @@ import { getAccountRepository } from "@/lib/composition/account-repository"
 import type { AccountUsage } from "@/lib/domain/account"
 
 /**
- * Live usage from GET /me/usage — the counts the enforcers use, not a
+ * Live usage from GET /me/usage - the counts the enforcers use, not a
  * client-side guess from whatever list happens to be loaded.
  */
 export function useAccountUsage() {

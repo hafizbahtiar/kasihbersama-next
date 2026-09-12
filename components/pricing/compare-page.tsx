@@ -77,7 +77,7 @@ export function ComparePage() {
       </div>
 
       {/*
-        Plain HTML table — not react-aria's Table collection. RAC requires
+        Plain HTML table - not react-aria's Table collection. RAC requires
         globally unique column ids; three compare sections sharing free/family/
         care_home columns crashed the page. Native table supports colSpan for
         section headers, which RAC does not.

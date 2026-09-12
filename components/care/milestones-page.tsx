@@ -87,7 +87,7 @@ export function MilestonesPage() {
         <AlertTitle>Julat normal adalah luas</AlertTitle>
         <AlertDescription>
           Setiap kanak-kanak berkembang mengikut rentaknya sendiri. Item yang
-          belum ditanda bukan tanda masalah — julat umur di sini hanya
+          belum ditanda bukan tanda masalah - julat umur di sini hanya
           menunjukkan bila ia biasanya berlaku. Bincang dengan klinik jika anda
           ada kemusykilan.
         </AlertDescription>
