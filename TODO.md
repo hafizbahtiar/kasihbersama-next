@@ -31,24 +31,25 @@ genuinely fail to compile - those are sound.
 
 ### Silent write failures - a success toast over a write that did not happen
 
-- [ ] **A cleared health field is discarded and still reports success.**
-  `profile-health-fields-card.tsx:89-110`: empty becomes `undefined`, the provider
-  whitelist skips `undefined`, and `healthFieldsBody` omits empty strings. The
-  COALESCE reasoning behind that is sound; the toast is not. A caregiver who
-  deletes a wrong allergy sees "Profil disimpan.", the box looks empty, and the
-  allergy is still stored and still on the emergency card. **Clinically the worst
-  item in this file.** Same for Tinggi, Klinik and Nota kecemasan.
+- [ ] **A cleared *number* still silently does nothing.** The free-text fields are
+  fixed - `""` now travels card -> provider -> body -> server, and the server
+  clears the column to NULL - but `parseNumber` returns `undefined` for an empty
+  Tinggi or Umur kandungan, and `undefined` is the absent signal. There is no
+  clear signal for a numeric column yet; `''` is not a value the server can read
+  as "remove this" for one. Needs an explicit null in the request body, which
+  means the DTO must distinguish absent from null.
 - [ ] **`updateSchedule` drops `status` from the PATCH body**
   (`api-care-repository.ts:818-836`). The only caller sends exactly `{status}`
   (`medication-detail-page.tsx:129`), so "Jeda" sends a PATCH with no fields, the
   badge still reads "Aktif", and doses keep generating for a medication the
   caregiver believes they paused. The mock repository applies it, so this works in
   mock mode and no-ops against the API.
-- [ ] **`parseNumber` returns `undefined` for unparseable input, which the
-  whitelist then drops** (`profile-health-fields-card.tsx:80-87`). Typing `96,5` -
-  a comma is the normal decimal separator for many Malaysian users - or `1.6 m`
-  gives "Profil disimpan." and no height change, with the typed text still in the
-  box.
+- [ ] **`parseNumber` returns `undefined` for unparseable input, which is the
+  absent signal** (`profile-health-fields-card.tsx:80-87`). Typing `96,5` - a comma
+  is the normal decimal separator for many Malaysian users - or `1.6 m` gives
+  "Profil disimpan." and no height change, with the typed text still in the box.
+  Unlike the item above this one is fixable without a contract change: reject the
+  input in the form instead of turning it into silence.
 - [ ] **`createProfile` advertises `relation`, `notes` and `status` and forwards
   only `displayName` and `dateOfBirth`** (`care-data-provider.tsx:311-318`), in
   both modes. The create form *requires* "Hubungan" and then discards it. Harmless

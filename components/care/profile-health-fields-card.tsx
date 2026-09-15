@@ -89,18 +89,30 @@ export function ProfileHealthFieldsCard({
   async function submit() {
     setIsSaving(true)
     try {
+      // The text fields send their trimmed value even when it is empty, and
+      // that is the point: this card submits every field it holds, so a field
+      // the user emptied is "cleared", not "absent". Mapping it to `undefined`
+      // made the two indistinguishable - the provider skips `undefined`, the
+      // request body dropped it, and the server left the column alone. A
+      // caregiver deleting a wrong allergy saw "Profil disimpan." while it
+      // stayed stored and stayed on the emergency card.
+      //
+      // The two numbers keep `undefined`, because there is no clear signal for
+      // them yet: '' is not a value the server can read as "remove this" for a
+      // numeric column. Clearing a height still silently does nothing, and
+      // that is in the TODO rather than papered over here.
       await updateProfile(profile.id, {
         dateOfBirth: dateOfBirth || undefined,
-        gender: gender || undefined,
-        bloodType: bloodType || undefined,
+        gender,
+        bloodType,
         heightCm: parseNumber(heightCm),
         gestationalAgeWeeks: parseNumber(gestationalAgeWeeks),
-        allergySummary: allergySummary.trim() || undefined,
-        conditionSummary: conditionSummary.trim() || undefined,
-        legalName: formatPersonNameInput(legalName).trim() || undefined,
-        primaryClinic: primaryClinic.trim() || undefined,
-        primaryDoctor: primaryDoctor.trim() || undefined,
-        emergencyNote: emergencyNote.trim() || undefined,
+        allergySummary: allergySummary.trim(),
+        conditionSummary: conditionSummary.trim(),
+        legalName: formatPersonNameInput(legalName).trim(),
+        primaryClinic: primaryClinic.trim(),
+        primaryDoctor: primaryDoctor.trim(),
+        emergencyNote: emergencyNote.trim(),
       })
     } catch {
       toast.error("Gagal menyimpan maklumat kesihatan.")

@@ -132,11 +132,14 @@ const HEALTH_COLUMN: { [K in HealthFieldKey]-?: string } = {
 }
 
 /**
- * The health columns as a request body, omitting anything the form left empty.
+ * The health columns as a request body, omitting only what the caller left
+ * absent.
  *
- * Empty means "not filled in", and every one of these columns is
- * COALESCE-patched server-side, so sending `""` would erase a stored value
- * rather than leave it alone.
+ * `undefined` means "not part of this patch" and is dropped. `""` means "the
+ * user emptied this field" and is sent, because the free-text columns read it
+ * as a clear: the server distinguishes NULL (leave alone) from '' (set to
+ * NULL). Collapsing the two here is what made a wrongly recorded allergy
+ * impossible to remove while the UI reported success.
  *
  * Numbers are not trimmed and not tested for truthiness: `0` is falsy, and
  * dropping it would turn an out-of-range entry into silence instead of the
@@ -154,7 +157,7 @@ function healthFieldsBody(input: ProfileHealthInfo) {
       continue
     }
     const trimmed = value?.trim()
-    if (trimmed) {
+    if (trimmed !== undefined) {
       body[HEALTH_COLUMN[key]] = trimmed
     }
   }
