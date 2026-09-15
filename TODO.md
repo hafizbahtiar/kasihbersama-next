@@ -22,24 +22,113 @@ compile.
   decision. The WHO growth tables are the standing example of why guessing it is
   expensive.
 
-## Found in use, 2026-09-11
+## From the 2026-09-12 module audit
 
-Both came from actually opening the app, and neither would have surfaced from
-reading code - which is the argument for the section below.
+A read-only agent traced every form to its request body. Ranked by harm. The
+three exhaustiveness guards (`HEALTH_PATCH_KEY_SET`, `HEALTH_COLUMN`,
+`EveryHealthField`) were re-checked with the delete-a-field test and all three
+genuinely fail to compile - those are sound.
 
-- [x] **Growth chart said "Rekod tidak dijumpai."** The route is gated behind
-  `FEATURE_GROWTH_CHART`, which answers 404 when off - indistinguishable from a missing
-  record at the transport layer, so the client rendered the generic not-found message.
-  Bootstrap now advertises `growth_chart`, the nav entry hides while it is off, and the
-  page says plainly that the feature is waiting on WHO data if reached by URL.
-- [x] **No date-of-birth field existed anywhere in API mode.** It sat inside the create
-  form's `{!apiMode ? ...}` block, and the health-fields card did not carry it - while the
-  form was still *sending* `date_of_birth` on save, so the value posted was always empty.
-  Both the immunisation book and the growth chart require it, so their preconditions could
-  never be met through any screen. The field is now outside that block and on the health
-  card.
-  The notice above it also claimed "tarikh lahir disimpan", which was not true in the mode
-  it was shown in.
+### Silent write failures - a success toast over a write that did not happen
+
+- [ ] **A cleared health field is discarded and still reports success.**
+  `profile-health-fields-card.tsx:89-110`: empty becomes `undefined`, the provider
+  whitelist skips `undefined`, and `healthFieldsBody` omits empty strings. The
+  COALESCE reasoning behind that is sound; the toast is not. A caregiver who
+  deletes a wrong allergy sees "Profil disimpan.", the box looks empty, and the
+  allergy is still stored and still on the emergency card. **Clinically the worst
+  item in this file.** Same for Tinggi, Klinik and Nota kecemasan.
+- [ ] **`updateSchedule` drops `status` from the PATCH body**
+  (`api-care-repository.ts:818-836`). The only caller sends exactly `{status}`
+  (`medication-detail-page.tsx:129`), so "Jeda" sends a PATCH with no fields, the
+  badge still reads "Aktif", and doses keep generating for a medication the
+  caregiver believes they paused. The mock repository applies it, so this works in
+  mock mode and no-ops against the API.
+- [ ] **`parseNumber` returns `undefined` for unparseable input, which the
+  whitelist then drops** (`profile-health-fields-card.tsx:80-87`). Typing `96,5` -
+  a comma is the normal decimal separator for many Malaysian users - or `1.6 m`
+  gives "Profil disimpan." and no height change, with the typed text still in the
+  box.
+- [ ] **`createProfile` advertises `relation`, `notes` and `status` and forwards
+  only `displayName` and `dateOfBirth`** (`care-data-provider.tsx:311-318`), in
+  both modes. The create form *requires* "Hubungan" and then discards it. Harmless
+  against the API today, but it is the same hand-written-literal whitelist that
+  caused the health-field bug, one call above the guarded `updateProfile`.
+
+### Data corruption
+
+- [ ] **`uploadDocument` identifies the new document by title, then PATCHes issue
+  date, expiry and notes onto whatever it finds** (`api-care-repository.ts:1138`):
+  `find(item => item.title === input.title) ?? listed.data[0]`. Upload a second
+  "Keputusan darah" and the new file's metadata is written onto the **older**
+  document of that name, while the file just uploaded keeps none of it. The
+  `?? data[0]` fallback does the same to an unrelated document when the new one is
+  not on page 1. Needs the create response to carry the id.
+
+### State the user cannot recover from
+
+- [ ] **Any accept failure is reported as an invalid token, after the token has
+  been consumed** (`care-data-provider.tsx:406-441`, `accept-token-page.tsx:122`).
+  `acceptInvite`/`acceptClaim` catch everything and return `null`; the page maps
+  `null` to "Token tidak sah atau sudah digunakan", and `consumeStoredToken` has
+  already run. A family member on flaky data sees a valid invite read as burned,
+  and reloading no longer prefills it.
+- [ ] **Archiving a circle flips the page to "Kumpulan tidak dijumpai."**
+  `mapCircle` never sets `archived` (`mappers/care.ts:293`) and the list API is
+  scoped to active rows, so a deliberate action reads as data loss. The "Aktifkan"
+  branch is unreachable, so `unarchiveCircle` cannot be invoked from the UI at all.
+- [ ] **The immunisation "complete your profile" button leads to a form that
+  cannot complete it** (`immunisations-page.tsx:193`). It links to `/edit`, which
+  in apiMode renders only Nama and Tarikh lahir; gender lives on the detail page.
+  When the missing requirement is `gender` there is no path to the fix. The growth
+  chart's equivalent link points at the right page.
+
+### Wrong or missing feedback
+
+- [ ] **"Mula"/"Selesai" never refresh the list they render**
+  (`tasks-page.tsx:84-102`). The Cancel path directly below calls
+  `paginated.reload()`, as do appointments, documents, vitals and care logs - this
+  is the one omission. The row keeps its "Terbuka" badge and a second press
+  re-sends the same PATCH.
+- [ ] **`new Date(value).toISOString()` on a clearable date field** throws
+  RangeError inside the press handler (`task-form-page.tsx:51`,
+  `care-log-form-page.tsx:52`). Clear "Masa akhir", press Simpan, and nothing at
+  all happens - no save, no validation message, no toast. The vital and
+  appointment forms guard this with `parseDateTimeLocal`.
+- [ ] **The new-medication form seeds `beforeAfterMeal` with a label, not a
+  value** (`medication-detail-page.tsx:512`): `useState("Selepas makan")` where the
+  values are `before_meal|after_meal|with_meal|any_time`. The select renders blank,
+  and submitting untouched sends the label.
+- [ ] **An `ApiError` object is interpolated into the dashboard subtitle**
+  (`dashboard-page.tsx:108`), rendering "ApiError: Gagal memuatkan data jagaan."
+  That is the dashboard's only failure indicator, and it has no retry.
+- [ ] **`milestones-page.tsx:63` uses `cause.message` instead of
+  `messageForApiError(cause)`**, unlike every other catch in the area, so a signed
+  out user sees the raw English backend string.
+- [ ] **In apiMode the profile form's dirty check omits `dateOfBirth`, which
+  apiMode sends** (`profile-form-page.tsx:44-50`). Edit only the birth date, press
+  Kembali, and the "Buang perubahan?" guard does not appear - the edit is lost
+  silently.
+- [ ] **The Tarikh lahir DatePicker is the one control missing
+  `isDisabled={!canEdit}`** (`profile-health-fields-card.tsx:145`). Nothing is
+  written, since Simpan is hidden for viewers, but a `family_viewer` can type into
+  a child's birth date and watch it stick.
+- [ ] **Status verbs resolve to a no-op when the row is outside the snapshot**
+  (`care-data-provider.tsx:568-612`). The snapshot holds 100 rows while the tasks
+  table pages at 10, so past 100 tasks the buttons do nothing with no feedback.
+
+### Latent, not yet biting
+
+- [ ] **The exhaustiveness chain stops one hop short of the forms.**
+  `ProfileHealthFieldsCard`'s submit object and `OwnHealthPage`'s `FormState` are
+  hand-written literals with no guard. `FormState` already omits
+  `gestationalAgeWeeks` - defensible for an adult's own record, but nothing records
+  that decision - and a twelfth health field would compile everywhere while never
+  being collected.
+- [ ] **Stale comment in `api-growth-repository.ts:58`.** It says a 404 from the
+  chart is "ambiguous by design"; the backend now answers `growth_chart_disabled`
+  with its own code, so the client can tell the feature being off from a missing
+  record and should.
 
 ## Needs a browser, not a code read
 
