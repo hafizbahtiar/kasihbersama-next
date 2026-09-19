@@ -51,3 +51,16 @@ export function getAppPlatform() {
 export function getApiVersion() {
   return process.env.NEXT_PUBLIC_API_VERSION ?? "v1"
 }
+
+/**
+ * Prefix API untuk `baseUrl` yang diberi.
+ *
+ * Kosong (pelayar): `/api/v1` same-origin, dan rewrite Next menanggalkan `/api`
+ * sebelum menghantarnya ke backend. Tidak kosong (pelayan): panggilan pergi terus ke
+ * backend, yang melayani `/v1/*` tanpa prefix `/api` - memakai `/api/v1` di sini
+ * memberi 404 pada setiap render.
+ */
+export function apiPrefix(baseUrl: string) {
+  const base = baseUrl.replace(/\/$/, "")
+  return base ? `${base}/v1` : "/api/v1"
+}

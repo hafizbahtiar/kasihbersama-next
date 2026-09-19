@@ -5,7 +5,9 @@ export const CLAIM_ACCEPT_APP_PATH = "/claims/accept"
 /**
  * Public landing routes. Email links should target these with a URL fragment
  * (`#token=…`) so the secret is not sent to the server or logged in Referer.
- * See kasihbersama-backend/docs/04-claim-invite-transfer.md.
+ * See kasihbersama-backend/docs/02-core-circle-rbac-erd.md (jemputan + tuntutan person).
+ * (`docs/04-claim-invite-transfer.md` tidak pernah wujud dalam v0.2; docs/04 ialah ERD
+ * kesihatan.)
  */
 export const INVITE_ACCEPT_LANDING_PATH = "/accept/invite"
 export const CLAIM_ACCEPT_LANDING_PATH = "/accept/claim"

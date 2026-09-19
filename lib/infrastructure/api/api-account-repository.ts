@@ -145,7 +145,7 @@ export class ApiAccountRepository implements AccountRepository {
     // Sparse patch: only the field being changed is sent, so the rest of the
     // profile is left as it is. An empty string would be a deliberate clear.
     return this.client
-      .request<UpdateMeResponse>("/auth/me", {
+      .request<UpdateMeResponse>("/me", {
         method: "PATCH",
         body: JSON.stringify({ display_name: displayName }),
       })
@@ -243,7 +243,7 @@ export class ApiAccountRepository implements AccountRepository {
 
   getSettings() {
     return this.client
-      .request<ApiSettingsResponse>("/auth/settings")
+      .request<ApiSettingsResponse>("/me/settings")
       .then((body) => mapSettings(body.settings))
   }
 
@@ -269,7 +269,7 @@ export class ApiAccountRepository implements AccountRepository {
       body.preferences = patch.preferences
     }
     return this.client
-      .request<ApiSettingsResponse>("/auth/settings", {
+      .request<ApiSettingsResponse>("/me/settings", {
         method: "PATCH",
         body: JSON.stringify(body),
       })

@@ -1,5 +1,5 @@
 /**
- * The signed-in account. The optional fields are what `/v1/auth/me` returns on
+ * The signed-in account. The optional fields are what `/v1/me` returns on
  * top of the essentials; the v0.1 account endpoints do not send them, so they
  * stay optional rather than forcing every mapper to invent a value.
  */

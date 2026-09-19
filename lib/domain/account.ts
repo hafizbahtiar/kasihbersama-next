@@ -104,7 +104,7 @@ export type DistanceUnit = "km" | "mi"
 export type WeekStart = 1 | 2 | 3 | 4 | 5 | 6 | 7
 
 /**
- * Display preferences (`GET /v1/auth/settings`).
+ * Display preferences (`GET /v1/me/settings`).
  *
  * `dateFormat` is a pattern string, not an enum: the backend only checks it is
  * non-empty (`dd/MM/yyyy` is the schema default), so the token vocabulary is
@@ -121,7 +121,7 @@ export type UserSettings = {
 }
 
 /**
- * A partial write to `PATCH /v1/auth/settings`.
+ * A partial write to `PATCH /v1/me/settings`.
  *
  * Every field is optional and an absent key means "do not touch", mirroring
  * the backend's `omitempty` pointers - a patch never resets what it does not

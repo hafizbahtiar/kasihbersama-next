@@ -1,3 +1,4 @@
+import { apiPrefix } from "@/lib/infrastructure/config"
 import type {
   BootstrapConfig,
   PlatformFeatures,
@@ -63,7 +64,7 @@ export class ApiPlatformRepository implements PlatformRepository {
   constructor(private readonly baseUrl: string) {}
 
   async getBootstrap(appBuild: number): Promise<BootstrapConfig> {
-    const url = `${this.baseUrl.replace(/\/$/, "")}/api/v1/bootstrap`
+    const url = `${apiPrefix(this.baseUrl)}/bootstrap`
     const headers: Record<string, string> = {
       "X-App-Build": String(appBuild),
     }

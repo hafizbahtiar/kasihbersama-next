@@ -1,5 +1,5 @@
+import { apiPrefix } from "@/lib/infrastructure/config"
 import { parseApiError, ApiError } from "@/lib/infrastructure/api/errors"
-import { applyDefaultApiHeaders } from "@/lib/infrastructure/api/request-headers"
 import { tokenStorage } from "@/lib/infrastructure/api/token-storage"
 
 const PRE_AUTH_PATHS = [
@@ -50,7 +50,7 @@ export class ApiClient {
   constructor(private readonly baseUrl: string) {}
 
   private get apiBase() {
-    return `${this.baseUrl.replace(/\/$/, "")}/api/v1`
+    return apiPrefix(this.baseUrl)
   }
 
   async request<T>(path: string, init: ApiRequestInit = {}): Promise<T> {
@@ -90,7 +90,6 @@ export class ApiClient {
 
   private buildHeaders(init: ApiRequestInit) {
     const headers = new Headers(init.headers)
-    applyDefaultApiHeaders(headers)
     if (!headers.has("Content-Type") && init.body) {
       headers.set("Content-Type", "application/json")
     }
@@ -177,7 +176,6 @@ export class ApiClient {
     }
     try {
       const headers = new Headers({ "Content-Type": "application/json" })
-      applyDefaultApiHeaders(headers)
       const response = await fetch(`${this.apiBase}/auth/refresh`, {
         method: "POST",
         headers,

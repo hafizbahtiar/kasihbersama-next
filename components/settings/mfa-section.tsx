@@ -32,7 +32,7 @@ type Enrolment = { secret: string; otpauthUrl: string }
  * Enrols a TOTP factor, then shows the recovery codes exactly once.
  *
  * There is no endpoint that answers "does this account already have a
- * confirmed factor". `GET /auth/me` reports only the current session's
+ * confirmed factor". `GET /me` reports only the current session's
  * `mfa_level`, and even that is inconclusive - a trusted device skips MFA, so
  * a session at level 1 can belong to an account that is fully enrolled. The
  * frontend maps nothing to it. So this card offers the setup action and never

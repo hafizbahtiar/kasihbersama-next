@@ -7,6 +7,7 @@ import type {
   VerifyMfaInput,
 } from "@/lib/domain/auth"
 import type { AuthRepository } from "@/lib/domain/auth-repository"
+import { currentDevice } from "@/lib/infrastructure/device-identity"
 import { ApiError } from "@/lib/infrastructure/api/errors"
 import type { ApiClient } from "@/lib/infrastructure/api/client"
 import { mapAuthUser } from "@/lib/infrastructure/api/mappers/auth"
@@ -35,7 +36,14 @@ export class ApiAuthRepository implements AuthRepository {
       method: "POST",
       skipAuth: true,
       skipRefresh: true,
-      body: JSON.stringify({ email: input.email, password: input.password }),
+      body: JSON.stringify({
+        email: input.email,
+        password: input.password,
+        // Naming the device is what puts a row in the devices list - the
+        // backend skips the whole upsert without an `install_id`. It is also
+        // how a trusted device comes to skip the MFA prompt.
+        device: currentDevice(),
+      }),
     })
 
     // A correct password with a second factor enrolled. The challenge is a
@@ -184,7 +192,7 @@ export class ApiAuthRepository implements AuthRepository {
 
   me() {
     return this.client
-      .request<MeResponse>("/auth/me")
+      .request<MeResponse>("/me")
       .then((response) => mapAuthUser(response.user))
   }
 }

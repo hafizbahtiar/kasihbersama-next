@@ -237,7 +237,7 @@ export function SettingsPage() {
                 <CardHeader>
                   <CardTitle>Akaun</CardTitle>
                   <CardDescription>
-                    Nama paparan diselaraskan dengan `GET/PATCH /me`.
+                    Nama yang dipaparkan di seluruh aplikasi.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
