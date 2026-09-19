@@ -1,41 +1,39 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 
-import { VerifyEmailForm } from "@/components/auth/verify-email-form"
+import { ConfirmEmailChangeForm } from "@/components/auth/confirm-email-change-form"
 import { AuthShell } from "@/components/auth/auth-shell"
 
 export const metadata: Metadata = {
-  title: "Sahkan e-mel",
-  description: "Sahkan alamat e-mel akaun Kasih Bersama anda.",
+  title: "Sahkan e-mel baharu",
+  description: "Sahkan alamat e-mel baharu akaun Kasih Bersama anda.",
 }
 
-export default async function VerifyEmailPage({
+export default async function ConfirmEmailChangePage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string; email?: string }>
+  searchParams: Promise<{ token?: string }>
 }) {
   const params = await searchParams
-  const token = params.token
-  const email = params.email
 
   return (
     <AuthShell
-      panelKicker="Hampir siap."
-      panelTitle="Sahkan e-mel anda."
-      panelBody="Pengesahan e-mel membantu melindungi akaun dan memastikan pemberitahuan sampai."
+      panelKicker="Alamat baharu."
+      panelTitle="Sahkan e-mel baharu anda."
+      panelBody="Sahkan alamat baharu supaya akaun anda kekal selamat dan pemberitahuan sampai."
     >
       <header className="space-y-3">
-        <p className="text-sm font-medium text-primary">Pengesahan</p>
+        <p className="text-sm font-medium text-primary">Tukar e-mel</p>
         <h1 className="font-heading text-2xl tracking-tight text-balance sm:text-3xl lg:text-4xl">
-          Sahkan e-mel anda.
+          Sahkan e-mel baharu anda.
         </h1>
         <p className="max-w-sm text-sm leading-6 text-muted-foreground">
-          Tampal token dari e-mel pengesahan, atau buka pautan terus dari peti
-          masuk.
+          Buka pautan ini terus dari peti masuk anda untuk melengkapkan
+          pertukaran alamat.
         </p>
       </header>
 
-      <VerifyEmailForm initialToken={token} initialEmail={email} />
+      <ConfirmEmailChangeForm token={params.token} />
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
         <Link

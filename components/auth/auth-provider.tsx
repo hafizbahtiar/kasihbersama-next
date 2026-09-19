@@ -20,8 +20,10 @@ import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import type {
   AuthUser,
   LoginInput,
+  LoginOutcome,
   RegisterInput,
   ResetPasswordInput,
+  VerifyMfaInput,
 } from "@/lib/domain/auth"
 import {
   messageForApiError,
@@ -37,13 +39,23 @@ type AuthContextValue = {
   status: AuthStatus
   user: AuthUser | null
   error: ApiError | null
-  login: (input: LoginInput, redirectTo?: string) => Promise<void>
+  /**
+   * Resolves to the outcome so the caller can continue into the second step
+   * when a factor is required. `null` means the attempt failed, and the reason
+   * is on `error`.
+   */
+  login: (
+    input: LoginInput,
+    redirectTo?: string
+  ) => Promise<LoginOutcome | null>
+  verifyMfa: (input: VerifyMfaInput, redirectTo?: string) => Promise<boolean>
   register: (input: RegisterInput) => Promise<void>
   logout: () => Promise<void>
   logoutAll: () => Promise<void>
   updateDisplayName: (displayName: string) => Promise<void>
   verifyEmail: (token: string) => Promise<boolean>
-  resendVerification: () => Promise<boolean>
+  /** Falls back to the signed-in user's address when none is given. */
+  resendVerification: (email?: string) => Promise<boolean>
   forgotPassword: (email: string) => Promise<boolean>
   resetPassword: (input: ResetPasswordInput) => Promise<void>
   clearError: () => void
@@ -51,6 +63,13 @@ type AuthContextValue = {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
+
+/** Only in-app paths; an absolute or protocol-relative URL is someone else's site. */
+function safeDestination(redirectTo?: string) {
+  return redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+    ? redirectTo
+    : "/home"
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -150,25 +169,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearError: () => setError(null),
       retryBootstrap: bootstrap,
       async login(input, redirectTo) {
-        const destination =
-          redirectTo &&
-          redirectTo.startsWith("/") &&
-          !redirectTo.startsWith("//")
-            ? redirectTo
-            : "/home"
+        const destination = safeDestination(redirectTo)
         try {
-          const tokens = await getAuthRepository().login(input)
-          await persistSession(tokens)
+          const outcome = await getAuthRepository().login(input)
+          if (outcome.status === "mfaRequired") {
+            // Not a failure and not a session: hand the challenge back so the
+            // form can ask for the code.
+            setError(null)
+            return outcome
+          }
+          await persistSession(outcome.tokens)
           router.push(destination)
+          return outcome
         } catch (cause) {
           handleAuthError(cause)
+          return null
+        }
+      },
+      async verifyMfa(input, redirectTo) {
+        const destination = safeDestination(redirectTo)
+        try {
+          const tokens = await getAuthRepository().verifyMfa(input)
+          await persistSession(tokens)
+          router.push(destination)
+          return true
+        } catch (cause) {
+          handleAuthError(cause)
+          return false
         }
       },
       async register(input) {
         try {
-          const tokens = await getAuthRepository().register(input)
-          await persistSession(tokens)
-          router.push("/verify-email")
+          await getAuthRepository().register(input)
+          // Registering returns no session - the backend will not log the
+          // account in until the address is verified. Drop any previous
+          // session so the verify screen speaks for the new account.
+          clearAppSessionState()
+          tokenStorage.clear()
+          setUser(null)
+          setStatus("unauthenticated")
+          setError(null)
+          toast.success("Akaun dicipta.", {
+            description:
+              "Kami telah menghantar pautan pengesahan. Sahkan e-mel anda sebelum log masuk.",
+          })
+          router.push(
+            `/verify-email?email=${encodeURIComponent(input.email.trim())}`
+          )
         } catch (cause) {
           handleAuthError(cause)
         }
@@ -198,14 +245,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       },
       async logout() {
-        const refresh = tokenStorage.readRefresh()
-        clearLocalSession()
-        if (refresh) {
-          try {
-            await getAuthRepository().logout(refresh)
-          } catch {
-            // Session already cleared locally.
-          }
+        try {
+          // The backend revokes the session named by the access token, so this
+          // has to run before the token is dropped.
+          await getAuthRepository().logout()
+        } catch {
+          // An expired session is nothing to report - clearing locally is the
+          // outcome the user asked for either way.
+        } finally {
+          clearLocalSession()
         }
         router.push("/")
       },
@@ -220,9 +268,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return false
         }
       },
-      async resendVerification() {
+      async resendVerification(email) {
+        // Usually called before sign-in, when there is no user to read - hence
+        // the address can be passed in explicitly.
+        const address = (email ?? user?.email ?? "").trim()
+        if (!address) {
+          toast.error("Tiada alamat e-mel untuk dihantar.")
+          return false
+        }
         try {
-          await getAuthRepository().resendVerification()
+          await getAuthRepository().resendVerification(address)
           toast.success("E-mel pengesahan dihantar.", {
             description:
               "Pautan sah selama 24 jam. Semak folder spam jika tiada dalam peti masuk.",

@@ -27,16 +27,22 @@ import { Button, buttonVariants } from "@/components/ui/button"
  * which made the button stand a head taller than the "Saya ada token" link
  * beside it. A shared control cannot pick a size that suits only one of the
  * places it appears; the caller knows its own row.
+ *
+ * `email` is a prop for the same reason: the backend takes the address in the
+ * body, and the usual caller is a freshly registered user who is not signed in
+ * yet, so there is no session to read it from.
  */
 export function ResendVerificationButton({
   className,
   size = "default",
   variant,
+  email,
   children = "Hantar e-mel pengesahan",
 }: {
   className?: string
   size?: VariantProps<typeof buttonVariants>["size"]
   variant?: VariantProps<typeof buttonVariants>["variant"]
+  email?: string
   children?: React.ReactNode
 }) {
   const { resendVerification } = useAuth()
@@ -46,7 +52,7 @@ export function ResendVerificationButton({
   async function onPress() {
     setIsSending(true)
     try {
-      if (await resendVerification()) {
+      if (await resendVerification(email)) {
         setSent(true)
       }
     } finally {

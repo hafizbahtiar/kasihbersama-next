@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { IconEye, IconInbox } from "@tabler/icons-react"
+import { toast } from "sonner"
 
 import { BackButton } from "@/components/back-button"
 import { ConfirmDialog } from "@/components/confirm-dialog"
@@ -21,7 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { getAuthRepository } from "@/lib/composition/auth-repository"
 import { ROLE_LABELS, type CareProfile } from "@/lib/domain/care"
+import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
 
 export function CircleDetailPage({ circleId }: { circleId: string }) {
   const router = useRouter()
@@ -30,6 +33,7 @@ export function CircleDetailPage({ circleId }: { circleId: string }) {
     linkProfileToCircle,
     archiveCircle,
     unarchiveCircle,
+    refresh,
     isRefreshing,
   } = useCareData()
   const circle = snapshot.circles.find((item) => item.id === circleId)
@@ -88,6 +92,25 @@ export function CircleDetailPage({ circleId }: { circleId: string }) {
     )
   }
 
+  // Scopes the session to this circle server-side. The backend offers no way to
+  // read which circle a session points at, so nothing here claims to show it -
+  // this is the action, not a status.
+  async function makeActive() {
+    try {
+      await getAuthRepository().switchCircle(circleId)
+      toast.success("Kumpulan dijadikan aktif.")
+      // The active circle can change what the care endpoints return, so reload
+      // the same snapshot the page's other mutations do.
+      await refresh()
+    } catch (cause) {
+      toast.error(
+        isApiError(cause)
+          ? messageForApiError(cause)
+          : "Gagal menukar kumpulan aktif."
+      )
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <BackButton href="/circles" />
@@ -108,9 +131,21 @@ export function CircleDetailPage({ circleId }: { circleId: string }) {
               Aktifkan
             </Button>
           ) : (
-            <Button variant="destructive" onPress={() => setArchiveOpen(true)}>
-              Arkib kumpulan
-            </Button>
+            <>
+              <Button
+                onPress={() => {
+                  void makeActive()
+                }}
+              >
+                Jadikan kumpulan aktif
+              </Button>
+              <Button
+                variant="destructive"
+                onPress={() => setArchiveOpen(true)}
+              >
+                Arkib kumpulan
+              </Button>
+            </>
           )
         }
       />

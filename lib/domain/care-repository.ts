@@ -241,6 +241,16 @@ export interface CareDocumentRepository {
     patch: Partial<CareDocument>
   ): Promise<CareDocument>
   deleteDocument(profileId: string, documentId: string): Promise<void>
+  /**
+   * Starts an upload and declares everything the document will carry.
+   *
+   * Returns nothing on purpose. Against the API the documents row is created
+   * by a server-side worker after the request completes, so there is no
+   * document to hand back - the caller refreshes the list instead. Typing it
+   * as `Promise<CareDocument>` had the API implementation guessing which
+   * document it had just made, by title, and writing metadata onto the wrong
+   * one when a title repeated.
+   */
   uploadDocument(
     profileId: string,
     file: File,
@@ -251,7 +261,7 @@ export interface CareDocumentRepository {
       expiryDate?: string
       notes?: string
     }
-  ): Promise<CareDocument>
+  ): Promise<void>
   getDocumentDownloadUrl(
     profileId: string,
     documentId: string

@@ -1,7 +1,7 @@
 import type { AuthUser } from "@/lib/domain/auth"
 import type {
   AccountUsage,
-  DeleteAccountResult,
+  AuthDevice,
   DeviceToken,
   NotificationChannel,
   ProfileNotificationPref,
@@ -32,24 +32,34 @@ export interface AccountRepository {
     currentPassword: string
     newPassword: string
   }): Promise<void>
-  /** Resolves with the account as it now stands - `emailVerified: false`. */
+  /** Asks to move the account to a new address. Resolves once the confirmation
+   * link has been sent; the address itself does not move until it is followed. */
   changeEmail(input: {
     currentPassword: string
     newEmail: string
-  }): Promise<AuthUser>
+  }): Promise<void>
 
   listSessions(): Promise<UserSession[]>
   revokeSession(sessionId: string): Promise<void>
+
+  /** The devices the account has signed in from. */
+  listDevices(): Promise<AuthDevice[]>
+  revokeDevice(deviceId: string): Promise<void>
+  /**
+   * Marks one device trusted. There is no untrust: the backend can only ever
+   * set trust to true.
+   */
+  trustDevice(deviceId: string): Promise<void>
 
   /**
    * Erases the account. Password-gated: this is the most destructive action in
    * the app.
    *
-   * Rejects with an ApiError carrying code "deletion_blocked" when a care
-   * profile still needs a decision - read the list with
-   * `deletionBlockersFromError`.
+   * Rejects with an ApiError carrying code "auth.account.owns_circle" when the
+   * caller still owns a circle. That error names no profiles - the backend has
+   * no list to give - so the UI shows its message alone.
    */
-  deleteAccount(currentPassword: string): Promise<DeleteAccountResult>
+  deleteAccount(currentPassword: string): Promise<void>
 
   /** The caller's own data, as a JSON string ready to save to a file. */
   exportAccount(): Promise<string>

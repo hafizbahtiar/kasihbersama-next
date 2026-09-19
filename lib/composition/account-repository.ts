@@ -5,6 +5,7 @@ import { ApiAccountRepository } from "@/lib/infrastructure/api/api-account-repos
 import {
   seedAccountPassword,
   seedAccountUser,
+  seedAuthDevices,
   seedDeviceTokens,
   seedNotificationPrefs,
   seedSessions,
@@ -21,6 +22,7 @@ export function getAccountRepository(): AccountRepository {
           prefs: seedNotificationPrefs,
           devices: seedDeviceTokens,
           sessions: seedSessions,
+          authDevices: seedAuthDevices,
           password: seedAccountPassword,
         })
       : new ApiAccountRepository(ensureApiClient())

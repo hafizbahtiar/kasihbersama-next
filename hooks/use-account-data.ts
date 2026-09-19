@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { getAccountRepository } from "@/lib/composition/account-repository"
 import type {
+  AuthDevice,
   DeviceToken,
   NotificationChannel,
   ProfileNotificationPref,
@@ -234,6 +235,59 @@ export function useSessions() {
   )
 
   return { ...state, reload: load, revoke }
+}
+
+export function useAuthDevices() {
+  const [state, setState] = useState<AsyncState<AuthDevice[]>>({
+    data: [],
+    isLoading: true,
+    error: null,
+  })
+
+  const load = useCallback(async () => {
+    setState((current) => ({ ...current, isLoading: true, error: null }))
+    try {
+      const data = await getAccountRepository().listDevices()
+      setState({ data, isLoading: false, error: null })
+    } catch (cause) {
+      const error = isApiError(cause)
+        ? cause
+        : new ApiError("Gagal memuatkan peranti.", {
+            code: "internal",
+            status: 500,
+          })
+      setState({ data: [], isLoading: false, error })
+    }
+  }, [])
+
+  useEffect(() => {
+    // Load-on-mount: the loader flips isLoading synchronously before its first
+    // await, which the compiler rule flags. Safe here - it is one extra render
+    // on mount, and the alternative (deferring the flip) would show a stale
+    // "loaded" frame first.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load()
+  }, [load])
+
+  const revoke = useCallback(
+    async (deviceId: string) => {
+      await getAccountRepository().revokeDevice(deviceId)
+      await load()
+    },
+    [load]
+  )
+
+  // Trust only ever moves false->true (the backend has no untrust route), so
+  // the reload is what refreshes the badge and the trusted_at timestamp.
+  const trust = useCallback(
+    async (deviceId: string) => {
+      await getAccountRepository().trustDevice(deviceId)
+      await load()
+    },
+    [load]
+  )
+
+  return { ...state, reload: load, revoke, trust }
 }
 
 export function accountErrorMessage(error: ApiError | null) {

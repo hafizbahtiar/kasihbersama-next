@@ -1,5 +1,6 @@
 import type { AuthUser } from "@/lib/domain/auth"
 import type {
+  AuthDevice,
   DeviceToken,
   ProfileNotificationPref,
   UserSession,
@@ -64,5 +65,33 @@ export const seedSessions: UserSession[] = [
     current: false,
     createdAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
     expiresAt: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+]
+
+/** Signed-in devices - one already trusted, one not, so both states show. */
+export const seedAuthDevices: AuthDevice[] = [
+  {
+    id: "dev-web",
+    installId: "install-web-1",
+    platform: "web",
+    name: "Chrome · macOS",
+    model: "MacBookPro18,3",
+    osVersion: "macOS 15.1",
+    appVersion: "1.0.0",
+    isTrusted: true,
+    trustedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+    lastSeenAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "dev-phone",
+    installId: "install-phone-1",
+    platform: "android",
+    name: "Kasih Bersama · Android",
+    osVersion: "Android 15",
+    appVersion: "1.0.0",
+    isTrusted: false,
+    lastSeenAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ]

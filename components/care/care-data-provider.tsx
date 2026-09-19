@@ -132,7 +132,9 @@ type CareDataContextValue = CareProfileContextValue & {
     issueDate?: string
     expiryDate?: string
     notes?: string
-  }) => Promise<CareDocument>
+    // Returns nothing: the document row is created by a server-side worker
+    // after the request completes, so there is nothing to hand back yet.
+  }) => Promise<void>
   getDocumentDownloadUrl: (
     documentId: string
   ) => Promise<{ url: string; filename: string }>

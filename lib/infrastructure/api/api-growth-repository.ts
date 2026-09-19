@@ -60,8 +60,13 @@ export class ApiGrowthRepository implements GrowthRepository {
       // side - it is what FEATURE_GROWTH_CHART answers when the feature is
       // off - so it is left to the generic handler rather than dressed up.
       if (isApiError(cause) && cause.code === "not_ready") {
-        const missing = Array.isArray(cause.details?.missing)
-          ? (cause.details.missing as string[])
+        // v0.1 answered `details: { missing: [...] }`; the v0.2 contract is an
+        // array of {field, issue}. Cast until the growth endpoints move over.
+        const details = cause.details as unknown as
+          | { missing?: unknown }
+          | undefined
+        const missing = Array.isArray(details?.missing)
+          ? (details.missing as string[])
           : []
         throw new GrowthChartNotReadyError(cause.message, missing)
       }

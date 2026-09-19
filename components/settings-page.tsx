@@ -22,6 +22,8 @@ import {
   DeleteAccountCard,
   ExportAccountCard,
 } from "@/components/settings/danger-zone"
+import { DevicesCard } from "@/components/settings/devices-section"
+import { MfaCard } from "@/components/settings/mfa-section"
 import {
   ChangeEmailCard,
   ChangePasswordCard,
@@ -282,6 +284,7 @@ export function SettingsPage() {
             <div className="flex flex-col gap-4">
               <ChangePasswordCard />
               <ChangeEmailCard />
+              <MfaCard />
             </div>
           ) : null}
 
@@ -402,61 +405,65 @@ export function SettingsPage() {
           ) : null}
 
           {section === "devices" ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Peranti</CardTitle>
-                <CardDescription>
-                  Peranti iOS/Android yang menerima push melalui subscription
-                  id.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AsyncStateBanner
-                  error={devices.error}
-                  onRetry={() => {
-                    void devices.reload()
-                  }}
-                  label="Gagal memuatkan senarai peranti."
-                />
+            <div className="flex flex-col gap-4">
+              <DevicesCard />
 
-                {devices.isLoading ? (
-                  <Skeleton className="h-24 w-full" />
-                ) : devices.data.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Tiada peranti didaftarkan. Daftar melalui aplikasi mudah
-                    alih Kasih Bersama.
-                  </p>
-                ) : (
-                  <ItemGroup className="gap-3">
-                    {devices.data.map((device) => (
-                      <Item key={device.id} variant="muted">
-                        <ItemMedia variant="icon">
-                          <IconDeviceMobile />
-                        </ItemMedia>
-                        <ItemContent>
-                          <ItemTitle>
-                            {PLATFORM_LABELS[device.platform]}
-                          </ItemTitle>
-                          <ItemDescription>
-                            {device.subscriptionId.slice(0, 18)}… ·{" "}
-                            {formatDateTime(device.createdAt)}
-                          </ItemDescription>
-                        </ItemContent>
-                        <ItemActions>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onPress={() => setRevokeTarget(device.id)}
-                          >
-                            Keluarkan
-                          </Button>
-                        </ItemActions>
-                      </Item>
-                    ))}
-                  </ItemGroup>
-                )}
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Peranti push</CardTitle>
+                  <CardDescription>
+                    Peranti iOS/Android yang menerima push melalui subscription
+                    id.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AsyncStateBanner
+                    error={devices.error}
+                    onRetry={() => {
+                      void devices.reload()
+                    }}
+                    label="Gagal memuatkan senarai peranti."
+                  />
+
+                  {devices.isLoading ? (
+                    <Skeleton className="h-24 w-full" />
+                  ) : devices.data.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      Tiada peranti didaftarkan. Daftar melalui aplikasi mudah
+                      alih Kasih Bersama.
+                    </p>
+                  ) : (
+                    <ItemGroup className="gap-3">
+                      {devices.data.map((device) => (
+                        <Item key={device.id} variant="muted">
+                          <ItemMedia variant="icon">
+                            <IconDeviceMobile />
+                          </ItemMedia>
+                          <ItemContent>
+                            <ItemTitle>
+                              {PLATFORM_LABELS[device.platform]}
+                            </ItemTitle>
+                            <ItemDescription>
+                              {device.subscriptionId.slice(0, 18)}… ·{" "}
+                              {formatDateTime(device.createdAt)}
+                            </ItemDescription>
+                          </ItemContent>
+                          <ItemActions>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onPress={() => setRevokeTarget(device.id)}
+                            >
+                              Keluarkan
+                            </Button>
+                          </ItemActions>
+                        </Item>
+                      ))}
+                    </ItemGroup>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           ) : null}
 
           {section === "session" ? (

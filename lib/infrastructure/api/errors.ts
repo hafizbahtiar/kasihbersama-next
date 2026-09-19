@@ -1,10 +1,13 @@
-import type { ApiErrorBody } from "@/lib/infrastructure/api/types"
+import type {
+  ApiErrorBody,
+  ApiErrorDetail,
+} from "@/lib/infrastructure/api/types"
 
 export class ApiError extends Error {
   readonly code: string
   readonly status: number
   readonly requestId?: string
-  readonly details?: Record<string, unknown>
+  readonly details?: ApiErrorDetail[]
 
   constructor(
     message: string,
@@ -12,7 +15,7 @@ export class ApiError extends Error {
       code: string
       status: number
       requestId?: string
-      details?: Record<string, unknown>
+      details?: ApiErrorDetail[]
     }
   ) {
     super(message)
@@ -26,6 +29,44 @@ export class ApiError extends Error {
 
 /** Maps backend `error.code` to default Malay copy for toasts/banners. */
 const CODE_MESSAGES: Record<string, string> = {
+  // The v0.2 backend namespaces every code (`module.section.reason`). The bare
+  // keys below this block are the v0.1 codes the care endpoints still send;
+  // both sets stay until that migration lands.
+  "auth.credentials.invalid": "E-mel atau kata laluan salah.",
+  "auth.email.unverified":
+    "Sahkan e-mel anda dahulu. Buka pautan dalam e-mel pengesahan.",
+  "auth.email.taken": "E-mel ini sudah didaftarkan pada akaun lain.",
+  // The server's own message for this one is the English domain error, so the
+  // Malay copy has to live here rather than deferring to it.
+  "auth.password.weak": "Kata laluan mesti sekurang-kurangnya 10 aksara.",
+  "auth.account.locked":
+    "Terlalu banyak cubaan gagal. Akaun dikunci sementara.",
+  "auth.token.invalid": "Pautan atau token tidak sah, atau sudah tamat.",
+  "auth.session.revoked": "Sesi telah ditamatkan. Sila log masuk semula.",
+  "auth.session.not_found": "Sesi tidak dijumpai.",
+  "auth.device.not_found": "Peranti tidak dijumpai.",
+  "auth.mfa.invalid": "Kod MFA tidak sah atau sudah tamat.",
+  "auth.mfa.code_invalid": "Kod MFA tidak sah.",
+  "auth.mfa.not_enrolled": "Tiada faktor MFA yang menunggu pengesahan.",
+  "auth.email.invalid": "Alamat e-mel tidak sah.",
+  "auth.settings.invalid": "Tetapan tidak sah.",
+  "auth.circle.not_member": "Anda bukan ahli circle itu.",
+  "auth.account.owns_circle":
+    "Anda masih pemilik circle. Pindahkan pemilikan dahulu.",
+  // Client-synthesised, never sent by the server: `ApiAccountRepository`
+  // rewrites a 404 from a `/me/*` route that v0.2 dropped, so it stops reading
+  // as "Rekod tidak dijumpai." - which reads as data loss - when it means the
+  // feature is not built yet.
+  "account.feature.unavailable":
+    "Ciri ini belum tersedia buat masa ini.",
+  // Framework-level codes, from `codeForStatus` in the backend's httpx.
+  "auth.required": "Sila log masuk semula.",
+  "request.invalid": "Maklumat tidak sah. Semak semula borang.",
+  "request.forbidden": "Anda tidak dibenarkan melakukan tindakan ini.",
+  "request.not_found": "Rekod tidak dijumpai.",
+  "request.conflict": "Rekod sudah wujud atau bercanggah.",
+  "rate_limit.exceeded": "Terlalu banyak percubaan. Cuba lagi kemudian.",
+  "internal.error": "Ralat pelayan. Cuba lagi.",
   unauthenticated: "Sila log masuk semula.",
   not_permitted: "Anda tidak dibenarkan melakukan tindakan ini.",
   forbidden: "Anda tidak dibenarkan melakukan tindakan ini.",
@@ -59,6 +100,10 @@ const CODE_MESSAGES: Record<string, string> = {
   rate_limited: "Terlalu banyak percubaan. Cuba lagi kemudian.",
   expired: "Pautan atau token sudah tamat tempoh.",
   gone: "Pautan atau token sudah tamat tempoh.",
+  // Only seen once the client's own retries have run out, so the request is
+  // genuinely still in flight - not a conflict the user caused.
+  idempotency_in_progress:
+    "Permintaan sebelumnya masih diproses. Cuba lagi sebentar.",
   internal: "Ralat pelayan. Cuba lagi.",
   storage_error: "Ralat storan fail. Cuba lagi.",
   network: "Tidak dapat hubungi pelayan. Semak sambungan rangkaian.",
@@ -92,28 +137,19 @@ export function messageForApiError(error: ApiError) {
 export type FieldErrors = Record<string, string>
 
 /**
- * Extract field-level errors when backend populates `error.details`.
- * Today most handlers return an empty `details` object and put validation
- * text in `error.message`; callers should fall back to that message.
+ * Extract field-level errors from `error.details`.
+ *
+ * The backend reports validation failures as huma locations - `body.email`,
+ * `query.per_page` - so the location prefix is stripped to leave the key a
+ * form already uses. An empty result is normal: not every failure belongs to a
+ * field, and callers should fall back to `messageForApiError`.
  */
 export function fieldErrorsFromApiError(error: ApiError): FieldErrors {
-  const details = error.details
-  if (!details) {
-    return {}
-  }
-
-  const nested =
-    details.fields && typeof details.fields === "object"
-      ? (details.fields as Record<string, unknown>)
-      : details
-
   const result: FieldErrors = {}
-  for (const [key, value] of Object.entries(nested)) {
-    if (key === "fields") {
-      continue
-    }
-    if (typeof value === "string" && value.trim()) {
-      result[key] = value
+  for (const detail of error.details ?? []) {
+    const field = detail.field?.replace(/^(body|query|path|header)\./, "")
+    if (field && detail.issue?.trim()) {
+      result[field] = detail.issue
     }
   }
   return result
@@ -150,7 +186,13 @@ export function deletionBlockersFromError(error: unknown) {
   if (!isApiError(error) || error.code !== "deletion_blocked") {
     return []
   }
-  const raw = error.details?.profiles
+  // The v0.1 account endpoint answered with `details.profiles` - an object.
+  // The v0.2 contract is an array of {field, issue}. Cast until the account
+  // endpoints move over; nothing else here reads the value.
+  const details = error.details as unknown as
+    | { profiles?: unknown }
+    | undefined
+  const raw = details?.profiles
   if (!Array.isArray(raw)) {
     return []
   }

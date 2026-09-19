@@ -113,14 +113,8 @@ export function DeleteAccountCard() {
     setError(null)
     setBlockers([])
     try {
-      const result = await getAccountRepository().deleteAccount(password)
-      if (result.deletedCareProfileIds.length > 0) {
-        toast.success(
-          `Akaun dipadam. ${result.deletedCareProfileIds.length} profil jagaan turut dipadam.`
-        )
-      } else {
-        toast.success("Akaun dipadam.")
-      }
+      await getAccountRepository().deleteAccount(password)
+      toast.success("Akaun dipadam.")
       await logout()
     } catch (cause) {
       const blocked = deletionBlockersFromError(cause)

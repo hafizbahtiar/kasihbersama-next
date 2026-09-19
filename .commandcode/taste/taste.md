@@ -1,0 +1,1 @@
+- Communicates in Malay / Manglish (informal Bahasa Melayu mixed with English) and is comfortable receiving replies in the same style. Confidence: 0.75

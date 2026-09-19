@@ -872,7 +872,10 @@ export class InMemoryCareRepository implements CareRepository {
       notes?: string
     }
   ) {
-    return this.createDocument(profileId, {
+    // Returns nothing, matching the API repository: there the document is
+    // created by a worker after the request completes, so a caller that used
+    // the return value would work in mock mode and not against the API.
+    await this.createDocument(profileId, {
       title: input.title,
       documentType: input.documentType,
       filename: file.name,

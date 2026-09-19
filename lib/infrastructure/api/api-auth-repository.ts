@@ -1,63 +1,91 @@
 import type {
   AuthUser,
   LoginInput,
+  LoginOutcome,
   RegisterInput,
   ResetPasswordInput,
   TokenPair,
+  VerifyMfaInput,
 } from "@/lib/domain/auth"
 import type { AuthRepository } from "@/lib/domain/auth-repository"
+import { ApiError } from "@/lib/infrastructure/api/errors"
 import type { ApiClient } from "@/lib/infrastructure/api/client"
 import type {
+  ApiTokenDTO,
+  ApiUserDTO,
+  LoginResponse,
   MeResponse,
+  MfaConfirmResponse,
+  MfaEnrollResponse,
+  RegisterResponse,
   TokenPairResponse,
 } from "@/lib/infrastructure/api/types"
 
-function mapTokenPair(response: TokenPairResponse): TokenPair {
+function mapTokenPair(tokens: ApiTokenDTO): TokenPair {
   return {
-    accessToken: response.access_token,
-    refreshToken: response.refresh_token,
+    accessToken: tokens.access_token,
+    refreshToken: tokens.refresh_token,
   }
 }
 
-function mapMe(response: MeResponse): AuthUser {
+function mapUser(user: ApiUserDTO): AuthUser {
   return {
-    id: response.id,
-    email: response.email,
-    displayName: response.display_name,
-    emailVerified: response.email_verified,
+    id: user.id,
+    email: user.email,
+    displayName: user.display_name,
+    emailVerified: user.email_verified,
+    status: user.status,
+    locale: user.locale,
+    timezone: user.timezone,
+    givenName: user.given_name,
+    familyName: user.family_name,
   }
 }
 
 export class ApiAuthRepository implements AuthRepository {
   constructor(private readonly client: ApiClient) {}
 
-  login(input: LoginInput) {
-    return this.client
-      .request<TokenPairResponse>("/auth/login", {
-        method: "POST",
-        skipAuth: true,
-        skipRefresh: true,
-        body: JSON.stringify({
-          email: input.email,
-          password: input.password,
-        }),
+  async login(input: LoginInput): Promise<LoginOutcome> {
+    const response = await this.client.request<LoginResponse>("/auth/login", {
+      method: "POST",
+      skipAuth: true,
+      skipRefresh: true,
+      body: JSON.stringify({ email: input.email, password: input.password }),
+    })
+
+    // A correct password with a second factor enrolled. The challenge is a
+    // 200, so it arrives through the success path, not the error path.
+    if (response.mfa_required && response.challenge_token) {
+      return {
+        status: "mfaRequired",
+        challengeToken: response.challenge_token,
+      }
+    }
+    if (!response.tokens) {
+      throw new ApiError("Respons log masuk tidak lengkap.", {
+        code: "internal",
+        status: 200,
       })
-      .then(mapTokenPair)
+    }
+    return { status: "authenticated", tokens: mapTokenPair(response.tokens) }
   }
 
   register(input: RegisterInput) {
+    // Keyed so the client's retries reuse one account creation instead of
+    // hitting `auth.email.taken` with the account the first attempt made.
     return this.client
-      .request<TokenPairResponse>("/auth/signup", {
+      .request<RegisterResponse>("/auth/register", {
         method: "POST",
         skipAuth: true,
         skipRefresh: true,
+        idempotencyKey: crypto.randomUUID(),
         body: JSON.stringify({
           email: input.email,
           password: input.password,
           display_name: input.displayName,
         }),
       })
-      .then(mapTokenPair)
+      .then((response) => mapUser(response.user))
   }
 
   refresh(refreshToken: string) {
@@ -68,20 +96,16 @@ export class ApiAuthRepository implements AuthRepository {
         skipRefresh: true,
         body: JSON.stringify({ refresh_token: refreshToken }),
       })
-      .then(mapTokenPair)
+      .then((response) => mapTokenPair(response.tokens))
   }
 
-  logout(refreshToken: string) {
-    return this.client.request<void>("/auth/logout", {
-      method: "POST",
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    })
+  logout() {
+    // No body: the backend ends the session the access token names.
+    return this.client.request<void>("/auth/logout", { method: "POST" })
   }
 
   logoutAll() {
-    return this.client.request<void>("/auth/logout-all", {
-      method: "POST",
-    })
+    return this.client.request<void>("/auth/sessions", { method: "DELETE" })
   }
 
   verifyEmail(token: string) {
@@ -93,16 +117,17 @@ export class ApiAuthRepository implements AuthRepository {
     })
   }
 
-  resendVerification() {
-    // Authenticated and keyed on the session: the backend reads the caller
-    // from the access token, so there is no address to send.
-    return this.client.request<void>("/auth/resend-verification", {
+  resendVerification(email: string) {
+    return this.client.request<void>("/auth/verification/resend", {
       method: "POST",
+      skipAuth: true,
+      skipRefresh: true,
+      body: JSON.stringify({ email }),
     })
   }
 
   forgotPassword(email: string) {
-    return this.client.request<void>("/auth/forgot-password", {
+    return this.client.request<void>("/auth/password/forgot", {
       method: "POST",
       skipAuth: true,
       skipRefresh: true,
@@ -111,18 +136,70 @@ export class ApiAuthRepository implements AuthRepository {
   }
 
   resetPassword(input: ResetPasswordInput) {
-    return this.client.request<void>("/auth/reset-password", {
+    return this.client.request<void>("/auth/password/reset", {
       method: "POST",
       skipAuth: true,
       skipRefresh: true,
       body: JSON.stringify({
         token: input.token,
-        new_password: input.newPassword,
+        password: input.newPassword,
       }),
     })
   }
 
+  verifyMfa(input: VerifyMfaInput) {
+    return this.client
+      .request<TokenPairResponse>("/auth/mfa/verify", {
+        method: "POST",
+        skipAuth: true,
+        skipRefresh: true,
+        body: JSON.stringify({
+          challenge_token: input.challengeToken,
+          code: input.code,
+        }),
+      })
+      .then((response) => mapTokenPair(response.tokens))
+  }
+
+  enrollMfa() {
+    return this.client
+      .request<MfaEnrollResponse>("/auth/mfa/totp/enroll", { method: "POST" })
+      .then((response) => ({
+        secret: response.secret,
+        otpauthUrl: response.otpauth_url,
+      }))
+  }
+
+  confirmMfa(code: string) {
+    return this.client
+      .request<MfaConfirmResponse>("/auth/mfa/totp/confirm", {
+        method: "POST",
+        body: JSON.stringify({ code }),
+      })
+      .then((response) => ({ recoveryCodes: response.recovery_codes }))
+  }
+
+  confirmEmailChange(token: string) {
+    // Public like the other inbox-link endpoints: the caller follows the link
+    // from an e-mail and usually has no session.
+    return this.client.request<void>("/auth/email/change/confirm", {
+      method: "POST",
+      skipAuth: true,
+      skipRefresh: true,
+      body: JSON.stringify({ token }),
+    })
+  }
+
+  switchCircle(circleId: string) {
+    return this.client.request<void>("/auth/switch-circle", {
+      method: "POST",
+      body: JSON.stringify({ circle_id: circleId }),
+    })
+  }
+
   me() {
-    return this.client.request<MeResponse>("/me").then(mapMe)
+    return this.client
+      .request<MeResponse>("/auth/me")
+      .then((response) => mapUser(response.user))
   }
 }

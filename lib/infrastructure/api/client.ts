@@ -4,18 +4,44 @@ import { tokenStorage } from "@/lib/infrastructure/api/token-storage"
 
 const PRE_AUTH_PATHS = [
   "/auth/login",
-  "/auth/signup",
+  "/auth/register",
   "/auth/refresh",
-  "/auth/forgot-password",
-  "/auth/reset-password",
+  "/auth/password/forgot",
+  "/auth/password/reset",
   "/auth/verify-email",
+  "/auth/verification/resend",
+  "/auth/mfa/verify",
 ]
 
 export type ApiRequestInit = RequestInit & {
   skipAuth?: boolean
   skipRefresh?: boolean
+  /**
+   * Sent as `Idempotency-Key` and makes the request retryable (doc 06
+   * §Idempotency). Generate one per user action and pass the same value for
+   * the whole action - the retries below reuse it, which is what lets the
+   * server replay the first answer instead of applying the write twice.
+   */
   idempotencyKey?: string
 }
+
+/**
+ * Waits before each retry of a keyed request. Three retries, about 3.5 s in
+ * total: long enough to ride out a dropped connection or a redeploy, short
+ * enough that a user watching a spinner is not left wondering.
+ */
+const IDEMPOTENT_RETRY_DELAYS_MS = [500, 1000, 2000]
+
+/**
+ * Statuses worth retrying with the same key. A gateway error or a 503 says
+ * nothing about whether the write happened - which is exactly the question
+ * the key answers. The backend releases the key on a 5xx it produced, so a
+ * retry runs the work again rather than replaying the failure.
+ */
+const RETRYABLE_STATUSES = new Set([502, 503, 504])
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms))
 
 export class ApiClient {
   private refreshing: Promise<boolean> | null = null
@@ -80,7 +106,38 @@ export class ApiClient {
     return headers
   }
 
+  /**
+   * Retries only requests that carry an idempotency key. Without one, a
+   * retry after a lost response could apply the write twice; with one, the
+   * server either runs it once or replays what it already answered.
+   */
   private async fetch(path: string, init: ApiRequestInit = {}) {
+    if (!init.idempotencyKey) {
+      return this.fetchOnce(path, init)
+    }
+    for (let attempt = 0; ; attempt++) {
+      const canRetry =
+        attempt < IDEMPOTENT_RETRY_DELAYS_MS.length && !init.signal?.aborted
+      let response: Response
+      try {
+        response = await this.fetchOnce(path, init)
+      } catch (cause) {
+        // A network failure is the case the key exists for: the request may
+        // have reached the server and only the answer was lost.
+        if (!canRetry || (cause as Error)?.name === "AbortError") {
+          throw cause
+        }
+        await sleep(IDEMPOTENT_RETRY_DELAYS_MS[attempt])
+        continue
+      }
+      if (!canRetry || !(await isRetryable(response))) {
+        return response
+      }
+      await sleep(IDEMPOTENT_RETRY_DELAYS_MS[attempt])
+    }
+  }
+
+  private async fetchOnce(path: string, init: ApiRequestInit = {}) {
     const response = await fetch(`${this.apiBase}${path}`, {
       ...init,
       headers: this.buildHeaders(init),
@@ -130,22 +187,43 @@ export class ApiClient {
         return false
       }
       const data = (await response.json()) as {
-        access_token?: unknown
-        refresh_token?: unknown
+        tokens?: { access_token?: unknown; refresh_token?: unknown }
       }
+      const tokens = data.tokens
       if (
-        typeof data.access_token !== "string" ||
-        typeof data.refresh_token !== "string" ||
-        !data.access_token ||
-        !data.refresh_token
+        typeof tokens?.access_token !== "string" ||
+        typeof tokens?.refresh_token !== "string" ||
+        !tokens.access_token ||
+        !tokens.refresh_token
       ) {
         return false
       }
-      tokenStorage.saveTokens(data.access_token, data.refresh_token)
+      tokenStorage.saveTokens(tokens.access_token, tokens.refresh_token)
       return true
     } catch {
       return false
     }
+  }
+}
+
+async function isRetryable(response: Response) {
+  if (RETRYABLE_STATUSES.has(response.status)) {
+    return true
+  }
+  if (response.status !== 409) {
+    return false
+  }
+  // The first attempt with this key is still running on the server - usually
+  // the one whose response was lost. Waiting lets it finish so the next try
+  // gets its replay. Read from a clone: a 409 that is not this one is
+  // returned to the caller, whose error parsing needs the body intact.
+  try {
+    const body = (await response.clone().json()) as {
+      error?: { code?: string }
+    }
+    return body.error?.code === "idempotency_in_progress"
+  } catch {
+    return false
   }
 }
 

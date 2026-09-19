@@ -2,6 +2,7 @@ import type { AuthUser } from "@/lib/domain/auth"
 import {
   MIN_PASSWORD_LENGTH,
   type AccountUsage,
+  type AuthDevice,
   type DeviceToken,
   type NotificationChannel,
   type ProfileNotificationPref,
@@ -16,6 +17,7 @@ type MockState = {
   prefs: ProfileNotificationPref[]
   devices: DeviceToken[]
   sessions: UserSession[]
+  authDevices: AuthDevice[]
   password: string
 }
 
@@ -99,7 +101,6 @@ export class InMemoryAccountRepository implements AccountRepository {
       // banner that follows, not a silently verified account.
       emailVerified: false,
     }
-    return structuredClone(this.state.user)
   }
 
   async listSessions() {
@@ -119,12 +120,37 @@ export class InMemoryAccountRepository implements AccountRepository {
     )
   }
 
+  async listDevices() {
+    return structuredClone(this.state.authDevices)
+  }
+
+  async revokeDevice(deviceId: string) {
+    this.findDevice(deviceId)
+    this.state.authDevices = this.state.authDevices.filter(
+      (item) => item.id !== deviceId
+    )
+  }
+
+  async trustDevice(deviceId: string) {
+    const device = this.findDevice(deviceId)
+    device.isTrusted = true
+    device.trustedAt = new Date().toISOString()
+  }
+
+  // Mirrors the backend's `auth.device.not_found`, and the sessions above.
+  private findDevice(deviceId: string) {
+    const device = this.state.authDevices.find((item) => item.id === deviceId)
+    if (!device) {
+      throw new ApiError("Peranti tidak dijumpai.", {
+        code: "auth.device.not_found",
+        status: 404,
+      })
+    }
+    return device
+  }
+
   async deleteAccount(currentPassword: string) {
     this.assertPassword(currentPassword)
-    return {
-      anonymizedAt: new Date().toISOString(),
-      deletedCareProfileIds: [],
-    }
   }
 
   async exportAccount() {

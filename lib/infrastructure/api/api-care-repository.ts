@@ -475,6 +475,7 @@ export class ApiCareRepository implements CareRepository {
     return this.client
       .request<ApiSummary>(`${profilePath(profileId)}/summaries/doctor-visit`, {
         method: "POST",
+        idempotencyKey: crypto.randomUUID(),
         body: JSON.stringify({
           period_start: period.periodStart,
           period_end: period.periodEnd,
@@ -612,6 +613,7 @@ export class ApiCareRepository implements CareRepository {
       "/invites/accept",
       {
         method: "POST",
+        idempotencyKey: crypto.randomUUID(),
         body: JSON.stringify({ token }),
       }
     )
@@ -641,6 +643,7 @@ export class ApiCareRepository implements CareRepository {
       "/claims/accept",
       {
         method: "POST",
+        idempotencyKey: crypto.randomUUID(),
         body: JSON.stringify({ token }),
       }
     )
@@ -828,11 +831,17 @@ export class ApiCareRepository implements CareRepository {
       `${profilePath(profileId)}/medications/${medicationId}/schedules/${scheduleId}`,
       {
         method: "PATCH",
+        // status carries the pause. It was missing, and the only caller sends
+        // exactly {status} - so "Jeda" sent a PATCH with no fields at all, the
+        // server answered 200 with the row unchanged, the badge stayed "Aktif",
+        // and doses kept generating for a medication the caregiver believed
+        // they had stopped.
         body: JSON.stringify({
           schedule_type: patch.scheduleType,
           time_of_day: patch.timeOfDay,
           rrule: patch.rrule,
           timezone: patch.timezone,
+          status: patch.status,
         }),
       }
     )
@@ -860,6 +869,7 @@ export class ApiCareRepository implements CareRepository {
       `${profilePath(profileId)}/medication-events/${eventId}/action`,
       {
         method: "POST",
+        idempotencyKey: crypto.randomUUID(),
         body: JSON.stringify({ action, note }),
       }
     )
@@ -1109,11 +1119,18 @@ export class ApiCareRepository implements CareRepository {
     >(`${profilePath(profileId)}/uploads/intents`, {
       method: "POST",
       idempotencyKey: crypto.randomUUID(),
+      // Everything the document will need, declared once. The documents row is
+      // created by the server's worker after this request returns, so the
+      // client never learns its id - which is why the metadata has to travel
+      // with the intent rather than be PATCHed on afterwards.
       body: JSON.stringify({
         title: input.title,
         document_type: input.documentType,
         mime_type: file.type,
         filename: file.name,
+        issue_date: input.issueDate,
+        expiry_date: input.expiryDate,
+        notes: input.notes,
       }),
     })
 
@@ -1137,25 +1154,22 @@ export class ApiCareRepository implements CareRepository {
       }
     )
 
-    const listed = await this.listDocuments(profileId, { page: 1, perPage: 20 })
-    const created =
-      listed.data.find((item) => item.title === input.title) ?? listed.data[0]
-    if (!created) {
-      throw new ApiError("Dokumen sedang diproses. Muat semula senarai.", {
-        code: "internal",
-        status: 202,
-      })
-    }
-
-    if (input.issueDate || input.expiryDate || input.notes) {
-      return this.updateDocument(profileId, created.id, {
-        issueDate: input.issueDate,
-        expiryDate: input.expiryDate,
-        notes: input.notes,
-      })
-    }
-
-    return created
+    // Nothing is returned, because at this point nothing exists to return.
+    // Validation and the documents row happen on a worker tick, so the
+    // document appears in the list shortly afterwards.
+    //
+    // This used to list the first page, pick the row whose title matched, fall
+    // back to `data[0]` when none did, and PATCH the metadata onto whatever it
+    // found. Uploading a second "Keputusan darah" - a very likely repeat title
+    // - wrote the new file's dates and notes onto the OLDER document of that
+    // name, while the file just uploaded kept none of them; the fallback did
+    // the same to an unrelated document whenever the new one was not on page
+    // 1. It also threw "Dokumen sedang diproses" as an error whenever the
+    // worker had not caught up, telling the user an upload had failed when it
+    // had succeeded.
+    //
+    // The metadata now travels with the intent, so there is nothing left to
+    // patch and nothing to find.
   }
 
   async getDocumentDownloadUrl(profileId: string, documentId: string) {

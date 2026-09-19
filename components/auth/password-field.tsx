@@ -18,6 +18,7 @@ type PasswordFieldProps = {
   placeholder?: string
   autoComplete?: string
   required?: boolean
+  minLength?: number
   value?: string
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void
 }
@@ -29,6 +30,7 @@ export function PasswordField({
   placeholder = "Masukkan kata laluan",
   autoComplete = "current-password",
   required = true,
+  minLength,
   value,
   onChange,
 }: PasswordFieldProps) {
@@ -43,6 +45,7 @@ export function PasswordField({
         placeholder={placeholder}
         autoComplete={autoComplete}
         required={required}
+        minLength={minLength}
         value={value}
         onChange={onChange}
       />

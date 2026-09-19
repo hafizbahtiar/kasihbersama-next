@@ -4,18 +4,23 @@ This document mirrors [`kasihbersama-backend/docs/06-api-contract.md`](../../kas
 
 ## Error envelope
 
-Backend JSON (all non-2xx):
+Backend JSON (all non-2xx), v0.2 (`internal/platform/httpx/apierror.go`):
 
 ```json
 {
   "error": {
-    "code": "unprocessable",
-    "message": "display_name must be at most 100 runes",
-    "request_id": "req_…",
-    "details": {}
+    "code": "auth.password.weak",
+    "message": "Kata laluan terlalu lemah",
+    "details": [{ "field": "body.password", "issue": "expected length >= 10" }],
+    "request_id": "01J…"
   }
 }
 ```
+
+`code` is stable and machine-readable, `message` is human and never parsed, and
+`details` is **always an array** of `{field, issue}` - possibly empty.
+`field` is huma's location string (`body.email`, `query.per_page`), so
+`fieldErrorsFromApiError()` strips the prefix to leave the form field's key.
 
 ### Client mapping
 
@@ -23,9 +28,26 @@ Backend JSON (all non-2xx):
 |-------|------|-----------|
 | Parse | `lib/infrastructure/api/errors.ts` → `parseApiError()` | Builds `ApiError` with `code`, `status`, `message`, `request_id`, `details` |
 | Toast copy | `messageForApiError()` | Malay defaults per `code` / HTTP status |
-| Field errors | `fieldErrorsFromApiError()` | Reads `details` / `details.fields` when present |
+| Field errors | `fieldErrorsFromApiError()` | Maps `details` to `{ field: issue }`, prefix stripped |
 
-### Common codes
+### Common codes - auth (v0.2)
+
+| Code | HTTP | Frontend message (default) |
+|------|------|----------------------------|
+| `auth.credentials.invalid` | 401 | E-mel atau kata laluan salah. |
+| `auth.required` | 401 | Sila log masuk semula. |
+| `auth.session.revoked` | 401 | Sesi telah ditamatkan. Sila log masuk semula. |
+| `auth.email.unverified` | 403 | Sahkan e-mel anda dahulu. |
+| `auth.email.taken` | 409 | E-mel ini sudah didaftarkan pada akaun lain. |
+| `auth.password.weak` | 400 | Kata laluan mesti sekurang-kurangnya 10 aksara. |
+| `auth.account.locked` | 429 | Terlalu banyak cubaan gagal. Akaun dikunci sementara. |
+| `auth.token.invalid` | 400 | Pautan atau token tidak sah, atau sudah tamat. |
+| `auth.mfa.invalid` | 401 | Kod MFA tidak sah atau sudah tamat. |
+| `request.invalid` | 400/422 | Maklumat tidak sah. Semak semula borang. |
+| `rate_limit.exceeded` | 429 | Terlalu banyak percubaan. Cuba lagi kemudian. |
+| `internal.error` | 500 | Ralat pelayan. Cuba lagi. |
+
+### Common codes - care (v0.1, not yet migrated)
 
 | Code | HTTP | Frontend message (default) |
 |------|------|----------------------------|
@@ -38,7 +60,50 @@ Backend JSON (all non-2xx):
 | `invalid_argument` | 400 | Parameter permintaan tidak sah |
 | `rate_limited` | 429 | Terlalu banyak percubaan |
 
-**Validation:** Most handlers today put human text in `error.message` with empty `details`. Form pages should show `message` until structured field errors ship.
+The care endpoints still answer the v0.1 shape (`details` as an object, bare
+codes). `deletionBlockersFromError()` and `api-growth-repository.ts` carry a
+narrow cast for it; both go when the care endpoints move to v0.2.
+
+## Auth (backend v0.2)
+
+Base: browser calls same-origin `/api/v1/*`; the rewrite sends it to the
+backend's `/v1/*` (`next.config.ts`).
+
+| Action | Backend route | Body | Response |
+|--------|---------------|------|----------|
+| Register | `POST /v1/auth/register` | `{email, password, display_name}` | **201** `{user}` - **no tokens** |
+| Login | `POST /v1/auth/login` | `{email, password}` | `{user, tokens}` **or** `{mfa_required, challenge_token}` |
+| MFA verify | `POST /v1/auth/mfa/verify` | `{challenge_token, code}` | `{tokens}` |
+| Refresh | `POST /v1/auth/refresh` | `{refresh_token}` | `{tokens}` |
+| Logout | `POST /v1/auth/logout` | - (auth header) | `{message}` |
+| Revoke all sessions | `DELETE /v1/auth/sessions` | - | `{message}` |
+| Verify email | `POST /v1/auth/verify-email` | `{token}` | `{message}` |
+| Resend verification | `POST /v1/auth/verification/resend` | `{email}` | `{message}` |
+| Forgot password | `POST /v1/auth/password/forgot` | `{email}` | `{message}` |
+| Reset password | `POST /v1/auth/password/reset` | `{token, password}` | `{message}` |
+| Current user | `GET /v1/auth/me` | - | `{user, session}` |
+
+`tokens` is `{access_token, access_expires_at, refresh_token,
+refresh_expires_at, token_type}`; only the two token strings are mapped into the
+domain, and `ApiTokenDTO` is unwrapped inside `ApiAuthRepository` so nothing
+downstream sees the envelope.
+
+Three behaviours worth remembering:
+
+- **Register does not sign in.** It answers 201 with the user and no session, and
+  the backend refuses login with `403 auth.email.unverified` until the address is
+  confirmed. The register form therefore routes to
+  `/verify-email?email=…` rather than into the app.
+- **MFA is an outcome, not an error.** `POST /v1/auth/login` answers 200 with
+  `{mfa_required, challenge_token}` when the password was right and a second
+  factor is enrolled. `AuthRepository.login` returns `LoginOutcome` and the form
+  switches to a code step.
+- **Logout needs the access token.** Revocation is keyed on the session the
+  access token names, so `AuthProvider.logout()` calls the API *before* clearing
+  local tokens - clearing first would send an unauthenticated request.
+
+Tokens are opaque, not JWT: the access token lives in Redis (15 min TTL) and the
+refresh token in Postgres, rotating on every use.
 
 ## Paginated lists
 
@@ -137,7 +202,7 @@ columns is COALESCE-patched, so a blank string would overwrite a stored value.
 
 The staging backend does not emit `Access-Control-Allow-Origin` for browser origins. The Next.js app therefore:
 
-1. Rewrites `/api/v1/:path*` → `NEXT_PUBLIC_API_BASE_URL/api/v1/:path*` (`next.config.ts`)
+1. Rewrites `/api/v1/:path*` → `NEXT_PUBLIC_API_BASE_URL/v1/:path*` (`next.config.ts`) - the `/api` is dropped here because the backend serves the same routes under `/v1`
 2. Uses same-origin `/api/v1` in the browser (`getApiBaseUrl()` returns `""` on client)
 3. Excludes `/api/*` from auth `proxy.ts` so unauthenticated pre-auth calls (login, forgot-password) are not redirected to `/`
 

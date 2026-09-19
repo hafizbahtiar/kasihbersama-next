@@ -19,8 +19,11 @@ const nextConfig: NextConfig = {
     }
     return [
       {
+        // The browser keeps calling same-origin /api/v1/*; the backend serves
+        // the same routes without the /api. Stripping it here is what lets the
+        // prefix stay stable on this side while the backend owns its own.
         source: "/api/v1/:path*",
-        destination: `${proxyTarget}/api/v1/:path*`,
+        destination: `${proxyTarget}/v1/:path*`,
       },
     ]
   },

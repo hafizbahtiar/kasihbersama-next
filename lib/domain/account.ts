@@ -64,6 +64,27 @@ export type UserSession = {
 }
 
 /**
+ * A device the account has signed in from - the install itself, not a push
+ * subscription (`DeviceToken` is that other thing).
+ *
+ * `isTrusted` only ever moves false→true: the backend has a trust route and no
+ * untrust, so no UI should offer the reverse.
+ */
+export type AuthDevice = {
+  id: string
+  installId: string
+  platform: string
+  name?: string
+  model?: string
+  osVersion?: string
+  appVersion?: string
+  isTrusted: boolean
+  trustedAt?: string
+  lastSeenAt?: string
+  createdAt: string
+}
+
+/**
  * Shortest password the backend will accept (`auth.MinPasswordLen`).
  *
  * Only the floor is mirrored here. The full rule - common passwords, keyboard
@@ -94,12 +115,6 @@ export const DELETION_BLOCK_LABELS: Record<DeletionBlockReason, string> = {
 export const DELETION_BLOCK_FIXES: Record<DeletionBlockReason, string> = {
   sole_admin: "Lantik pentadbir lain dahulu.",
   shared_subject: "Serahkan profil ini atau arkibkannya dahulu.",
-}
-
-export type DeleteAccountResult = {
-  anonymizedAt: string
-  /** Profiles removed along with the account. Never silent. */
-  deletedCareProfileIds: string[]
 }
 
 /**

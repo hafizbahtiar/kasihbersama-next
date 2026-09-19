@@ -13,7 +13,13 @@ import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { ResendVerificationButton } from "@/components/auth/resend-verification-button"
 
-export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
+export function VerifyEmailForm({
+  initialToken,
+  initialEmail,
+}: {
+  initialToken?: string
+  initialEmail?: string
+}) {
   const router = useRouter()
   const { verifyEmail, error, clearError, user } = useAuth()
   useClearAuthErrorOnMount()
@@ -21,6 +27,9 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const autoSubmitted = useRef(false)
+  // Registering sends the user here before any session exists, so the address
+  // to resend to comes from the query string in that case.
+  const resendEmail = user?.email ?? initialEmail
 
   useEffect(() => {
     const trimmed = initialToken?.trim()
@@ -88,7 +97,11 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
             masuk ({user.email}). Minta pautan baharu untuk akaun ini.
           </AlertDescription>
         </Alert>
-        <ResendVerificationButton size="xl" className="w-full" />
+        <ResendVerificationButton
+          size="xl"
+          className="w-full"
+          email={resendEmail}
+        />
       </div>
     )
   }
@@ -147,7 +160,7 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
         </Button>
       </FieldGroup>
 
-      {user ? (
+      {resendEmail ? (
         <div className="border-t pt-6">
           <p className="mb-3 text-sm text-muted-foreground">
             Tiada e-mel, atau pautan sudah tamat tempoh?
@@ -156,6 +169,7 @@ export function VerifyEmailForm({ initialToken }: { initialToken?: string }) {
             size="xl"
             variant="outline"
             className="w-full"
+            email={resendEmail}
           />
         </div>
       ) : null}
