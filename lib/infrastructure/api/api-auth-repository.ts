@@ -1,5 +1,4 @@
 import type {
-  AuthUser,
   LoginInput,
   LoginOutcome,
   RegisterInput,
@@ -10,9 +9,9 @@ import type {
 import type { AuthRepository } from "@/lib/domain/auth-repository"
 import { ApiError } from "@/lib/infrastructure/api/errors"
 import type { ApiClient } from "@/lib/infrastructure/api/client"
+import { mapAuthUser } from "@/lib/infrastructure/api/mappers/auth"
 import type {
   ApiTokenDTO,
-  ApiUserDTO,
   LoginResponse,
   MeResponse,
   MfaConfirmResponse,
@@ -25,20 +24,6 @@ function mapTokenPair(tokens: ApiTokenDTO): TokenPair {
   return {
     accessToken: tokens.access_token,
     refreshToken: tokens.refresh_token,
-  }
-}
-
-function mapUser(user: ApiUserDTO): AuthUser {
-  return {
-    id: user.id,
-    email: user.email,
-    displayName: user.display_name,
-    emailVerified: user.email_verified,
-    status: user.status,
-    locale: user.locale,
-    timezone: user.timezone,
-    givenName: user.given_name,
-    familyName: user.family_name,
   }
 }
 
@@ -85,7 +70,7 @@ export class ApiAuthRepository implements AuthRepository {
           display_name: input.displayName,
         }),
       })
-      .then((response) => mapUser(response.user))
+      .then((response) => mapAuthUser(response.user))
   }
 
   refresh(refreshToken: string) {
@@ -200,6 +185,6 @@ export class ApiAuthRepository implements AuthRepository {
   me() {
     return this.client
       .request<MeResponse>("/auth/me")
-      .then((response) => mapUser(response.user))
+      .then((response) => mapAuthUser(response.user))
   }
 }

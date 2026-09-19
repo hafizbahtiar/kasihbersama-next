@@ -78,6 +78,11 @@ export type RegisterResponse = {
   user: ApiUserDTO
 }
 
+/** `PATCH /v1/auth/me` (op `auth-me-update`) answers with the user alone. */
+export type UpdateMeResponse = {
+  user: ApiUserDTO
+}
+
 /** `GET /v1/auth/me` carries the session alongside the user. */
 export type MeResponse = {
   user: ApiUserDTO

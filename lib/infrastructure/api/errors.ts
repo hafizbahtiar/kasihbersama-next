@@ -53,6 +53,8 @@ const CODE_MESSAGES: Record<string, string> = {
   "auth.circle.not_member": "Anda bukan ahli circle itu.",
   "auth.account.owns_circle":
     "Anda masih pemilik circle. Pindahkan pemilikan dahulu.",
+  "auth.profile.invalid": "Nama tidak sah. Semak semula.",
+  "auth.user.not_found": "Akaun tidak dijumpai.",
   // Client-synthesised, never sent by the server: `ApiAccountRepository`
   // rewrites a 404 from a `/me/*` route that v0.2 dropped, so it stops reading
   // as "Rekod tidak dijumpai." - which reads as data loss - when it means the
@@ -100,10 +102,14 @@ const CODE_MESSAGES: Record<string, string> = {
   rate_limited: "Terlalu banyak percubaan. Cuba lagi kemudian.",
   expired: "Pautan atau token sudah tamat tempoh.",
   gone: "Pautan atau token sudah tamat tempoh.",
-  // Only seen once the client's own retries have run out, so the request is
-  // genuinely still in flight - not a conflict the user caused.
-  idempotency_in_progress:
-    "Permintaan sebelumnya masih diproses. Cuba lagi sebentar.",
+  // The backend's idempotency middleware (docs/00 §6.2) answers 409 with this
+  // code when an `Idempotency-Key` arrives with a different body than the one
+  // it already stored for that key. It is not retryable - the key and the new
+  // body will never agree - so the copy only names the cause. (The backend
+  // never emits `idempotency_in_progress`: a retry with the same key AND body
+  // is replayed, not rejected, so there is no "still processing" signal.)
+  "idempotency.key_conflict":
+    "Permintaan ini sudah dihantar dengan kandungan berbeza. Muat semula halaman dan cuba lagi.",
   internal: "Ralat pelayan. Cuba lagi.",
   storage_error: "Ralat storan fail. Cuba lagi.",
   network: "Tidak dapat hubungi pelayan. Semak sambungan rangkaian.",

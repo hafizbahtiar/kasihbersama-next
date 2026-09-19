@@ -130,7 +130,7 @@ export class ApiClient {
         await sleep(IDEMPOTENT_RETRY_DELAYS_MS[attempt])
         continue
       }
-      if (!canRetry || !(await isRetryable(response))) {
+      if (!canRetry || !isRetryable(response)) {
         return response
       }
       await sleep(IDEMPOTENT_RETRY_DELAYS_MS[attempt])
@@ -206,25 +206,15 @@ export class ApiClient {
   }
 }
 
-async function isRetryable(response: Response) {
-  if (RETRYABLE_STATUSES.has(response.status)) {
-    return true
-  }
-  if (response.status !== 409) {
-    return false
-  }
-  // The first attempt with this key is still running on the server - usually
-  // the one whose response was lost. Waiting lets it finish so the next try
-  // gets its replay. Read from a clone: a 409 that is not this one is
-  // returned to the caller, whose error parsing needs the body intact.
-  try {
-    const body = (await response.clone().json()) as {
-      error?: { code?: string }
-    }
-    return body.error?.code === "idempotency_in_progress"
-  } catch {
-    return false
-  }
+// Only gateway-class failures, because only they are safe to replay: the
+// server stores the key with a hash of the body, so a retry that carries the
+// same key AND the same body returns the original answer. A 409 is never one
+// of them - the backend's only idempotency conflict, `idempotency.key_conflict`,
+// means the key arrived with a *different* body, so retrying would repeat it.
+// There is no "still processing" signal to wait on - simultaneous identical
+// requests both run.
+function isRetryable(response: Response) {
+  return RETRYABLE_STATUSES.has(response.status)
 }
 
 let client: ApiClient | undefined

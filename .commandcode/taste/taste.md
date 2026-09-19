@@ -2,7 +2,7 @@
 
 ## Communication
 - Communicates in casual, colloquial Malay ("bro") and expects replies in Malay. Confidence: 0.85
-- Gives terse one-word go-aheads (e.g. "siapkan") even after being asked an open design question, and expects the agent to proceed autonomously — make a reasonable judgment call on the ambiguity and flag it for correction, rather than blocking on a clarifying question. Confidence: 0.5
+- Gives terse, compressed directives that name only the trigger and the target (e.g. "siapkan", "backend dah siap, siapkan module auth") — often right after being asked an open design question — and expects the agent to work out the scope itself, make a reasonable judgment call on the ambiguity, and flag it for correction rather than blocking on a clarifying question. Confidence: 0.6
 
 ## Workflow
 - When checking contract alignment, prefers the agent to read the source code (git branch/working tree) rather than probing deployed servers — assumes deployments may lag behind the code. Confidence: 0.7

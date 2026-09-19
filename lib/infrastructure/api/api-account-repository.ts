@@ -1,4 +1,3 @@
-import type { AuthUser } from "@/lib/domain/auth"
 import type { AccountRepository } from "@/lib/domain/account-repository"
 import type {
   AccountUsage,
@@ -18,26 +17,8 @@ import type {
 import { parsePlanId } from "@/lib/domain/platform"
 import type { ApiClient } from "@/lib/infrastructure/api/client"
 import { ApiError, isApiError } from "@/lib/infrastructure/api/errors"
-
-/**
- * The v0.1 account endpoints answer with a flat user. The v0.2 auth endpoints
- * wrap it as `{user, session}` - a different shape, and these routes have not
- * moved yet, so this stays local instead of borrowing `MeResponse`.
- */
-type ApiAccountUser = {
-  id: string
-  email: string
-  display_name: string
-  email_verified: boolean
-}
-
-type ApiNotificationPref = {
-  care_profile_id: string
-  channel: string
-  reminder_type: string
-  enabled: boolean
-  created_at: string
-}
+import { mapAuthUser } from "@/lib/infrastructure/api/mappers/auth"
+import type { UpdateMeResponse } from "@/lib/infrastructure/api/types"
 
 type ApiSession = {
   id: string
@@ -70,35 +51,6 @@ type ApiDevicesResponse = {
   data: ApiDevice[]
 }
 
-type ApiDeviceToken = {
-  id: string
-  platform: string
-  subscription_id: string
-  app_version?: string
-  created_at: string
-}
-
-function mapMe(response: ApiAccountUser): AuthUser {
-  return {
-    id: response.id,
-    email: response.email,
-    displayName: response.display_name,
-    emailVerified: response.email_verified,
-  }
-}
-
-function mapNotificationPref(
-  api: ApiNotificationPref
-): ProfileNotificationPref {
-  return {
-    careProfileId: api.care_profile_id,
-    channel: api.channel as NotificationChannel,
-    reminderType: api.reminder_type as ReminderType,
-    enabled: api.enabled,
-    createdAt: api.created_at,
-  }
-}
-
 function mapSession(api: ApiSession): UserSession {
   return {
     id: api.id,
@@ -122,16 +74,6 @@ function mapDevice(api: ApiDevice): AuthDevice {
     isTrusted: api.is_trusted,
     trustedAt: api.trusted_at,
     lastSeenAt: api.last_seen_at,
-    createdAt: api.created_at,
-  }
-}
-
-function mapDeviceToken(api: ApiDeviceToken): DeviceToken {
-  return {
-    id: api.id,
-    platform: api.platform as DeviceToken["platform"],
-    subscriptionId: api.subscription_id,
-    appVersion: api.app_version,
     createdAt: api.created_at,
   }
 }
@@ -200,63 +142,45 @@ export class ApiAccountRepository implements AccountRepository {
   constructor(private readonly client: ApiClient) {}
 
   updateDisplayName(displayName: string) {
-    return this.notYetAvailable(
-      this.client
-        .request<ApiAccountUser>("/me", {
-          method: "PATCH",
-          body: JSON.stringify({ display_name: displayName }),
-        })
-        .then(mapMe)
-    )
+    // Sparse patch: only the field being changed is sent, so the rest of the
+    // profile is left as it is. An empty string would be a deliberate clear.
+    return this.client
+      .request<UpdateMeResponse>("/auth/me", {
+        method: "PATCH",
+        body: JSON.stringify({ display_name: displayName }),
+      })
+      .then((response) => mapAuthUser(response.user))
   }
 
-  listNotificationPrefs(careProfileId: string) {
-    return this.notYetAvailable(
-      this.client
-        .request<ApiNotificationPref[]>(
-          `/me/notification-preferences?care_profile_id=${encodeURIComponent(careProfileId)}`
-        )
-        .then((rows) => rows.map(mapNotificationPref))
-    )
+  // The next four are not migrated, and deliberately make no request.
+  //
+  // v0.2 does have `/v1/me/notification-preferences` and `/v1/me/device-tokens`,
+  // but under its notification module and with different models: preferences
+  // are per-user categories x channels with quiet hours, not per-profile
+  // reminder rows, and push subscriptions come back in a `{data, meta}`
+  // envelope keyed by `provider_subscription_id`. These calls still speak the
+  // retired shape, so a request would return 200 with the wrong shape and crash
+  // on `.map` - worse than saying so. The code matches the 404 case, so the UI
+  // copy is unchanged.
+  listNotificationPrefs(_careProfileId: string) {
+    return this.notMigrated<ProfileNotificationPref[]>()
   }
 
-  updateNotificationPref(input: {
+  updateNotificationPref(_input: {
     careProfileId: string
     channel: NotificationChannel
     reminderType: ReminderType
     enabled: boolean
   }) {
-    return this.notYetAvailable(
-      this.client
-        .request<ApiNotificationPref>(
-          `/me/notification-preferences?care_profile_id=${encodeURIComponent(input.careProfileId)}`,
-          {
-            method: "PUT",
-            body: JSON.stringify({
-              channel: input.channel,
-              reminder_type: input.reminderType,
-              enabled: input.enabled,
-            }),
-          }
-        )
-        .then(mapNotificationPref)
-    )
+    return this.notMigrated<ProfileNotificationPref>()
   }
 
   listDeviceTokens() {
-    return this.notYetAvailable(
-      this.client
-        .request<ApiDeviceToken[]>("/me/device-tokens")
-        .then((rows) => rows.map(mapDeviceToken))
-    )
+    return this.notMigrated<DeviceToken[]>()
   }
 
-  revokeDeviceToken(tokenId: string) {
-    return this.notYetAvailable(
-      this.client.request<void>(`/me/device-tokens/${tokenId}`, {
-        method: "DELETE",
-      })
-    )
+  revokeDeviceToken(_tokenId: string) {
+    return this.notMigrated<void>()
   }
 
   changePassword(input: { currentPassword: string; newPassword: string }) {
@@ -406,5 +330,17 @@ export class ApiAccountRepository implements AccountRepository {
       }
       throw cause
     }
+  }
+
+  /** For a feature the v0.2 backend models differently and this client has not
+   * adopted. Rejects without touching the network - see the comment on the
+   * notification and device-token methods for why. */
+  private notMigrated<T>(): Promise<T> {
+    return Promise.reject(
+      new ApiError("Ciri ini belum tersedia buat masa ini.", {
+        code: "account.feature.unavailable",
+        status: 0,
+      })
+    )
   }
 }
