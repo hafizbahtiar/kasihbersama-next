@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/item"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuthDevices } from "@/hooks/use-account-data"
-import { formatDateTime } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import type { AuthDevice } from "@/lib/domain/account"
 import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
 
@@ -65,6 +65,7 @@ function deviceTitle(device: AuthDevice) {
  */
 export function DevicesCard() {
   const devices = useAuthDevices()
+  const { dateTime } = useDisplayFormat()
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null)
 
   return (
@@ -128,10 +129,10 @@ export function DevicesCard() {
                       </span>
                       <span className="block">
                         {device.lastSeenAt
-                          ? `Kali terakhir ${formatDateTime(device.lastSeenAt)}`
-                          : `Didaftarkan ${formatDateTime(device.createdAt)}`}
+                          ? `Kali terakhir ${dateTime(device.lastSeenAt)}`
+                          : `Didaftarkan ${dateTime(device.createdAt)}`}
                         {device.isTrusted && device.trustedAt
-                          ? ` · Dipercayai ${formatDateTime(device.trustedAt)}`
+                          ? ` · Dipercayai ${dateTime(device.trustedAt)}`
                           : ""}
                       </span>
                     </ItemDescription>

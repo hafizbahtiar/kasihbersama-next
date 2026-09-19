@@ -84,6 +84,69 @@ export type AuthDevice = {
   createdAt: string
 }
 
+/** `user_settings.theme`. `next-themes` owns this locally, so the app reads it
+ *  but never writes it back - see `UserSettingsPatch`. */
+export type ThemePreference = "system" | "light" | "dark"
+
+/**
+ * `user_settings.time_format`. Closed set, enforced in the backend's
+ * `validateSettings`; `12h` is the schema default.
+ */
+export type TimeFormat = "12h" | "24h"
+
+/** `user_settings.distance_unit`. Closed set, enforced server-side. */
+export type DistanceUnit = "km" | "mi"
+
+/**
+ * `user_settings.week_starts_on` - ISO weekday, 1 = Monday … 7 = Sunday.
+ * The DB `CHECK (week_starts_on BETWEEN 1 AND 7)` holds it to this range.
+ */
+export type WeekStart = 1 | 2 | 3 | 4 | 5 | 6 | 7
+
+/**
+ * Display preferences (`GET /v1/auth/settings`).
+ *
+ * `dateFormat` is a pattern string, not an enum: the backend only checks it is
+ * non-empty (`dd/MM/yyyy` is the schema default), so the token vocabulary is
+ * defined by whoever renders it - see `useDisplayFormat`. `preferences` is an
+ * open key/value bag the backend stores as JSONB.
+ */
+export type UserSettings = {
+  theme: ThemePreference
+  dateFormat: string
+  timeFormat: TimeFormat
+  weekStartsOn: WeekStart
+  distanceUnit: DistanceUnit
+  preferences: Record<string, unknown>
+}
+
+/**
+ * A partial write to `PATCH /v1/auth/settings`.
+ *
+ * Every field is optional and an absent key means "do not touch", mirroring
+ * the backend's `omitempty` pointers - a patch never resets what it does not
+ * name. `theme` is deliberately absent here: `next-themes` owns the theme
+ * locally, and a second writer would give the app two authorities that can
+ * disagree.
+ */
+export type UserSettingsPatch = {
+  dateFormat?: string
+  timeFormat?: TimeFormat
+  weekStartsOn?: WeekStart
+  distanceUnit?: DistanceUnit
+  preferences?: Record<string, unknown>
+}
+
+/** The column defaults from `20260918100100_system_auth.sql`. */
+export const DEFAULT_USER_SETTINGS: UserSettings = {
+  theme: "system",
+  dateFormat: "dd/MM/yyyy",
+  timeFormat: "12h",
+  weekStartsOn: 1,
+  distanceUnit: "km",
+  preferences: {},
+}
+
 /**
  * Shortest password the backend will accept (`auth.MinPasswordLen`).
  *

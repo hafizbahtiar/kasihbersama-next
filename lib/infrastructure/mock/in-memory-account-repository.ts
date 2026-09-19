@@ -8,6 +8,8 @@ import {
   type ProfileNotificationPref,
   type ReminderType,
   type UserSession,
+  type UserSettings,
+  type UserSettingsPatch,
 } from "@/lib/domain/account"
 import type { AccountRepository } from "@/lib/domain/account-repository"
 import { ApiError } from "@/lib/infrastructure/api/errors"
@@ -18,6 +20,7 @@ type MockState = {
   devices: DeviceToken[]
   sessions: UserSession[]
   authDevices: AuthDevice[]
+  settings: UserSettings
   password: string
 }
 
@@ -179,6 +182,32 @@ export class InMemoryAccountRepository implements AccountRepository {
       storage: { usedBytes: 0 },
       members: [],
     }
+  }
+
+  async getSettings() {
+    return structuredClone(this.state.settings)
+  }
+
+  async updateSettings(patch: UserSettingsPatch) {
+    // Same sparse semantics as the backend: an absent key stays as it was, and
+    // preferences merge per key rather than replacing the whole bag.
+    const settings = this.state.settings
+    if (patch.dateFormat !== undefined) {
+      settings.dateFormat = patch.dateFormat
+    }
+    if (patch.timeFormat !== undefined) {
+      settings.timeFormat = patch.timeFormat
+    }
+    if (patch.weekStartsOn !== undefined) {
+      settings.weekStartsOn = patch.weekStartsOn
+    }
+    if (patch.distanceUnit !== undefined) {
+      settings.distanceUnit = patch.distanceUnit
+    }
+    if (patch.preferences !== undefined) {
+      settings.preferences = { ...settings.preferences, ...patch.preferences }
+    }
+    return structuredClone(settings)
   }
 
   private assertPassword(candidate: string) {

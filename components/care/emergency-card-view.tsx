@@ -15,7 +15,7 @@ import { LogoMark } from "@/components/brand/logo-mark"
 import { Button, LinkButton } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getCareRepository } from "@/lib/composition/care-repository"
-import { formatDate } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import {
   bloodTypeLabel,
   genderLabel,
@@ -200,6 +200,7 @@ export function EmergencyCardView({
   const [tilt, setTilt] = useState({ x: 0, y: 0 })
   const [sheen, setSheen] = useState({ x: 50, y: 0, on: false })
   const frameRef = useRef<HTMLDivElement>(null)
+  const { date } = useDisplayFormat()
 
   const load = useCallback(async () => {
     setIsLoading(true)
@@ -331,10 +332,10 @@ export function EmergencyCardView({
                   label="Lahir"
                   value={
                     shown.dateOfBirth
-                      ? formatDate(shown.dateOfBirth)
+                      ? date(shown.dateOfBirth)
                       : undefined
                   }
-                  sample={formatDate(sample.dateOfBirth ?? "")}
+                  sample={date(sample.dateOfBirth ?? "")}
                 />
                 <Field
                   label="Jantina"
@@ -481,7 +482,7 @@ export function EmergencyCardView({
           <Field
             label="Tarikh lahir"
             value={
-              shown.dateOfBirth ? formatDate(shown.dateOfBirth) : undefined
+              shown.dateOfBirth ? date(shown.dateOfBirth) : undefined
             }
           />
           <Field label="Nama penuh" value={shown.legalName} />

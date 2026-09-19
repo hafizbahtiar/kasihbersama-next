@@ -26,7 +26,7 @@ import {
   ItemTitle,
   ItemDescription,
 } from "@/components/ui/item"
-import { formatDateTime } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import { useCarePermissions } from "@/hooks/use-care-permissions"
 import type { EventAction } from "@/lib/domain/care"
 
@@ -48,6 +48,7 @@ const ACTION_LABELS: Record<EventAction, string> = {
 export function TodayDosesCard() {
   const { snapshot, selectedProfile, actOnEvent } = useCareData()
   const { can } = useCarePermissions()
+  const { dateTime } = useDisplayFormat()
 
   const pending = useMemo(() => {
     if (!selectedProfile) return []
@@ -104,7 +105,7 @@ export function TodayDosesCard() {
                     ) : null}
                   </ItemTitle>
                   <ItemDescription>
-                    {formatDateTime(event.expectedAt)}
+                    {dateTime(event.expectedAt)}
                   </ItemDescription>
                 </ItemContent>
                 {can("can_tick_medication") ? (

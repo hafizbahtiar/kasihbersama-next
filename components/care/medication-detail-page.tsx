@@ -40,7 +40,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { formatDateTime, todayKey } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
+import { todayKey } from "@/lib/application/care-format"
 import { fieldValue } from "@/lib/application/form-value"
 import {
   validateDateRange,
@@ -74,6 +75,7 @@ export function MedicationDetailPage({
     actOnEvent,
     isRefreshing,
   } = useCareData()
+  const { dateTime } = useDisplayFormat()
   const medication = snapshot.medications.find(
     (item) => item.id === medicationId
   )
@@ -152,7 +154,7 @@ export function MedicationDetailPage({
     return helper.columns([
       helper.accessor("expectedAt", {
         header: "Masa",
-        cell: ({ getValue }) => formatDateTime(getValue()),
+        cell: ({ getValue }) => dateTime(getValue()),
       }),
       helper.accessor("actionStatus", {
         header: "Status",
@@ -223,7 +225,7 @@ export function MedicationDetailPage({
           ) : null,
       }),
     ])
-  }, [actOnEvent])
+  }, [actOnEvent, dateTime])
 
   if (!medication) {
     return (

@@ -8,6 +8,7 @@ import { PlatformProvider } from "@/components/platform/platform-provider"
 import { LogoutProvider } from "@/components/logout-provider"
 import { ResourceSnapshotProvider } from "@/components/resource-snapshot-provider"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { DisplayPreferencesProvider } from "@/lib/application/display-preferences"
 import { createResourceSnapshot } from "@/lib/application/resource-snapshot"
 import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import { getCareRepository } from "@/lib/composition/care-repository"
@@ -29,23 +30,25 @@ export default async function AppLayout({
 
   return (
     <AuthGate>
-      <PlatformProvider>
-        <ForceUpdateGate>
-          <ResourceSnapshotProvider snapshot={resourceSnapshot}>
-            <CareDataProvider initialSnapshot={careSnapshot}>
-              <LogoutProvider>
-                <SidebarProvider>
-                  <AppSidebar />
-                  <SidebarInset className="min-w-0 overflow-x-hidden">
-                    <AppHeader />
-                    <AppMain>{children}</AppMain>
-                  </SidebarInset>
-                </SidebarProvider>
-              </LogoutProvider>
-            </CareDataProvider>
-          </ResourceSnapshotProvider>
-        </ForceUpdateGate>
-      </PlatformProvider>
+      <DisplayPreferencesProvider>
+        <PlatformProvider>
+          <ForceUpdateGate>
+            <ResourceSnapshotProvider snapshot={resourceSnapshot}>
+              <CareDataProvider initialSnapshot={careSnapshot}>
+                <LogoutProvider>
+                  <SidebarProvider>
+                    <AppSidebar />
+                    <SidebarInset className="min-w-0 overflow-x-hidden">
+                      <AppHeader />
+                      <AppMain>{children}</AppMain>
+                    </SidebarInset>
+                  </SidebarProvider>
+                </LogoutProvider>
+              </CareDataProvider>
+            </ResourceSnapshotProvider>
+          </ForceUpdateGate>
+        </PlatformProvider>
+      </DisplayPreferencesProvider>
     </AuthGate>
   )
 }

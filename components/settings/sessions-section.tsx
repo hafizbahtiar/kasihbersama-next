@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/item"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSessions } from "@/hooks/use-account-data"
-import { formatDateTime } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 
 /**
  * The list of live logins.
@@ -37,6 +37,7 @@ import { formatDateTime } from "@/lib/application/care-format"
  */
 export function SessionsCard() {
   const sessions = useSessions()
+  const { dateTime } = useDisplayFormat()
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null)
 
   return (
@@ -80,7 +81,7 @@ export function SessionsCard() {
                     </ItemTitle>
                     <ItemDescription>
                       {session.ipAddress ? `${session.ipAddress} · ` : ""}
-                      Mula {formatDateTime(session.createdAt)}
+                      Mula {dateTime(session.createdAt)}
                     </ItemDescription>
                   </ItemContent>
                   <ItemActions>

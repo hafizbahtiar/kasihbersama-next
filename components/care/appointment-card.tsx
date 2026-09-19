@@ -2,7 +2,7 @@
 
 import { AppointmentStatusBadge } from "@/components/care/status-badges"
 import { Button } from "@/components/ui/button"
-import { formatTime } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import type { Appointment } from "@/lib/domain/care"
 
 export function AppointmentCard({
@@ -12,13 +12,15 @@ export function AppointmentCard({
   appointment: Appointment
   onStatus: (status: Appointment["status"]) => void
 }) {
+  const { time } = useDisplayFormat()
+
   return (
     <div className="rounded-lg bg-muted/60 px-3 py-2.5">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <p className="font-medium">{appointment.title}</p>
           <p className="text-sm text-muted-foreground">
-            {formatTime(appointment.appointmentAt)} · {appointment.location} ·{" "}
+            {time(appointment.appointmentAt)} · {appointment.location} ·{" "}
             {appointment.doctorName}
           </p>
           {appointment.notes ? (

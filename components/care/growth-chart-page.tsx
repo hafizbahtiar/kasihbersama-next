@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useGrowthChart } from "@/hooks/use-growth-chart"
-import { formatDate } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import {
   GROWTH_INDICATORS,
   GROWTH_INDICATOR_LABELS,
@@ -39,6 +39,7 @@ import {
 export function GrowthChartPage() {
   const { selectedProfile } = useCareProfile()
   const { isFeatureEnabled } = usePlatform()
+  const { date } = useDisplayFormat()
   const [indicator, setIndicator] =
     useState<GrowthIndicator>("weight_for_age")
   const { chart, notReady, isLoading, error, reload } = useGrowthChart(
@@ -163,7 +164,7 @@ export function GrowthChartPage() {
                 {outOfRange.length} ukuran di luar julat rujukan dan tidak
                 diberi skor:{" "}
                 {outOfRange
-                  .map((point) => formatDate(point.measuredAt))
+                  .map((point) => date(point.measuredAt))
                   .join(", ")}
                 .
               </p>

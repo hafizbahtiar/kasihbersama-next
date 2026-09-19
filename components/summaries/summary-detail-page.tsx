@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getCareRepository } from "@/lib/composition/care-repository"
-import { formatDate } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import type { CareSummary } from "@/lib/domain/care"
 import { ApiError, normalizeApiError } from "@/lib/infrastructure/api/errors"
 
@@ -29,6 +29,7 @@ export function SummaryDetailPage({ summaryId }: { summaryId: string }) {
   const [summary, setSummary] = useState<CareSummary | null>(null)
   const [isLoading, setIsLoading] = useState(Boolean(profileId))
   const [error, setError] = useState<ApiError | null>(null)
+  const { date } = useDisplayFormat()
 
   const load = useCallback(async () => {
     if (!profileId) {
@@ -94,8 +95,8 @@ export function SummaryDetailPage({ summaryId }: { summaryId: string }) {
               Ringkasan jagaan
             </h1>
             <p className="text-sm text-muted-foreground">
-              {selectedProfile.displayName} · {formatDate(summary.periodStart)}{" "}
-              – {formatDate(summary.periodEnd)}
+              {selectedProfile.displayName} · {date(summary.periodStart)}{" "}
+              – {date(summary.periodEnd)}
             </p>
             <p className="text-sm text-muted-foreground">
               {/* Printed, this line is the provenance a clinician needs: it

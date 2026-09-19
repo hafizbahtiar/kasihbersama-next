@@ -1,6 +1,6 @@
 "use client"
 
-import { formatDateTime } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import type { SummaryContent } from "@/lib/domain/care"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { cn } from "@/lib/utils"
@@ -40,6 +40,8 @@ export function SummarySections({
   content: SummaryContent
   className?: string
 }) {
+  const { dateTime } = useDisplayFormat()
+
   return (
     <div className={cn("space-y-5", className)}>
       {content.truncated ? (
@@ -103,7 +105,7 @@ export function SummarySections({
             <li key={`${a.title}-${index}`} className="space-y-0.5">
               <p className="font-medium">{a.title}</p>
               <p className="text-muted-foreground">
-                {formatDateTime(a.at)}
+                {dateTime(a.at)}
                 {a.doctorName ? ` · ${a.doctorName}` : ""}
                 {a.location ? ` · ${a.location}` : ""}
               </p>
@@ -118,7 +120,7 @@ export function SummarySections({
             <li key={`${l.title}-${index}`} className="space-y-0.5">
               <p className="font-medium">{l.title}</p>
               <p className="text-xs text-muted-foreground">
-                {formatDateTime(l.occurredAt)}
+                {dateTime(l.occurredAt)}
               </p>
               {l.body ? (
                 <p className="text-muted-foreground">{l.body}</p>

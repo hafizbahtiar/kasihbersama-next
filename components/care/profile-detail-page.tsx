@@ -52,7 +52,8 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { usePaginatedCareResource } from "@/hooks/use-paginated-care-resource"
-import { buildTimeline, formatDateTime } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
+import { buildTimeline } from "@/lib/application/care-format"
 import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import {
   buildClaimAcceptLink,
@@ -132,6 +133,7 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
     setSelectedProfileId,
     isRefreshing,
   } = useCareData()
+  const { dateTime } = useDisplayFormat()
   const { user } = useAuth()
   const currentUserId = user?.id
   const profile = snapshot.profiles.find((item) => item.id === profileId)
@@ -377,7 +379,7 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
     return helper.columns([
       helper.accessor("occurredAt", {
         header: "Masa",
-        cell: ({ getValue }) => formatDateTime(getValue()),
+        cell: ({ getValue }) => dateTime(getValue()),
       }),
       helper.accessor("kind", {
         header: "Jenis",
@@ -394,7 +396,7 @@ export function ProfileDetailPage({ profileId }: { profileId: string }) {
       }),
       helper.accessor((row) => row.meta ?? "-", { id: "meta", header: "Meta" }),
     ])
-  }, [])
+  }, [dateTime])
 
   if (!profile) {
     return (

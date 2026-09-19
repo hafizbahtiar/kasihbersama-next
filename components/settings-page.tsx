@@ -3,6 +3,7 @@
 import { useState } from "react"
 import {
   IconBell,
+  IconCalendar,
   IconDatabase,
   IconDeviceMobile,
   IconLock,
@@ -23,6 +24,7 @@ import {
   ExportAccountCard,
 } from "@/components/settings/danger-zone"
 import { DevicesCard } from "@/components/settings/devices-section"
+import { DisplaySection } from "@/components/settings/display-section"
 import { MfaCard } from "@/components/settings/mfa-section"
 import {
   ChangeEmailCard,
@@ -65,7 +67,7 @@ import {
   useDeviceTokens,
   useNotificationPrefs,
 } from "@/hooks/use-account-data"
-import { formatDateTime } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import { fieldValue } from "@/lib/application/form-value"
 import {
   PLATFORM_LABELS,
@@ -76,6 +78,7 @@ import { cn } from "@/lib/utils"
 
 const settingsNav = [
   { id: "account", label: "Akaun", icon: IconUser },
+  { id: "display", label: "Paparan", icon: IconCalendar },
   { id: "security", label: "Keselamatan", icon: IconLock },
   { id: "data", label: "Data & akaun", icon: IconDatabase },
   { id: "notifications", label: "Pemberitahuan", icon: IconBell },
@@ -87,6 +90,7 @@ type SettingsSection = (typeof settingsNav)[number]["id"]
 
 export function SettingsPage() {
   const { user, updateDisplayName, logoutAll } = useAuth()
+  const { dateTime } = useDisplayFormat()
   const { requestLogout } = useLogout()
   const { selectedProfile, profiles, setSelectedProfileId } = useCareProfile()
   const [section, setSection] = useState<SettingsSection>("account")
@@ -280,6 +284,8 @@ export function SettingsPage() {
             </div>
           ) : null}
 
+          {section === "display" ? <DisplaySection /> : null}
+
           {section === "security" ? (
             <div className="flex flex-col gap-4">
               <ChangePasswordCard />
@@ -445,7 +451,7 @@ export function SettingsPage() {
                             </ItemTitle>
                             <ItemDescription>
                               {device.subscriptionId.slice(0, 18)}… ·{" "}
-                              {formatDateTime(device.createdAt)}
+                              {dateTime(device.createdAt)}
                             </ItemDescription>
                           </ItemContent>
                           <ItemActions>

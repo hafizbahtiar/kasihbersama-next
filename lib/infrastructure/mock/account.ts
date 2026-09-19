@@ -1,9 +1,11 @@
 import type { AuthUser } from "@/lib/domain/auth"
-import type {
-  AuthDevice,
-  DeviceToken,
-  ProfileNotificationPref,
-  UserSession,
+import {
+  DEFAULT_USER_SETTINGS,
+  type AuthDevice,
+  type DeviceToken,
+  type ProfileNotificationPref,
+  type UserSession,
+  type UserSettings,
 } from "@/lib/domain/account"
 
 export const seedAccountUser: AuthUser = {
@@ -38,6 +40,12 @@ export const seedDeviceTokens: DeviceToken[] = [
     createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ]
+
+/** Starts on the schema defaults, so the demo shows an untouched account. */
+export const seedAccountSettings: UserSettings = {
+  ...DEFAULT_USER_SETTINGS,
+  preferences: {},
+}
 
 /**
  * The password the mock account answers to.

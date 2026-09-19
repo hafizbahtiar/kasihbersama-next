@@ -33,11 +33,13 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { buildDashboardStats } from "@/lib/application/dashboard-stats"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 
 export function DashboardPage() {
   const { snapshot, selectedProfile, isRefreshing, loadError } = useCareData()
   const { accountLimits } = usePlatform()
   const { usage } = useAccountUsage()
+  const { dateTime } = useDisplayFormat()
 
   const stats = useMemo(
     () => buildDashboardStats(snapshot, selectedProfile?.id),
@@ -147,7 +149,7 @@ export function DashboardPage() {
               ? `Trend sistolik dan diastolik untuk ${selectedProfile.displayName}.`
               : "Pilih profil untuk melihat trend."
           }
-          data={toPressureChartData(vitals)}
+          data={toPressureChartData(vitals, dateTime)}
           config={pressureChartConfig}
           series={[
             { dataKey: "systolic", color: "var(--color-systolic)" },
@@ -157,7 +159,7 @@ export function DashboardPage() {
         <VitalChartWidget
           title="Gula darah"
           description="mmol/L merentasi bacaan terakhir."
-          data={toNumericChartData(vitals, "blood_glucose")}
+          data={toNumericChartData(vitals, "blood_glucose", dateTime)}
           config={numericChartConfig}
           series={[{ dataKey: "value", color: "var(--color-value)" }]}
         />

@@ -16,7 +16,6 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
-import { formatDateTime } from "@/lib/application/care-format"
 import type { VitalReading } from "@/lib/domain/care"
 import { useHydrated } from "@/hooks/use-hydrated"
 import { cn } from "@/lib/utils"
@@ -35,13 +34,19 @@ export const numericChartConfig = {
   value: { label: "Nilai", color: "var(--primary)" },
 } satisfies ChartConfig
 
-export function toPressureChartData(vitals: VitalReading[]): VitalChartPoint[] {
+// The label is the tooltip's text, so the caller passes its formatter in rather
+// than this module picking one - the account's date format is a user setting
+// now, and a plain function here cannot read it.
+export function toPressureChartData(
+  vitals: VitalReading[],
+  formatLabel: (value: string) => string
+): VitalChartPoint[] {
   return vitals
     .filter((item) => item.readingType === "blood_pressure")
     .slice()
     .reverse()
     .map((item) => ({
-      label: formatDateTime(item.measuredAt),
+      label: formatLabel(item.measuredAt),
       systolic: item.systolic,
       diastolic: item.diastolic,
     }))
@@ -49,14 +54,15 @@ export function toPressureChartData(vitals: VitalReading[]): VitalChartPoint[] {
 
 export function toNumericChartData(
   vitals: VitalReading[],
-  readingType: string
+  readingType: string,
+  formatLabel: (value: string) => string
 ): VitalChartPoint[] {
   return vitals
     .filter((item) => item.readingType === readingType)
     .slice()
     .reverse()
     .map((item) => ({
-      label: formatDateTime(item.measuredAt),
+      label: formatLabel(item.measuredAt),
       value: item.valueNumeric,
     }))
 }

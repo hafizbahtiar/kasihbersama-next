@@ -19,10 +19,10 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import {
   dateKey,
   formatFullDate,
-  formatTime,
   formatWeekRange,
   formatWeekdayShort,
   shiftDateKey,
@@ -56,6 +56,7 @@ export function AppointmentCalendar({
   isRefreshing?: boolean
 }) {
   const [view, setView] = useState<CalendarView>("month")
+  const { weekStartsOn } = useDisplayFormat()
   const today = todayKey()
   const isAwayFromToday = selectedDay !== today
   const selectedView = useMemo(() => new Set([view]), [view])
@@ -88,7 +89,10 @@ export function AppointmentCalendar({
     return map
   }, [byDay])
 
-  const weekDays = useMemo(() => weekDateKeys(selectedDay), [selectedDay])
+  const weekDays = useMemo(
+    () => weekDateKeys(selectedDay, weekStartsOn),
+    [selectedDay, weekStartsOn]
+  )
   const dayAppointments = byDay.get(selectedDay) ?? []
 
   function goToday() {
@@ -143,7 +147,7 @@ export function AppointmentCalendar({
               </Button>
               <p className="min-w-52 px-1 text-center text-sm font-medium">
                 {view === "week"
-                  ? formatWeekRange(selectedDay)
+                  ? formatWeekRange(selectedDay, weekStartsOn)
                   : formatFullDate(selectedDay)}
               </p>
               <Button
@@ -176,6 +180,7 @@ export function AppointmentCalendar({
             dayStatuses={dayStatuses}
             dayAppointments={dayAppointments}
             onStatus={onStatus}
+            weekStartsOn={weekStartsOn}
           />
         ) : null}
         {view === "week" ? (
@@ -209,12 +214,14 @@ function MonthView({
   dayStatuses,
   dayAppointments,
   onStatus,
+  weekStartsOn,
 }: {
   selectedDay: string
   onSelectDay: (day: string) => void
   dayStatuses: Map<string, AppointmentStatus[]>
   dayAppointments: Appointment[]
   onStatus: (id: string, status: AppointmentStatus) => void
+  weekStartsOn: "mon" | "sun"
 }) {
   const selectedLabel = formatFullDate(selectedDay)
 
@@ -224,6 +231,7 @@ function MonthView({
         selectedDay={selectedDay}
         onSelectDay={onSelectDay}
         dayStatuses={dayStatuses}
+        weekStartsOn={weekStartsOn}
       />
       <Card>
         <CardHeader>
@@ -270,6 +278,8 @@ function WeekView({
   onSelectDay: (day: string) => void
   onOpenDay: (day: string) => void
 }) {
+  const { time } = useDisplayFormat()
+
   return (
     <div className="overflow-x-auto">
       <div className="grid min-w-[56rem] grid-cols-7 divide-x overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
@@ -322,7 +332,7 @@ function WeekView({
                       )}
                     >
                       <p className="text-[0.7rem] leading-none text-muted-foreground tabular-nums">
-                        {formatTime(item.appointmentAt)}
+                        {time(item.appointmentAt)}
                       </p>
                       <p className="mt-1 truncate text-sm font-medium">
                         {item.title}

@@ -4,10 +4,16 @@ import type {
   AccountUsage,
   AuthDevice,
   DeviceToken,
+  DistanceUnit,
   NotificationChannel,
   ProfileNotificationPref,
   ReminderType,
+  ThemePreference,
+  TimeFormat,
   UserSession,
+  UserSettings,
+  UserSettingsPatch,
+  WeekStart,
 } from "@/lib/domain/account"
 import { parsePlanId } from "@/lib/domain/platform"
 import type { ApiClient } from "@/lib/infrastructure/api/client"
@@ -127,6 +133,30 @@ function mapDeviceToken(api: ApiDeviceToken): DeviceToken {
     subscriptionId: api.subscription_id,
     appVersion: api.app_version,
     createdAt: api.created_at,
+  }
+}
+
+type ApiSettings = {
+  theme: string
+  date_format: string
+  time_format: string
+  week_starts_on: number
+  distance_unit: string
+  preferences: Record<string, unknown> | null
+}
+
+type ApiSettingsResponse = {
+  settings: ApiSettings
+}
+
+function mapSettings(api: ApiSettings): UserSettings {
+  return {
+    theme: api.theme as ThemePreference,
+    dateFormat: api.date_format,
+    timeFormat: api.time_format as TimeFormat,
+    weekStartsOn: api.week_starts_on as WeekStart,
+    distanceUnit: api.distance_unit as DistanceUnit,
+    preferences: api.preferences ?? {},
   }
 }
 
@@ -285,6 +315,41 @@ export class ApiAccountRepository implements AccountRepository {
     return this.notYetAvailable(
       this.client.request<ApiUsageResponse>("/me/usage").then(mapUsage)
     )
+  }
+
+  getSettings() {
+    return this.client
+      .request<ApiSettingsResponse>("/auth/settings")
+      .then((body) => mapSettings(body.settings))
+  }
+
+  updateSettings(patch: UserSettingsPatch) {
+    // Sparse on purpose: the backend reads a missing key as "do not touch", so
+    // sending only the keys the caller set is what keeps a partial patch from
+    // resetting the rest. A default here would silently overwrite a field the
+    // caller never mentioned.
+    const body: Record<string, unknown> = {}
+    if (patch.dateFormat !== undefined) {
+      body.date_format = patch.dateFormat
+    }
+    if (patch.timeFormat !== undefined) {
+      body.time_format = patch.timeFormat
+    }
+    if (patch.weekStartsOn !== undefined) {
+      body.week_starts_on = patch.weekStartsOn
+    }
+    if (patch.distanceUnit !== undefined) {
+      body.distance_unit = patch.distanceUnit
+    }
+    if (patch.preferences !== undefined) {
+      body.preferences = patch.preferences
+    }
+    return this.client
+      .request<ApiSettingsResponse>("/auth/settings", {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      })
+      .then((response) => mapSettings(response.settings))
   }
 
   listSessions() {

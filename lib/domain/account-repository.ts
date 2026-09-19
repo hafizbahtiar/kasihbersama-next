@@ -7,6 +7,8 @@ import type {
   ProfileNotificationPref,
   ReminderType,
   UserSession,
+  UserSettings,
+  UserSettingsPatch,
 } from "@/lib/domain/account"
 
 export interface AccountRepository {
@@ -66,4 +68,13 @@ export interface AccountRepository {
 
   /** Current counts against the limits this account is held to. */
   getUsage(): Promise<AccountUsage>
+
+  /** Display preferences. Defaults are returned until the account saves one. */
+  getSettings(): Promise<UserSettings>
+  /**
+   * A partial write: only the keys present in `patch` are sent, so the backend
+   * leaves every other setting untouched. Resolves with the full settings as
+   * the server stored them - never with a client-side guess.
+   */
+  updateSettings(patch: UserSettingsPatch): Promise<UserSettings>
 }

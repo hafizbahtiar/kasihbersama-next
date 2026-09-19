@@ -4,6 +4,7 @@ import type { AccountRepository } from "@/lib/domain/account-repository"
 import { ApiAccountRepository } from "@/lib/infrastructure/api/api-account-repository"
 import {
   seedAccountPassword,
+  seedAccountSettings,
   seedAccountUser,
   seedAuthDevices,
   seedDeviceTokens,
@@ -23,6 +24,7 @@ export function getAccountRepository(): AccountRepository {
           devices: seedDeviceTokens,
           sessions: seedSessions,
           authDevices: seedAuthDevices,
+          settings: seedAccountSettings,
           password: seedAccountPassword,
         })
       : new ApiAccountRepository(ensureApiClient())

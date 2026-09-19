@@ -15,7 +15,7 @@ import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { usePaginatedCareResource } from "@/hooks/use-paginated-care-resource"
-import { formatDateTime } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import { getCareRepository } from "@/lib/composition/care-repository"
 import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import {
@@ -30,6 +30,7 @@ export function CareLogsPage() {
   const apiMode = !isMockDataEnabled()
   const { selectedProfile } = useCareProfile()
   const { snapshot, isRefreshing, deleteCareLog } = useCareData()
+  const { dateTime } = useDisplayFormat()
   const [deleteTarget, setDeleteTarget] = useState<CareLog | null>(null)
 
   const fetchLogs = useCallback(
@@ -80,7 +81,7 @@ export function CareLogsPage() {
       }),
       helper.accessor("occurredAt", {
         header: "Masa",
-        cell: ({ getValue }) => formatDateTime(getValue()),
+        cell: ({ getValue }) => dateTime(getValue()),
       }),
       helper.accessor("createdBy", { header: "Oleh" }),
       helper.display({
@@ -100,7 +101,7 @@ export function CareLogsPage() {
         ),
       }),
     ])
-  }, [apiMode])
+  }, [apiMode, dateTime])
 
   return (
     <>

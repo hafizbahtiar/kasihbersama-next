@@ -188,15 +188,28 @@ export function shiftDateKey(key: string, days: number) {
   return parseDate(key).add({ days }).toString()
 }
 
-export function weekDateKeys(anchor: string) {
-  const start = startOfWeek(parseDate(anchor), "ms-MY", "mon")
+/**
+ * The seven date keys of the week containing `anchor`.
+ *
+ * `weekStartsOn` comes from the account's `week_starts_on` preference (via
+ * `useDisplayFormat`); it defaults to Monday, which is both the schema default
+ * and what this always returned before the preference existed.
+ */
+export function weekDateKeys(
+  anchor: string,
+  weekStartsOn: "mon" | "sun" = "mon"
+) {
+  const start = startOfWeek(parseDate(anchor), "ms-MY", weekStartsOn)
   return Array.from({ length: 7 }, (_, index) =>
     start.add({ days: index }).toString()
   )
 }
 
-export function formatWeekRange(anchor: string) {
-  const days = weekDateKeys(anchor)
+export function formatWeekRange(
+  anchor: string,
+  weekStartsOn: "mon" | "sun" = "mon"
+) {
+  const days = weekDateKeys(anchor, weekStartsOn)
   const start = new Date(`${days[0]}T00:00:00+08:00`)
   const end = new Date(`${days[6]}T00:00:00+08:00`)
   const sameMonth = days[0].slice(0, 7) === days[6].slice(0, 7)

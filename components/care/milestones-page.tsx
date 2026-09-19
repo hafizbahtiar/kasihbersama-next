@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { formatDate } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import {
   MILESTONE_DOMAINS,
   MILESTONE_DOMAIN_LABELS,
@@ -37,6 +37,7 @@ export function MilestonesPage() {
     selectedProfile?.id
   )
   const [busyId, setBusyId] = useState<string | null>(null)
+  const { date } = useDisplayFormat()
 
   const byDomain = useMemo(() => {
     const groups = new Map<string, MilestoneItem[]>()
@@ -145,7 +146,7 @@ export function MilestonesPage() {
                             Biasanya {item.typicalFromMonths}–
                             {item.typicalToMonths} bulan
                             {achieved && item.achievedAt
-                              ? ` · ditanda ${formatDate(item.achievedAt)}`
+                              ? ` · ditanda ${date(item.achievedAt)}`
                               : ""}
                           </p>
                         </div>

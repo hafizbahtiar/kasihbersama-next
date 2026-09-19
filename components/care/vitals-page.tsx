@@ -20,7 +20,7 @@ import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { usePaginatedCareResource } from "@/hooks/use-paginated-care-resource"
-import { formatDateTime } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import { getCareRepository } from "@/lib/composition/care-repository"
 import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import { VITAL_TYPE_OPTIONS, type VitalReading } from "@/lib/domain/care"
@@ -38,6 +38,7 @@ export function VitalsPage() {
   const apiMode = !isMockDataEnabled()
   const { selectedProfile } = useCareProfile()
   const { snapshot, isRefreshing } = useCareData()
+  const { dateTime } = useDisplayFormat()
 
   const fetchVitals = useMemo(
     () => (profileId: string, params: { page?: number; perPage?: number }) =>
@@ -77,7 +78,7 @@ export function VitalsPage() {
       helper.accessor((row) => row.unit ?? "-", { id: "unit", header: "Unit" }),
       helper.accessor("measuredAt", {
         header: "Masa",
-        cell: ({ getValue }) => formatDateTime(getValue()),
+        cell: ({ getValue }) => dateTime(getValue()),
       }),
       helper.accessor((row) => row.note ?? "-", {
         id: "note",
@@ -87,7 +88,7 @@ export function VitalsPage() {
         ),
       }),
     ])
-  }, [])
+  }, [dateTime])
 
   return (
     <div className="flex flex-col gap-5">
@@ -162,7 +163,7 @@ export function VitalsPage() {
             <VitalChartWidget
               title="Tekanan darah"
               description="Trend sistolik dan diastolik."
-              data={toPressureChartData(chartVitals)}
+              data={toPressureChartData(chartVitals, dateTime)}
               config={pressureChartConfig}
               series={[
                 { dataKey: "systolic", color: "var(--color-systolic)" },
@@ -172,7 +173,7 @@ export function VitalsPage() {
             <VitalChartWidget
               title="Gula darah"
               description="mmol/L merentasi hari terakhir."
-              data={toNumericChartData(chartVitals, "blood_glucose")}
+              data={toNumericChartData(chartVitals, "blood_glucose", dateTime)}
               config={numericChartConfig}
               series={[{ dataKey: "value", color: "var(--color-value)" }]}
             />

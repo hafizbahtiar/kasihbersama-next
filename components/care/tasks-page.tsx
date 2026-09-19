@@ -15,7 +15,7 @@ import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Button } from "@/components/ui/button"
 import { usePaginatedCareResource } from "@/hooks/use-paginated-care-resource"
-import { formatDateTime } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import { getCareRepository } from "@/lib/composition/care-repository"
 import { isMockDataEnabled } from "@/lib/infrastructure/config"
 import { TASK_STATUS_LABELS, type CareTask } from "@/lib/domain/care"
@@ -26,6 +26,7 @@ export function TasksPage() {
   const apiMode = !isMockDataEnabled()
   const { selectedProfile } = useCareProfile()
   const { snapshot, isRefreshing, updateTaskStatus } = useCareData()
+  const { dateTime } = useDisplayFormat()
   const [cancelTaskId, setCancelTaskId] = useState<string | null>(null)
 
   const fetchTasks = useMemo(
@@ -65,7 +66,7 @@ export function TasksPage() {
       }),
       helper.accessor("dueAt", {
         header: "Masa akhir",
-        cell: ({ getValue }) => formatDateTime(getValue()),
+        cell: ({ getValue }) => dateTime(getValue()),
       }),
       helper.accessor("status", {
         header: "Status",
@@ -112,7 +113,7 @@ export function TasksPage() {
         ),
       }),
     ])
-  }, [apiMode, updateTaskStatus])
+  }, [apiMode, updateTaskStatus, dateTime])
 
   return (
     <>

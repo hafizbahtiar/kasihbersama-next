@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/item"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useSummaries } from "@/hooks/use-care-admin"
-import { formatDate } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import { validateDateRange } from "@/lib/application/form-validation"
 import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
 
@@ -55,6 +55,7 @@ export function SummariesPage() {
   const [periodStart, setPeriodStart] = useState(() => daysAgoISO(30))
   const [periodEnd, setPeriodEnd] = useState(() => todayISO())
   const [isCreating, setIsCreating] = useState(false)
+  const { date } = useDisplayFormat()
 
   async function create() {
     const rangeError = validateDateRange(periodStart, periodEnd)
@@ -177,8 +178,8 @@ export function SummariesPage() {
                     </ItemMedia>
                     <ItemContent>
                       <ItemTitle className="flex flex-wrap items-center gap-2">
-                        {formatDate(summary.periodStart)} –{" "}
-                        {formatDate(summary.periodEnd)}
+                        {date(summary.periodStart)} –{" "}
+                        {date(summary.periodEnd)}
                         {/* The badge only appears for model output. An
                             assembled summary invents nothing, so labelling it
                             would imply a caveat that does not apply. */}

@@ -18,7 +18,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { LinkButton } from "@/components/ui/button"
 import { useImmunisationBook } from "@/hooks/use-immunisation-book"
-import { formatDate } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import { getGrowthRepository } from "@/lib/composition/growth-repository"
 import {
   GROWTH_REQUIREMENT_MESSAGES,
@@ -42,6 +42,7 @@ export function ImmunisationsPage() {
   const { data: book, isLoading, error, reload } = useImmunisationBook(
     selectedProfile?.id
   )
+  const { date } = useDisplayFormat()
   const [dialog, setDialog] = useState<DialogState>(null)
   const [deleteTarget, setDeleteTarget] = useState<ImmunisationItem | null>(
     null
@@ -57,7 +58,7 @@ export function ImmunisationsPage() {
         id: "dueDate",
         header: "Tarikh patut",
         cell: ({ row }) =>
-          row.original.dueDate ? formatDate(row.original.dueDate) : "-",
+          row.original.dueDate ? date(row.original.dueDate) : "-",
       }),
       helper.accessor("status", {
         header: "Status",
@@ -72,7 +73,7 @@ export function ImmunisationsPage() {
           header: "Tarikh diberi",
           cell: ({ row }) =>
             row.original.record?.givenAt
-              ? formatDate(row.original.record.givenAt)
+              ? date(row.original.record.givenAt)
               : "-",
         }
       ),
@@ -139,7 +140,7 @@ export function ImmunisationsPage() {
         },
       }),
     ])
-  }, [])
+  }, [date])
 
   if (!selectedProfile) {
     return <SelectProfileEmpty />
@@ -239,7 +240,7 @@ export function ImmunisationsPage() {
           deleteTarget
             ? `${deleteTarget.vaccine} - ${deleteTarget.label} pada ${
                 deleteTarget.record?.givenAt
-                  ? formatDate(deleteTarget.record.givenAt)
+                  ? date(deleteTarget.record.givenAt)
                   : "-"
               }. Dos akan kembali ke status menunggu atau lewat.`
             : "Rekod ini akan dipadam."

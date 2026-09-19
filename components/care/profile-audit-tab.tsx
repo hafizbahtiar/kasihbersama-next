@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/item"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuditEvents } from "@/hooks/use-care-admin"
-import { formatDateTime } from "@/lib/application/care-format"
+import { useDisplayFormat } from "@/lib/application/display-preferences"
 import { auditEventLabel } from "@/lib/domain/care"
 
 /**
@@ -35,6 +35,7 @@ import { auditEventLabel } from "@/lib/domain/care"
  */
 export function ProfileAuditTab({ profileId }: { profileId: string }) {
   const events = useAuditEvents(profileId)
+  const { dateTime } = useDisplayFormat()
 
   return (
     <PermissionGate
@@ -86,7 +87,7 @@ export function ProfileAuditTab({ profileId }: { profileId: string }) {
                         {/* The snapshot name is what survives an account being
                             deleted, so it is always shown rather than an id. */}
                         {event.actorDisplayName} ·{" "}
-                        {formatDateTime(event.createdAt)}
+                        {dateTime(event.createdAt)}
                       </ItemDescription>
                     </ItemContent>
                   </Item>

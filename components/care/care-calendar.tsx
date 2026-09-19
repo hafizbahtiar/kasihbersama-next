@@ -17,12 +17,15 @@ export function CareCalendar({
   selectedDay,
   onSelectDay,
   dayStatuses,
+  weekStartsOn,
   className,
 }: {
   selectedDay: string
   onSelectDay: (day: string) => void
   /** Every appointment's status for a day, keyed YYYY-MM-DD, in time order. */
   dayStatuses?: Map<string, AppointmentStatus[]>
+  /** First day of the week, from the account's `week_starts_on`. */
+  weekStartsOn?: "mon" | "sun"
   className?: string
 }) {
   const hydrated = useHydrated()
@@ -39,6 +42,7 @@ export function CareCalendar({
             // seventh of the available width and stay square.
             className="w-full max-w-none p-0 [--cell-size:--spacing(9)]"
             captionLayout="dropdown"
+            firstDayOfWeek={weekStartsOn}
             headerFormat={{ month: "long", year: "numeric" }}
             value={parseDate(selectedDay)}
             onChange={(value) => {
