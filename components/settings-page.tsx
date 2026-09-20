@@ -13,12 +13,10 @@ import {
 import { toast } from "sonner"
 
 import { useAuth } from "@/components/auth/auth-provider"
-import { AsyncStateBanner } from "@/components/care/async-state"
+import { AsyncStateBanner } from "@/components/shared/async-state"
 import { ResendVerificationButton } from "@/components/auth/resend-verification-button"
-import { useCareProfile } from "@/components/care/care-data-provider"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useLogout } from "@/components/logout-provider"
-import { PushPermissionHint } from "@/components/notifications/push-onboarding"
 import {
   DeleteAccountCard,
   ExportAccountCard,
@@ -26,6 +24,7 @@ import {
 import { DevicesCard } from "@/components/settings/devices-section"
 import { DisplaySection } from "@/components/settings/display-section"
 import { MfaCard } from "@/components/settings/mfa-section"
+import { NotificationsCard } from "@/components/settings/notifications-section"
 import {
   ChangeEmailCard,
   ChangePasswordCard,
@@ -44,11 +43,9 @@ import {
 } from "@/components/ui/card"
 import {
   Field,
-  FieldContent,
   FieldDescription,
   FieldGroup,
   FieldLabel,
-  FieldTitle,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
@@ -61,19 +58,10 @@ import {
   ItemTitle,
 } from "@/components/ui/item"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Switch } from "@/components/ui/switch"
-import {
-  prefEnabled,
-  useDeviceTokens,
-  useNotificationPrefs,
-} from "@/hooks/use-account-data"
+import { useDeviceTokens } from "@/hooks/use-account-data"
 import { useDisplayFormat } from "@/lib/application/display-preferences"
 import { fieldValue } from "@/lib/application/form-value"
-import {
-  PLATFORM_LABELS,
-  PUSH_ENABLED_REMINDER_TYPES,
-  REMINDER_TYPE_LABELS,
-} from "@/lib/domain/account"
+import { platformLabel } from "@/lib/domain/account"
 import { cn } from "@/lib/utils"
 
 const settingsNav = [
@@ -92,25 +80,15 @@ export function SettingsPage() {
   const { user, updateDisplayName, logoutAll } = useAuth()
   const { dateTime } = useDisplayFormat()
   const { requestLogout } = useLogout()
-  const { selectedProfile, profiles, setSelectedProfileId } = useCareProfile()
   const [section, setSection] = useState<SettingsSection>("account")
   const [displayName, setDisplayName] = useState(user?.displayName ?? "")
   const [savingAccount, setSavingAccount] = useState(false)
   const [logoutAllOpen, setLogoutAllOpen] = useState(false)
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null)
 
-  const notificationPrefs = useNotificationPrefs(selectedProfile?.id)
   const devices = useDeviceTokens()
 
   const current = settingsNav.find((item) => item.id === section)
-  const medicationPushEnabled = selectedProfile
-    ? prefEnabled(
-        notificationPrefs.data,
-        selectedProfile.id,
-        "push",
-        "medication"
-      )
-    : true
 
   async function saveAccount() {
     setSavingAccount(true)
@@ -121,21 +99,6 @@ export function SettingsPage() {
     }
   }
 
-  async function toggleMedicationPush(enabled: boolean) {
-    if (!selectedProfile) {
-      return
-    }
-    try {
-      await notificationPrefs.updatePref({
-        channel: "push",
-        reminderType: "medication",
-        enabled,
-      })
-      toast.success("Keutamaan disimpan.")
-    } catch {
-      // Error toast handled by auth/account layer where applicable.
-    }
-  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -316,99 +279,7 @@ export function SettingsPage() {
             </div>
           ) : null}
 
-          {section === "notifications" ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Pemberitahuan</CardTitle>
-                <CardDescription>
-                  Keutamaan dikaitkan dengan profil jagaan aktif.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                <AsyncStateBanner
-                  error={notificationPrefs.error}
-                  onRetry={() => {
-                    void notificationPrefs.reload()
-                  }}
-                  label="Gagal memuatkan keutamaan."
-                />
-
-                <Field>
-                  <FieldLabel>Profil jagaan</FieldLabel>
-                  <div className="flex flex-wrap gap-2">
-                    {profiles.map((profile) => (
-                      <Button
-                        key={profile.id}
-                        size="sm"
-                        variant={
-                          profile.id === selectedProfile?.id
-                            ? "default"
-                            : "outline"
-                        }
-                        onPress={() => setSelectedProfileId(profile.id)}
-                      >
-                        {profile.displayName}
-                      </Button>
-                    ))}
-                  </div>
-                </Field>
-
-                <PushPermissionHint />
-
-                {notificationPrefs.isLoading ? (
-                  <Skeleton className="h-24 w-full" />
-                ) : (
-                  <FieldGroup>
-                    <Field orientation="horizontal">
-                      <FieldContent>
-                        <FieldTitle>
-                          {REMINDER_TYPE_LABELS.medication} (push)
-                        </FieldTitle>
-                        <FieldDescription>
-                          Satu-satunya push aktif pada backend hari ini.
-                        </FieldDescription>
-                      </FieldContent>
-                      <Switch
-                        aria-label="Peringatan ubat push"
-                        isSelected={medicationPushEnabled}
-                        isDisabled={
-                          !selectedProfile || notificationPrefs.isLoading
-                        }
-                        onChange={(value) => {
-                          void toggleMedicationPush(value)
-                        }}
-                      />
-                    </Field>
-
-                    {(["appointment", "task"] as const).map((type) => (
-                      <Field key={type} orientation="horizontal">
-                        <FieldContent>
-                          <FieldTitle>
-                            {REMINDER_TYPE_LABELS[type]} (push)
-                          </FieldTitle>
-                          <FieldDescription>
-                            Push belum dihantar oleh backend - tetapan akan
-                            tersedia apabila saluran diaktifkan.
-                          </FieldDescription>
-                        </FieldContent>
-                        <Switch
-                          aria-label={`${REMINDER_TYPE_LABELS[type]} push`}
-                          isSelected={false}
-                          isDisabled
-                        />
-                      </Field>
-                    ))}
-                  </FieldGroup>
-                )}
-
-                <p className="text-xs text-muted-foreground">
-                  Saluran push aktif: {PUSH_ENABLED_REMINDER_TYPES.join(", ")}.
-                  Profil tanpa baris keutamaan dianggap opted-in (lalai
-                  backend).
-                </p>
-              </CardContent>
-            </Card>
-          ) : null}
+          {section === "notifications" ? <NotificationsCard /> : null}
 
           {section === "devices" ? (
             <div className="flex flex-col gap-4">
@@ -447,10 +318,10 @@ export function SettingsPage() {
                           </ItemMedia>
                           <ItemContent>
                             <ItemTitle>
-                              {PLATFORM_LABELS[device.platform]}
+                              {platformLabel(device.platform)}
                             </ItemTitle>
                             <ItemDescription>
-                              {device.subscriptionId.slice(0, 18)}… ·{" "}
+                              {device.providerSubscriptionId.slice(0, 18)}… ·{" "}
                               {dateTime(device.createdAt)}
                             </ItemDescription>
                           </ItemContent>

@@ -4,9 +4,10 @@ import type {
   AuthDevice,
   DeviceToken,
   DistanceUnit,
+  NotificationCategory,
   NotificationChannel,
-  ProfileNotificationPref,
-  ReminderType,
+  NotificationPreferences,
+  NotificationPreferencesPatch,
   ThemePreference,
   TimeFormat,
   UserSession,
@@ -59,6 +60,70 @@ function mapSession(api: ApiSession): UserSession {
     current: api.current,
     createdAt: api.created_at,
     expiresAt: api.absolute_expires_at,
+  }
+}
+
+type ApiNotificationPreferences = {
+  quiet_hours_start?: string
+  quiet_hours_end?: string
+  digest_enabled: boolean
+  digest_at: string
+  categories: Array<{
+    key: string
+    name: string
+    is_mandatory: boolean
+    channels: Array<{
+      channel: string
+      is_enabled: boolean
+      is_locked: boolean
+    }>
+  }>
+}
+
+type ApiDeviceToken = {
+  id: string
+  provider_subscription_id: string
+  platform: string
+  device_id?: string
+  last_seen_at?: string
+  created_at: string
+}
+
+type ApiDeviceTokensResponse = {
+  data: ApiDeviceToken[]
+}
+
+function mapNotificationPreferences(
+  api: ApiNotificationPreferences
+): NotificationPreferences {
+  return {
+    quietHoursStart: api.quiet_hours_start,
+    quietHoursEnd: api.quiet_hours_end,
+    digestEnabled: api.digest_enabled,
+    digestAt: api.digest_at,
+    categories: (api.categories ?? []).map(
+      (category): NotificationCategory => ({
+        key: category.key,
+        name: category.name,
+        isMandatory: category.is_mandatory,
+        channels: (category.channels ?? []).map((channel) => ({
+          channel: channel.channel as NotificationChannel,
+          isEnabled: channel.is_enabled,
+          isLocked: channel.is_locked,
+        })),
+      })
+    ),
+  }
+}
+
+function mapDeviceToken(api: ApiDeviceToken): DeviceToken {
+  return {
+    id: api.id,
+    providerSubscriptionId: api.provider_subscription_id,
+    platform: api.platform,
+    deviceId: api.device_id,
+    lastSeenAt: api.last_seen_at,
+    createdAt: api.created_at,
   }
 }
 
@@ -152,35 +217,55 @@ export class ApiAccountRepository implements AccountRepository {
       .then((response) => mapAuthUser(response.user))
   }
 
-  // The next four are not migrated, and deliberately make no request.
-  //
-  // v0.2 does have `/v1/me/notification-preferences` and `/v1/me/device-tokens`,
-  // but under its notification module and with different models: preferences
-  // are per-user categories x channels with quiet hours, not per-profile
-  // reminder rows, and push subscriptions come back in a `{data, meta}`
-  // envelope keyed by `provider_subscription_id`. These calls still speak the
-  // retired shape, so a request would return 200 with the wrong shape and crash
-  // on `.map` - worse than saying so. The code matches the 404 case, so the UI
-  // copy is unchanged.
-  listNotificationPrefs(_careProfileId: string) {
-    return this.notMigrated<ProfileNotificationPref[]>()
+  getNotificationPreferences() {
+    return this.client
+      .request<ApiNotificationPreferences>("/me/notification-preferences")
+      .then(mapNotificationPreferences)
   }
 
-  updateNotificationPref(_input: {
-    careProfileId: string
-    channel: NotificationChannel
-    reminderType: ReminderType
-    enabled: boolean
-  }) {
-    return this.notMigrated<ProfileNotificationPref>()
+  updateNotificationPreferences(patch: NotificationPreferencesPatch) {
+    // Sparse, same contract as updateSettings: an absent key is "do not
+    // touch". A quiet hour set to "" is a deliberate clear, so the check is
+    // `!== undefined` and not a truthiness test.
+    const body: Record<string, unknown> = {}
+    if (patch.quietHoursStart !== undefined) {
+      body.quiet_hours_start = patch.quietHoursStart
+    }
+    if (patch.quietHoursEnd !== undefined) {
+      body.quiet_hours_end = patch.quietHoursEnd
+    }
+    if (patch.digestEnabled !== undefined) {
+      body.digest_enabled = patch.digestEnabled
+    }
+    if (patch.digestAt !== undefined) {
+      body.digest_at = patch.digestAt
+    }
+    if (patch.preferences !== undefined) {
+      body.preferences = patch.preferences.map((pref) => ({
+        category_key: pref.categoryKey,
+        channel: pref.channel,
+        is_enabled: pref.isEnabled,
+      }))
+    }
+    return this.client
+      .request<ApiNotificationPreferences>("/me/notification-preferences", {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      })
+      .then(mapNotificationPreferences)
   }
 
   listDeviceTokens() {
-    return this.notMigrated<DeviceToken[]>()
+    return this.client
+      .request<ApiDeviceTokensResponse>("/me/device-tokens")
+      .then((body) => (body.data ?? []).map(mapDeviceToken))
   }
 
-  revokeDeviceToken(_tokenId: string) {
-    return this.notMigrated<void>()
+  revokeDeviceToken(deviceTokenId: string) {
+    return this.client.request<void>(
+      `/me/device-tokens/${encodeURIComponent(deviceTokenId)}`,
+      { method: "DELETE" }
+    )
   }
 
   changePassword(input: { currentPassword: string; newPassword: string }) {
@@ -332,15 +417,4 @@ export class ApiAccountRepository implements AccountRepository {
     }
   }
 
-  /** For a feature the v0.2 backend models differently and this client has not
-   * adopted. Rejects without touching the network - see the comment on the
-   * notification and device-token methods for why. */
-  private notMigrated<T>(): Promise<T> {
-    return Promise.reject(
-      new ApiError("Ciri ini belum tersedia buat masa ini.", {
-        code: "account.feature.unavailable",
-        status: 0,
-      })
-    )
-  }
 }

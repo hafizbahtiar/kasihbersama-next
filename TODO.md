@@ -131,6 +131,32 @@ genuinely fail to compile - those are sound.
   with its own code, so the client can tell the feature being off from a missing
   record and should.
 
+## From the 2026-09-20 settings audit
+
+Checked against the RUNNING backend (OpenAPI + real flows), not a code read.
+
+- [x] Every Settings call maps to a real backend route: `/me`, `/me/settings`,
+      `/auth/sessions` (and `/{id}`, `DELETE`), `/auth/devices` (and `/{id}`, `/{id}/trust`),
+      `/auth/mfa/totp/enroll|confirm`, `/auth/verify-email`, `/auth/verification/resend`,
+      `/auth/password/change`, `/auth/email/change` (+`/confirm`), `/auth/account/delete`.
+      Response shapes match (MFA `{secret, otpauth_url}` / `{recovery_codes}`, sessions
+      `{data, meta}`, settings `{settings: {...}}`)
+- [x] Flows verified end to end against the local API: register → verification link (logged
+      by the backend) → verify email → `/me` `email_verified=true`; resend; change password
+      (old rejected afterwards, new works). Settings can be exercised locally today
+- [x] Invitation email links now target `/accept/invite#token=…` - the backend's circle
+      mailer used to build `/accept-invitation?token=…`, which 404s on this app. It matches
+      `INVITE_ACCEPT_LANDING_PATH` and the fragment convention in `deep-links.ts`
+- [ ] `/me/export` - no backend route and no spec in docs. The UI already reports it as
+      unavailable through `notYetAvailable`, but the export button cannot work until the
+      format, scope, and sync-vs-link question is decided
+- [ ] `/me/usage` and `/me/health-profile` - no backend route yet (billing phase 3, health
+      phase 1). The UI degrades to "not available yet" on purpose; nothing to do until then
+
+Local dev note: the backend does NOT send email (log mailer). The verification link is in the
+API log: `grep -o '"pautan":"[^"]*"' <api log> | tail -1`. `PUBLIC_WEB_BASE_URL=http://localhost:3000`
+must be set in the backend's `.env.dev` or that link is relative and unclickable.
+
 ## Needs a browser, not a code read
 
 These were all concluded by reading source. No browser was available in the sessions that

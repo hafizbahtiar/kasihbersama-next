@@ -3,7 +3,7 @@ import {
   DEFAULT_USER_SETTINGS,
   type AuthDevice,
   type DeviceToken,
-  type ProfileNotificationPref,
+  type NotificationPreferences,
   type UserSession,
   type UserSettings,
 } from "@/lib/domain/account"
@@ -15,28 +15,47 @@ export const seedAccountUser: AuthUser = {
   emailVerified: true,
 }
 
-export const seedNotificationPrefs: ProfileNotificationPref[] = [
-  {
-    careProfileId: "cp-1",
-    channel: "push",
-    reminderType: "medication",
-    enabled: true,
-    createdAt: new Date().toISOString(),
-  },
-]
+export const seedNotificationPrefs: NotificationPreferences = {
+  quietHoursStart: "22:00",
+  quietHoursEnd: "07:00",
+  digestEnabled: false,
+  digestAt: "08:00",
+  categories: [
+    {
+      key: "security",
+      name: "Keselamatan akaun",
+      isMandatory: true,
+      channels: [
+        { channel: "inapp", isEnabled: true, isLocked: true },
+        { channel: "email", isEnabled: true, isLocked: true },
+        { channel: "push", isEnabled: true, isLocked: true },
+      ],
+    },
+    {
+      key: "circle",
+      name: "Aktiviti circle",
+      isMandatory: false,
+      channels: [
+        { channel: "inapp", isEnabled: true, isLocked: true },
+        { channel: "email", isEnabled: true, isLocked: false },
+        { channel: "push", isEnabled: false, isLocked: false },
+      ],
+    },
+  ],
+}
 
 export const seedDeviceTokens: DeviceToken[] = [
   {
     id: "dev-1",
+    providerSubscriptionId: "mock-subscription-ios",
     platform: "ios",
-    subscriptionId: "mock-subscription-ios",
-    appVersion: "1.0.0",
     createdAt: new Date().toISOString(),
   },
   {
     id: "dev-2",
+    providerSubscriptionId: "mock-subscription-android",
     platform: "android",
-    subscriptionId: "mock-subscription-android",
+    lastSeenAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
     createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ]

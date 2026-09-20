@@ -21,9 +21,18 @@ type ThemeContextValue = {
 }
 
 const STORAGE_KEY = "theme"
+
+/**
+ * Tema lalai untuk pengguna yang belum memilih apa-apa: TERANG, bukan "system".
+ *
+ * Satu pemalar, dipakai oleh skrip pra-hidrasi DAN kod React. Sebelum ini "system"
+ * ditulis empat kali di empat tempat berbeza; dua daripadanya boleh terpesong tanpa
+ * sesiapa perasan, dan hasilnya ialah kelipan tema antara cat pertama dan hidrasi.
+ */
+const DEFAULT_THEME: Theme = "light"
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
-const INIT_SCRIPT = `(function(){try{var d=document.documentElement;var t=localStorage.getItem("${STORAGE_KEY}")||"system";var r=t==="system"?(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;d.classList.remove("light","dark");d.classList.add(r);d.style.colorScheme=r}catch(e){}})();`
+const INIT_SCRIPT = `(function(){try{var d=document.documentElement;var t=localStorage.getItem("${STORAGE_KEY}")||"${DEFAULT_THEME}";var r=t==="system"?(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;d.classList.remove("light","dark");d.classList.add(r);d.style.colorScheme=r}catch(e){}})();`
 
 function systemTheme() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -73,14 +82,14 @@ function subscribe(onChange: () => void) {
 function normalizeTheme(value: string | null): Theme {
   return value === "light" || value === "dark" || value === "system"
     ? value
-    : "system"
+    : DEFAULT_THEME
 }
 
 function readTheme(): Theme {
   try {
     return normalizeTheme(window.localStorage.getItem(STORAGE_KEY))
   } catch {
-    return "system"
+    return DEFAULT_THEME
   }
 }
 
@@ -138,7 +147,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const theme = useSyncExternalStore(
     subscribe,
     readTheme,
-    () => "system" as Theme
+    () => DEFAULT_THEME
   )
   const resolvedTheme = useSyncExternalStore(
     subscribe,

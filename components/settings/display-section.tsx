@@ -2,7 +2,7 @@
 
 import { toast } from "sonner"
 
-import { AsyncStateBanner } from "@/components/care/async-state"
+import { AsyncStateBanner } from "@/components/shared/async-state"
 import {
   Card,
   CardContent,

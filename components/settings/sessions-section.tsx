@@ -4,7 +4,7 @@ import { useState } from "react"
 import { IconDeviceDesktop, IconLogout } from "@tabler/icons-react"
 import { toast } from "sonner"
 
-import { AsyncStateBanner } from "@/components/care/async-state"
+import { AsyncStateBanner } from "@/components/shared/async-state"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"

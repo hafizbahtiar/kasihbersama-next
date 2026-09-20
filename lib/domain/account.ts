@@ -1,50 +1,90 @@
 import type { PlanId } from "@/lib/domain/platform"
 
-export type NotificationChannel = "push" | "email"
-
-export type ReminderType = "medication" | "appointment" | "task"
-
-export type ProfileNotificationPref = {
-  careProfileId: string
-  channel: NotificationChannel
-  reminderType: ReminderType
-  enabled: boolean
-  createdAt: string
-}
-
-export type DeviceToken = {
-  id: string
-  platform: "ios" | "android"
-  subscriptionId: string
-  appVersion?: string
-  createdAt: string
-}
-
-export const NOTIFICATION_CHANNELS: NotificationChannel[] = ["push", "email"]
-
-export const REMINDER_TYPES: ReminderType[] = [
-  "medication",
-  "appointment",
-  "task",
-]
-
-export const REMINDER_TYPE_LABELS: Record<ReminderType, string> = {
-  medication: "Peringatan ubat",
-  appointment: "Peringatan temujanji",
-  task: "Peringatan tugasan",
-}
+/** `delivery_channel` dalam docs/05 §4. `inapp` sentiasa dikunci. */
+export type NotificationChannel = "push" | "email" | "sms" | "inapp"
 
 export const CHANNEL_LABELS: Record<NotificationChannel, string> = {
   push: "Push",
   email: "E-mel",
+  sms: "SMS",
+  inapp: "Dalam aplikasi",
 }
 
-/** Reminder types with an active backend push trigger today. */
-export const PUSH_ENABLED_REMINDER_TYPES: ReminderType[] = ["medication"]
+/**
+ * One channel of one category.
+ *
+ * `isLocked` means the backend will refuse to turn it off - mandatory
+ * categories and the `inapp` channel - so the UI shows state, not a switch.
+ */
+export type NotificationChannelPref = {
+  channel: NotificationChannel
+  isEnabled: boolean
+  isLocked: boolean
+}
 
-export const PLATFORM_LABELS: Record<DeviceToken["platform"], string> = {
+export type NotificationCategory = {
+  key: string
+  name: string
+  isMandatory: boolean
+  channels: NotificationChannelPref[]
+}
+
+/** `GET /v1/me/notification-preferences`. Quiet hours are `HH:MM` local. */
+export type NotificationPreferences = {
+  quietHoursStart?: string
+  quietHoursEnd?: string
+  digestEnabled: boolean
+  digestAt: string
+  categories: NotificationCategory[]
+}
+
+/**
+ * A partial write. An absent key means "do not touch"; an empty string on a
+ * quiet hour means "clear it" - the backend keeps those two intents apart.
+ */
+export type NotificationPreferencesPatch = {
+  quietHoursStart?: string
+  quietHoursEnd?: string
+  digestEnabled?: boolean
+  digestAt?: string
+  preferences?: Array<{
+    categoryKey: string
+    channel: NotificationChannel
+    isEnabled: boolean
+  }>
+}
+
+export const EMPTY_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+  digestEnabled: false,
+  digestAt: "",
+  categories: [],
+}
+
+/**
+ * A push subscription (`GET /v1/me/device-tokens`) - a device that can be
+ * REACHED. Not `AuthDevice`, which is a device that has signed in; two
+ * questions, two tables (docs/05 §9).
+ */
+export type DeviceToken = {
+  id: string
+  providerSubscriptionId: string
+  platform: string
+  deviceId?: string
+  lastSeenAt?: string
+  createdAt: string
+}
+
+/** The backend's device platform enum, shared by push tokens and auth devices. */
+const PLATFORM_LABELS: Record<string, string> = {
   ios: "iOS",
   android: "Android",
+  web: "Pelayar web",
+  desktop: "Komputer",
+  unknown: "Tidak dikenali",
+}
+
+export function platformLabel(platform: string) {
+  return PLATFORM_LABELS[platform] ?? platform
 }
 
 /**

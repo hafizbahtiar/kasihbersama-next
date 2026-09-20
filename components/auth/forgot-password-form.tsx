@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react"
 
 import { useClearAuthErrorOnMount } from "@/hooks/use-clear-auth-error-on-mount"
-import { AuthErrorBanner } from "@/components/care/async-state"
+import { AuthErrorBanner } from "@/components/shared/async-state"
 import { useAuth } from "@/components/auth/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"

@@ -4,9 +4,8 @@ import {
   type AccountUsage,
   type AuthDevice,
   type DeviceToken,
-  type NotificationChannel,
-  type ProfileNotificationPref,
-  type ReminderType,
+  type NotificationPreferences,
+  type NotificationPreferencesPatch,
   type UserSession,
   type UserSettings,
   type UserSettingsPatch,
@@ -16,7 +15,7 @@ import { ApiError } from "@/lib/infrastructure/api/errors"
 
 type MockState = {
   user: AuthUser
-  prefs: ProfileNotificationPref[]
+  prefs: NotificationPreferences
   devices: DeviceToken[]
   sessions: UserSession[]
   authDevices: AuthDevice[]
@@ -36,46 +35,54 @@ export class InMemoryAccountRepository implements AccountRepository {
     return structuredClone(this.state.user)
   }
 
-  async listNotificationPrefs(careProfileId: string) {
-    return this.state.prefs.filter(
-      (item) => item.careProfileId === careProfileId
-    )
+  async getNotificationPreferences() {
+    return structuredClone(this.state.prefs)
   }
 
-  async updateNotificationPref(input: {
-    careProfileId: string
-    channel: NotificationChannel
-    reminderType: ReminderType
-    enabled: boolean
-  }) {
-    const existing = this.state.prefs.find(
-      (item) =>
-        item.careProfileId === input.careProfileId &&
-        item.channel === input.channel &&
-        item.reminderType === input.reminderType
-    )
-    if (existing) {
-      existing.enabled = input.enabled
-      return structuredClone(existing)
+  async updateNotificationPreferences(patch: NotificationPreferencesPatch) {
+    const prefs = this.state.prefs
+    if (patch.quietHoursStart !== undefined) {
+      prefs.quietHoursStart = patch.quietHoursStart || undefined
     }
-    const created: ProfileNotificationPref = {
-      careProfileId: input.careProfileId,
-      channel: input.channel,
-      reminderType: input.reminderType,
-      enabled: input.enabled,
-      createdAt: new Date().toISOString(),
+    if (patch.quietHoursEnd !== undefined) {
+      prefs.quietHoursEnd = patch.quietHoursEnd || undefined
     }
-    this.state.prefs.unshift(created)
-    return structuredClone(created)
+    if (patch.digestEnabled !== undefined) {
+      prefs.digestEnabled = patch.digestEnabled
+    }
+    if (patch.digestAt !== undefined) {
+      prefs.digestAt = patch.digestAt
+    }
+    for (const wanted of patch.preferences ?? []) {
+      const category = prefs.categories.find(
+        (item) => item.key === wanted.categoryKey
+      )
+      const channel = category?.channels.find(
+        (item) => item.channel === wanted.channel
+      )
+      if (!channel) {
+        continue
+      }
+      // Mirrors the backend: a locked channel is refused, not silently
+      // ignored, so the UI's snap-back path is exercised in mock mode too.
+      if (channel.isLocked) {
+        throw new ApiError("Kategori ini wajib.", {
+          code: "notification.category.mandatory",
+          status: 400,
+        })
+      }
+      channel.isEnabled = wanted.isEnabled
+    }
+    return structuredClone(prefs)
   }
 
   async listDeviceTokens() {
     return structuredClone(this.state.devices)
   }
 
-  async revokeDeviceToken(tokenId: string) {
+  async revokeDeviceToken(deviceTokenId: string) {
     this.state.devices = this.state.devices.filter(
-      (item) => item.id !== tokenId
+      (item) => item.id !== deviceTokenId
     )
   }
 

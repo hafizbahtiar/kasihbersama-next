@@ -7,10 +7,7 @@ import { IconDotsVertical } from "@tabler/icons-react"
 import { AccountMenu, accountInitials } from "@/components/account-menu"
 import { useAuth } from "@/components/auth/auth-provider"
 import { LogoMark } from "@/components/brand/logo-mark"
-import { ProfileSwitcher } from "@/components/care/profile-switcher"
-import { useCareData } from "@/components/care/care-data-provider"
 import { usePlatform } from "@/components/platform/platform-provider"
-import { useCarePermissions } from "@/hooks/use-care-permissions"
 import { isNavActive, primaryNav, secondaryNav } from "@/lib/app-nav"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -36,21 +33,13 @@ export function AppSidebar() {
   const { state } = useSidebar()
   const collapsed = state === "collapsed"
   const { isFeatureEnabled } = usePlatform()
-  const { can } = useCarePermissions()
-  const { selectedProfile } = useCareData()
 
+  // Penapis permission dibuang bersama RBAC care v0.1. Bila RBAC v0.2 sampai, ia
+  // ditapis di sini semula - tetapi dengan permission circle sebenar, bukan tebakan
+  // berasaskan profil yang dipilih.
   const visiblePrimaryNav = useMemo(
-    () =>
-      primaryNav.filter((item) => {
-        if (item.feature && !isFeatureEnabled(item.feature)) {
-          return false
-        }
-        if (item.permission && selectedProfile && !can(item.permission)) {
-          return false
-        }
-        return true
-      }),
-    [can, isFeatureEnabled, selectedProfile]
+    () => primaryNav.filter((item) => !item.feature || isFeatureEnabled(item.feature)),
+    [isFeatureEnabled]
   )
 
   return (
@@ -60,7 +49,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              href="/home"
+              href="/settings"
               tooltip="Kasih Bersama"
               className="group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
             >
@@ -84,7 +73,6 @@ export function AppSidebar() {
           "pilih profil jagaan di header". The sidebar exists at every width.
         */}
         <div className="px-1 pt-1 group-data-[collapsible=icon]:hidden">
-          <ProfileSwitcher className="w-full" />
         </div>
       </SidebarHeader>
 

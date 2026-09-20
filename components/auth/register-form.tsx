@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useState, type FormEvent } from "react"
 
 import { useClearAuthErrorOnMount } from "@/hooks/use-clear-auth-error-on-mount"
-import { AuthErrorBanner } from "@/components/care/async-state"
+import { AuthErrorBanner } from "@/components/shared/async-state"
 import { useAuth } from "@/components/auth/auth-provider"
 import { PasswordField } from "@/components/auth/password-field"
 import { Button } from "@/components/ui/button"

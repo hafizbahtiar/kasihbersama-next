@@ -10,7 +10,8 @@ import {
   type ReactNode,
 } from "react"
 
-import { CARE_TIME_ZONE } from "@/lib/application/care-format"
+// Zon masa paparan lalai (docs/00 §5: papar dalam Asia/Kuala_Lumpur, simpan UTC).
+const CARE_TIME_ZONE = "Asia/Kuala_Lumpur"
 import { getAccountRepository } from "@/lib/composition/account-repository"
 import {
   DEFAULT_USER_SETTINGS,

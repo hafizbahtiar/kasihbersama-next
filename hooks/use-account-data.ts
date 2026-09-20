@@ -6,11 +6,11 @@ import { getAccountRepository } from "@/lib/composition/account-repository"
 import type {
   AuthDevice,
   DeviceToken,
-  NotificationChannel,
-  ProfileNotificationPref,
-  ReminderType,
+  NotificationPreferences,
+  NotificationPreferencesPatch,
   UserSession,
 } from "@/lib/domain/account"
+import { EMPTY_NOTIFICATION_PREFERENCES } from "@/lib/domain/account"
 import {
   ApiError,
   isApiError,
@@ -23,25 +23,18 @@ type AsyncState<T> = {
   error: ApiError | null
 }
 
-function emptyState<T>(data: T): AsyncState<T> {
-  return { data, isLoading: false, error: null }
-}
-
-export function useNotificationPrefs(profileId: string | undefined) {
-  const [state, setState] = useState<AsyncState<ProfileNotificationPref[]>>({
-    data: [],
-    isLoading: Boolean(profileId),
+export function useNotificationPreferences() {
+  const [state, setState] = useState<AsyncState<NotificationPreferences>>({
+    data: EMPTY_NOTIFICATION_PREFERENCES,
+    isLoading: true,
     error: null,
   })
+  const [isSaving, setIsSaving] = useState(false)
 
   const load = useCallback(async () => {
-    if (!profileId) {
-      setState(emptyState([]))
-      return
-    }
     setState((current) => ({ ...current, isLoading: true, error: null }))
     try {
-      const data = await getAccountRepository().listNotificationPrefs(profileId)
+      const data = await getAccountRepository().getNotificationPreferences()
       setState({ data, isLoading: false, error: null })
     } catch (cause) {
       const error = isApiError(cause)
@@ -50,9 +43,13 @@ export function useNotificationPrefs(profileId: string | undefined) {
             code: "internal",
             status: 500,
           })
-      setState({ data: [], isLoading: false, error })
+      setState({
+        data: EMPTY_NOTIFICATION_PREFERENCES,
+        isLoading: false,
+        error,
+      })
     }
-  }, [profileId])
+  }, [])
 
   useEffect(() => {
     // Load-on-mount: the loader flips isLoading synchronously before its first
@@ -63,92 +60,23 @@ export function useNotificationPrefs(profileId: string | undefined) {
     void load()
   }, [load])
 
-  const updatePref = useCallback(
-    async (input: {
-      channel: NotificationChannel
-      reminderType: ReminderType
-      enabled: boolean
-    }) => {
-      if (!profileId) {
-        return
-      }
-      const previous = state.data
-      setState((current) => ({
-        ...current,
-        data: mergePref(current.data, profileId, input),
-        error: null,
-      }))
-      try {
-        const saved = await getAccountRepository().updateNotificationPref({
-          careProfileId: profileId,
-          ...input,
-        })
-        setState((current) => ({
-          ...current,
-          data: mergePref(current.data, profileId, {
-            channel: saved.channel,
-            reminderType: saved.reminderType,
-            enabled: saved.enabled,
-          }),
-        }))
-      } catch (cause) {
-        setState({
-          data: previous,
-          isLoading: false,
-          error: isApiError(cause) ? cause : null,
-        })
-        throw cause
-      }
-    },
-    [profileId, state.data]
-  )
+  /**
+   * No optimistic write: the server answers with the full preferences, and a
+   * refused switch (a mandatory category) has to snap back anyway. Rendering
+   * only what the server returned keeps one authority instead of two.
+   */
+  const save = useCallback(async (patch: NotificationPreferencesPatch) => {
+    setIsSaving(true)
+    try {
+      const data =
+        await getAccountRepository().updateNotificationPreferences(patch)
+      setState({ data, isLoading: false, error: null })
+    } finally {
+      setIsSaving(false)
+    }
+  }, [])
 
-  return { ...state, reload: load, updatePref }
-}
-
-function mergePref(
-  prefs: ProfileNotificationPref[],
-  profileId: string,
-  input: {
-    channel: NotificationChannel
-    reminderType: ReminderType
-    enabled: boolean
-  }
-) {
-  const rest = prefs.filter(
-    (item) =>
-      !(
-        item.careProfileId === profileId &&
-        item.channel === input.channel &&
-        item.reminderType === input.reminderType
-      )
-  )
-  return [
-    ...rest,
-    {
-      careProfileId: profileId,
-      channel: input.channel,
-      reminderType: input.reminderType,
-      enabled: input.enabled,
-      createdAt: new Date().toISOString(),
-    },
-  ]
-}
-
-export function prefEnabled(
-  prefs: ProfileNotificationPref[],
-  profileId: string,
-  channel: NotificationChannel,
-  reminderType: ReminderType,
-  defaultEnabled = true
-) {
-  const match = prefs.find(
-    (item) =>
-      item.careProfileId === profileId &&
-      item.channel === channel &&
-      item.reminderType === reminderType
-  )
-  return match?.enabled ?? defaultEnabled
+  return { ...state, isSaving, reload: load, save }
 }
 
 export function useDeviceTokens() {

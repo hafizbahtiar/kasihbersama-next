@@ -3,9 +3,8 @@ import type {
   AccountUsage,
   AuthDevice,
   DeviceToken,
-  NotificationChannel,
-  ProfileNotificationPref,
-  ReminderType,
+  NotificationPreferences,
+  NotificationPreferencesPatch,
   UserSession,
   UserSettings,
   UserSettingsPatch,
@@ -13,17 +12,16 @@ import type {
 
 export interface AccountRepository {
   updateDisplayName(displayName: string): Promise<AuthUser>
-  listNotificationPrefs(
-    careProfileId: string
-  ): Promise<ProfileNotificationPref[]>
-  updateNotificationPref(input: {
-    careProfileId: string
-    channel: NotificationChannel
-    reminderType: ReminderType
-    enabled: boolean
-  }): Promise<ProfileNotificationPref>
+  getNotificationPreferences(): Promise<NotificationPreferences>
+  /** Sparse, like `updateSettings`. Resolves with the full preferences as the
+   *  server stored them, so a refused switch snaps back to the truth. */
+  updateNotificationPreferences(
+    patch: NotificationPreferencesPatch
+  ): Promise<NotificationPreferences>
+
+  /** Push subscriptions - devices that can be REACHED, not ones that signed in. */
   listDeviceTokens(): Promise<DeviceToken[]>
-  revokeDeviceToken(tokenId: string): Promise<void>
+  revokeDeviceToken(deviceTokenId: string): Promise<void>
 
   /**
    * Both security writes take the current password even though the caller is

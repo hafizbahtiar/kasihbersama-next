@@ -5,13 +5,13 @@ import { useState, type FormEvent } from "react"
 import { useClearAuthErrorOnMount } from "@/hooks/use-clear-auth-error-on-mount"
 import { useBrowserValue } from "@/hooks/use-browser-value"
 import { useHydrated } from "@/hooks/use-hydrated"
-import { AuthErrorBanner } from "@/components/care/async-state"
+import { AuthErrorBanner } from "@/components/shared/async-state"
 import { useAuth } from "@/components/auth/auth-provider"
 import { PasswordField } from "@/components/auth/password-field"
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { fieldValue } from "@/lib/application/form-value"
-import { readTokenFromUrl } from "@/lib/application/deep-links"
+import { readTokenFromUrl } from "@/lib/application/token-from-url"
 
 export function ResetPasswordForm({
   initialToken = "",

@@ -8,7 +8,7 @@ import {
 } from "@tabler/icons-react"
 import { toast } from "sonner"
 
-import { AsyncStateBanner } from "@/components/care/async-state"
+import { AsyncStateBanner } from "@/components/shared/async-state"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -31,26 +31,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuthDevices } from "@/hooks/use-account-data"
 import { useDisplayFormat } from "@/lib/application/display-preferences"
-import type { AuthDevice } from "@/lib/domain/account"
+import { platformLabel, type AuthDevice } from "@/lib/domain/account"
 import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
-
-/**
- * Labels for the backend's device platform enum
- * (`ios,android,web,desktop,unknown`, from the auth route's `deviceDTO`).
- * `PLATFORM_LABELS` is keyed on the push token's narrower two values, so the
- * full set lives here.
- */
-const DEVICE_PLATFORM_LABELS: Record<string, string> = {
-  ios: "iOS",
-  android: "Android",
-  web: "Pelayar web",
-  desktop: "Komputer",
-  unknown: "Tidak dikenali",
-}
-
-function platformLabel(platform: string) {
-  return DEVICE_PLATFORM_LABELS[platform] ?? platform
-}
 
 /** What identifies a device, most specific field first. */
 function deviceTitle(device: AuthDevice) {
