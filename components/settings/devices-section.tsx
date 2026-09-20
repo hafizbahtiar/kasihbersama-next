@@ -1,34 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import {
-  IconDeviceDesktop,
-  IconDeviceMobile,
-  IconShieldCheck,
-} from "@tabler/icons-react"
+import { IconDeviceMobile, IconShieldCheck } from "@tabler/icons-react"
 import { toast } from "sonner"
 
-import { AsyncStateBanner } from "@/components/shared/async-state"
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
+import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item"
-import { Skeleton } from "@/components/ui/skeleton"
 import { useAuthDevices } from "@/hooks/use-account-data"
 import { useDisplayFormat } from "@/lib/application/display-preferences"
 import { platformLabel, type AuthDevice } from "@/lib/domain/account"
@@ -50,115 +29,117 @@ export function DevicesCard() {
   const { dateTime } = useDisplayFormat()
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null)
 
+  const helper = createDataTableColumnHelper<AuthDevice>()
+  const columns = helper.columns([
+    helper.accessor((row) => deviceTitle(row), {
+      id: "device",
+      header: "Peranti",
+      cell: ({ row, getValue }) => (
+        <div className="min-w-0 space-y-0.5">
+          <p className="font-medium">{getValue()}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {[
+              platformLabel(row.original.platform),
+              row.original.model,
+              row.original.osVersion,
+              row.original.appVersion ? `App ${row.original.appVersion}` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        </div>
+      ),
+    }),
+    helper.accessor((row) => (row.isTrusted ? "dipercayai" : "belum"), {
+      id: "trust",
+      header: "Kepercayaan",
+      filterFn: "equalsString",
+      cell: ({ row }) =>
+        row.original.isTrusted ? (
+          <Badge variant="secondary">Dipercayai</Badge>
+        ) : (
+          <Badge variant="outline">Belum dipercayai</Badge>
+        ),
+    }),
+    helper.accessor((row) => row.lastSeenAt ?? row.createdAt, {
+      id: "lastSeen",
+      header: "Kali terakhir",
+      cell: ({ getValue }) => (
+        <span className="text-muted-foreground">{dateTime(getValue())}</span>
+      ),
+    }),
+    helper.display({
+      id: "action",
+      header: () => <span className="flex justify-end">Tindakan</span>,
+      enableSorting: false,
+      cell: ({ row }) => (
+        <TableActions>
+          {/* Kepercayaan hanya ditetapkan, tidak pernah dibatalkan: backend ada
+              laluan trust dan tiada untrust, jadi tiada kawalan sebaliknya. */}
+          {row.original.isTrusted ? null : (
+            <TableActionButton
+              aria-label={`Tandakan dipercayai: ${deviceTitle(row.original)}`}
+              onPress={() => {
+                void devices
+                  .trust(row.original.id)
+                  .then(() => {
+                    toast.success("Peranti ditandakan dipercayai.")
+                  })
+                  .catch((cause) => {
+                    toast.error(
+                      isApiError(cause)
+                        ? messageForApiError(cause)
+                        : "Gagal menandakan peranti."
+                    )
+                  })
+              }}
+            >
+              <IconShieldCheck />
+              Percaya
+            </TableActionButton>
+          )}
+          <TableActionButton
+            aria-label={`Tarik balik ${deviceTitle(row.original)}`}
+            onPress={() => setRevokeTarget(row.original.id)}
+          >
+            Tarik balik
+          </TableActionButton>
+        </TableActions>
+      ),
+    }),
+  ])
+
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Peranti yang dikenali</CardTitle>
-          <CardDescription>
-            Peranti yang pernah log masuk ke akaun anda. Peranti dipercayai
-            tidak perlu memasukkan kod MFA lagi.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <AsyncStateBanner
-            error={devices.error}
-            onRetry={() => {
-              void devices.reload()
-            }}
-            label="Gagal memuatkan peranti."
-          />
-
-          {devices.isLoading ? (
-            <Skeleton className="h-24 w-full" />
-          ) : devices.data.length === 0 ? (
+      <DataTable
+        columns={columns}
+        data={devices.data}
+        getRowId={(row) => row.id}
+        isLoading={devices.isLoading}
+        errorMessage={
+          devices.error ? messageForApiError(devices.error) : undefined
+        }
+        onRetry={() => {
+          void devices.reload()
+        }}
+        pageSize={5}
+        searchable
+        searchPlaceholder="Cari peranti..."
+        toolbarStart={
+          <div className="space-y-1">
+            <h2 className="font-heading text-lg tracking-tight">
+              Peranti yang dikenali
+            </h2>
             <p className="text-sm text-muted-foreground">
-              Tiada peranti direkodkan lagi.
+              Peranti yang pernah log masuk ke akaun anda. Peranti dipercayai
+              tidak perlu memasukkan kod MFA lagi.
             </p>
-          ) : (
-            <ItemGroup className="gap-3">
-              {devices.data.map((device) => (
-                <Item key={device.id} variant="muted">
-                  <ItemMedia variant="icon">
-                    {device.platform === "web" ||
-                    device.platform === "desktop" ? (
-                      <IconDeviceDesktop />
-                    ) : (
-                      <IconDeviceMobile />
-                    )}
-                  </ItemMedia>
-                  <ItemContent>
-                    <ItemTitle className="flex flex-wrap items-center gap-2">
-                      {deviceTitle(device)}
-                      {device.isTrusted ? (
-                        <Badge variant="secondary">Dipercayai</Badge>
-                      ) : (
-                        <Badge variant="outline">Belum dipercayai</Badge>
-                      )}
-                    </ItemTitle>
-                    <ItemDescription className="space-y-0.5">
-                      <span className="block">
-                        {[
-                          platformLabel(device.platform),
-                          device.model,
-                          device.osVersion,
-                          device.appVersion
-                            ? `App ${device.appVersion}`
-                            : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </span>
-                      <span className="block">
-                        {device.lastSeenAt
-                          ? `Kali terakhir ${dateTime(device.lastSeenAt)}`
-                          : `Didaftarkan ${dateTime(device.createdAt)}`}
-                        {device.isTrusted && device.trustedAt
-                          ? ` · Dipercayai ${dateTime(device.trustedAt)}`
-                          : ""}
-                      </span>
-                    </ItemDescription>
-                  </ItemContent>
-                  <ItemActions>
-                    {/* Trust is only ever set, never cleared: the backend has
-                        a trust route and no untrust, so no reverse control is
-                        offered. */}
-                    {device.isTrusted ? null : (
-                      <Button
-                        size="sm"
-                        onPress={() => {
-                          void devices
-                            .trust(device.id)
-                            .then(() => {
-                              toast.success("Peranti ditandakan dipercayai.")
-                            })
-                            .catch((cause) => {
-                              toast.error(
-                                isApiError(cause)
-                                  ? messageForApiError(cause)
-                                  : "Gagal menandakan peranti."
-                              )
-                            })
-                        }}
-                      >
-                        <IconShieldCheck />
-                        Tandakan dipercayai
-                      </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onPress={() => setRevokeTarget(device.id)}
-                    >
-                      Tarik balik
-                    </Button>
-                  </ItemActions>
-                </Item>
-              ))}
-            </ItemGroup>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        }
+        emptyIcon={<IconDeviceMobile />}
+        emptyTitle="Tiada peranti direkodkan"
+        emptyDescription="Peranti muncul di sini selepas ia log masuk."
+      />
 
       <ConfirmDialog
         isOpen={Boolean(revokeTarget)}

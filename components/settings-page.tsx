@@ -13,7 +13,6 @@ import {
 import { toast } from "sonner"
 
 import { useAuth } from "@/components/auth/auth-provider"
-import { AsyncStateBanner } from "@/components/shared/async-state"
 import { ResendVerificationButton } from "@/components/auth/resend-verification-button"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { useLogout } from "@/components/logout-provider"
@@ -22,6 +21,7 @@ import {
   ExportAccountCard,
 } from "@/components/settings/danger-zone"
 import { DevicesCard } from "@/components/settings/devices-section"
+import { PushDeviceTable } from "@/components/settings/push-devices-section"
 import { DisplaySection } from "@/components/settings/display-section"
 import { MfaCard } from "@/components/settings/mfa-section"
 import { NotificationsCard } from "@/components/settings/notifications-section"
@@ -48,20 +48,8 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item"
-import { Skeleton } from "@/components/ui/skeleton"
 import { useDeviceTokens } from "@/hooks/use-account-data"
-import { useDisplayFormat } from "@/lib/application/display-preferences"
 import { fieldValue } from "@/lib/application/form-value"
-import { platformLabel } from "@/lib/domain/account"
 import { cn } from "@/lib/utils"
 
 const settingsNav = [
@@ -78,7 +66,6 @@ type SettingsSection = (typeof settingsNav)[number]["id"]
 
 export function SettingsPage() {
   const { user, updateDisplayName, logoutAll } = useAuth()
-  const { dateTime } = useDisplayFormat()
   const { requestLogout } = useLogout()
   const [section, setSection] = useState<SettingsSection>("account")
   const [displayName, setDisplayName] = useState(user?.displayName ?? "")
@@ -284,62 +271,10 @@ export function SettingsPage() {
           {section === "devices" ? (
             <div className="flex flex-col gap-4">
               <DevicesCard />
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Peranti push</CardTitle>
-                  <CardDescription>
-                    Peranti iOS/Android yang menerima push melalui subscription
-                    id.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <AsyncStateBanner
-                    error={devices.error}
-                    onRetry={() => {
-                      void devices.reload()
-                    }}
-                    label="Gagal memuatkan senarai peranti."
-                  />
-
-                  {devices.isLoading ? (
-                    <Skeleton className="h-24 w-full" />
-                  ) : devices.data.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      Tiada peranti didaftarkan. Daftar melalui aplikasi mudah
-                      alih Kasih Bersama.
-                    </p>
-                  ) : (
-                    <ItemGroup className="gap-3">
-                      {devices.data.map((device) => (
-                        <Item key={device.id} variant="muted">
-                          <ItemMedia variant="icon">
-                            <IconDeviceMobile />
-                          </ItemMedia>
-                          <ItemContent>
-                            <ItemTitle>
-                              {platformLabel(device.platform)}
-                            </ItemTitle>
-                            <ItemDescription>
-                              {device.providerSubscriptionId.slice(0, 18)}… ·{" "}
-                              {dateTime(device.createdAt)}
-                            </ItemDescription>
-                          </ItemContent>
-                          <ItemActions>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onPress={() => setRevokeTarget(device.id)}
-                            >
-                              Keluarkan
-                            </Button>
-                          </ItemActions>
-                        </Item>
-                      ))}
-                    </ItemGroup>
-                  )}
-                </CardContent>
-              </Card>
+              <PushDeviceTable
+                devices={devices}
+                onRevoke={(id) => setRevokeTarget(id)}
+              />
             </div>
           ) : null}
 

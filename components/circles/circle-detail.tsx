@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import {
   IconCrown,
   IconDoorExit,
@@ -13,8 +13,9 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { usePlatform } from "@/components/platform/platform-provider"
-import { AsyncStateBanner } from "@/components/shared/async-state"
+import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -28,22 +29,12 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item"
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
 import { useCircleInvitations } from "@/hooks/use-circle-invitations"
 import { useCircleMembers } from "@/hooks/use-circle-members"
 import { useDisplayFormat } from "@/lib/application/display-preferences"
@@ -51,6 +42,7 @@ import { getCircleRepository } from "@/lib/composition/circle-repository"
 import {
   ASSIGNABLE_ROLES,
   roleLabel,
+  type CircleInvitation,
   type CircleMember,
 } from "@/lib/domain/circle"
 import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
@@ -71,7 +63,9 @@ export function CircleDetail({ circleId }: { circleId: string }) {
   const [inviteRole, setInviteRole] = useState<string>("member")
   const [busy, setBusy] = useState(false)
   const [removeTarget, setRemoveTarget] = useState<CircleMember | null>(null)
-  const [transferTarget, setTransferTarget] = useState<CircleMember | null>(null)
+  const [transferTarget, setTransferTarget] = useState<CircleMember | null>(
+    null
+  )
   const [leaveOpen, setLeaveOpen] = useState(false)
 
   // Permissions are resolved for the ACTIVE circle only, so this screen can
@@ -84,24 +78,188 @@ export function CircleDetail({ circleId }: { circleId: string }) {
   const isOwner = circle?.roleKey === "owner"
   const invitations = useCircleInvitations(circleId, canReadInvites)
 
-  async function run(action: Promise<unknown>, done: string, reload = true) {
-    setBusy(true)
-    try {
-      await action
-      toast.success(done)
-      if (reload) {
-        await members.reload()
+  // useCallback kerana ia dirujuk dalam sel jadual: fungsi baharu setiap render
+  // bermakna lajur dibina semula setiap render juga.
+  const run = useCallback(
+    async (action: Promise<unknown>, done: string, reload = true) => {
+      setBusy(true)
+      try {
+        await action
+        toast.success(done)
+        if (reload) {
+          await members.reload()
+        }
+      } catch (cause) {
+        toast.error(
+          isApiError(cause) ? messageForApiError(cause) : "Tindakan gagal."
+        )
+      } finally {
+        setBusy(false)
       }
-    } catch (cause) {
-      toast.error(
-        isApiError(cause) ? messageForApiError(cause) : "Tindakan gagal."
-      )
-    } finally {
-      setBusy(false)
-    }
-  }
+    },
+    [members]
+  )
 
   const repo = getCircleRepository()
+
+  // Tanpa useMemo: React Compiler yang memoize modul ini, dan senarai kebergantungan
+  // tulis tangan di sini hanya berkemungkinan menyimpang daripada yang disimpulkannya.
+  const memberHelper = createDataTableColumnHelper<CircleMember>()
+  const memberColumns = memberHelper.columns([
+    memberHelper.accessor("displayName", {
+      header: "Nama",
+      cell: ({ row }) => (
+        <div className="min-w-0 space-y-0.5">
+          <p className="font-medium">{row.original.displayName}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {row.original.email}
+          </p>
+        </div>
+      ),
+    }),
+    memberHelper.accessor((row) => roleLabel(row.roleKey), {
+      id: "role",
+      header: "Peranan",
+      cell: ({ row }) =>
+        canManage && row.original.roleKey !== "owner" ? (
+          <Select
+            aria-label={`Peranan ${row.original.displayName}`}
+            value={row.original.roleKey}
+            isDisabled={busy}
+            onChange={(key) => {
+              const roleKey = String(key ?? "")
+              if (!roleKey || roleKey === row.original.roleKey) {
+                return
+              }
+              void run(
+                repo.changeMemberRole(circleId, row.original.id, roleKey),
+                "Peranan dikemas kini."
+              )
+            }}
+          >
+            <SelectTrigger size="sm" className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ASSIGNABLE_ROLES.map((role) => (
+                <SelectItem key={role} id={role}>
+                  {roleLabel(role)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Badge variant="secondary">{roleLabel(row.original.roleKey)}</Badge>
+        ),
+    }),
+    memberHelper.accessor("status", {
+      header: "Status",
+      cell: ({ getValue }) =>
+        getValue() === "suspended" ? (
+          <Badge variant="destructive">Digantung</Badge>
+        ) : (
+          <Badge variant="outline">Aktif</Badge>
+        ),
+    }),
+    memberHelper.accessor("joinedAt", {
+      header: "Sertai",
+      cell: ({ getValue }) => (
+        <span className="text-muted-foreground">{date(getValue())}</span>
+      ),
+    }),
+    memberHelper.display({
+      id: "action",
+      header: () => <span className="flex justify-end">Tindakan</span>,
+      enableSorting: false,
+      cell: ({ row }) => {
+        // Pemilik tiada tindakan: ia dipindahkan, tidak dibuang atau digantung.
+        if (!canManage || row.original.roleKey === "owner") {
+          return null
+        }
+        return (
+          <TableActions>
+            <TableActionButton
+              isDisabled={busy}
+              onPress={() => {
+                void run(
+                  repo.setMemberStatus(
+                    circleId,
+                    row.original.id,
+                    row.original.status === "suspended" ? "active" : "suspended"
+                  ),
+                  row.original.status === "suspended"
+                    ? "Ahli diaktifkan semula."
+                    : "Ahli digantung."
+                )
+              }}
+            >
+              {row.original.status === "suspended" ? "Aktifkan" : "Gantung"}
+            </TableActionButton>
+            {isOwner ? (
+              <TableActionButton
+                aria-label={`Serah milik kepada ${row.original.displayName}`}
+                isDisabled={busy}
+                onPress={() => setTransferTarget(row.original)}
+              >
+                <IconCrown />
+                Serah milik
+              </TableActionButton>
+            ) : null}
+            <TableActionButton
+              aria-label={`Buang ${row.original.displayName}`}
+              isDisabled={busy}
+              onPress={() => setRemoveTarget(row.original)}
+            >
+              <IconTrash />
+              Buang
+            </TableActionButton>
+          </TableActions>
+        )
+      },
+    }),
+  ])
+
+  const invitationHelper = createDataTableColumnHelper<CircleInvitation>()
+  const invitationColumns = invitationHelper.columns([
+    invitationHelper.accessor("email", { header: "E-mel" }),
+    invitationHelper.accessor((row) => roleLabel(row.roleKey), {
+      id: "role",
+      header: "Peranan",
+      cell: ({ getValue }) => <Badge variant="secondary">{getValue()}</Badge>,
+    }),
+    invitationHelper.accessor("expiresAt", {
+      header: "Tamat",
+      cell: ({ getValue }) => (
+        <span className="text-muted-foreground">{date(getValue())}</span>
+      ),
+    }),
+    invitationHelper.display({
+      id: "action",
+      header: () => <span className="flex justify-end">Tindakan</span>,
+      enableSorting: false,
+      cell: ({ row }) =>
+        canInvite ? (
+          <TableActions>
+            <TableActionButton
+              aria-label={`Batalkan jemputan ${row.original.email}`}
+              isDisabled={busy}
+              onPress={() => {
+                void run(
+                  repo
+                    .revokeInvitation(circleId, row.original.id)
+                    .then(() => invitations.reload()),
+                  "Jemputan dibatalkan.",
+                  false
+                )
+              }}
+            >
+              <IconMailOff />
+              Batalkan
+            </TableActionButton>
+          </TableActions>
+        ) : null,
+    }),
+  ])
 
   return (
     <div className="flex flex-col gap-5">
@@ -123,124 +281,32 @@ export function CircleDetail({ circleId }: { circleId: string }) {
         </p>
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Ahli</CardTitle>
-          <CardDescription>
-            Siapa dalam circle ini dan apa peranan mereka.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <AsyncStateBanner
-            error={members.error}
-            onRetry={() => {
-              void members.reload()
-            }}
-            label="Gagal memuatkan ahli."
-          />
-
-          {members.isLoading ? (
-            <Skeleton className="h-32 w-full" />
-          ) : members.data.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Tiada ahli aktif.</p>
-          ) : (
-            <ItemGroup className="gap-3">
-              {members.data.map((member) => (
-                <Item key={member.id} variant="muted" className="items-start">
-                  <ItemMedia variant="icon">
-                    <IconUser />
-                  </ItemMedia>
-                  <ItemContent>
-                    <ItemTitle className="flex flex-wrap items-center gap-2">
-                      {member.displayName}
-                      <Badge variant="outline">
-                        {roleLabel(member.roleKey)}
-                      </Badge>
-                      {member.status === "suspended" ? (
-                        <Badge variant="destructive">Digantung</Badge>
-                      ) : null}
-                    </ItemTitle>
-                    <ItemDescription>
-                      {member.email} · sertai {date(member.joinedAt)}
-                    </ItemDescription>
-                  </ItemContent>
-                  {canManage && member.roleKey !== "owner" ? (
-                    <ItemActions className="flex-col items-end gap-2 sm:flex-row sm:items-center">
-                      <Select
-                        aria-label={`Peranan ${member.displayName}`}
-                        value={member.roleKey}
-                        isDisabled={busy}
-                        onChange={(key) => {
-                          const roleKey = String(key ?? "")
-                          if (!roleKey || roleKey === member.roleKey) {
-                            return
-                          }
-                          void run(
-                            repo.changeMemberRole(circleId, member.id, roleKey),
-                            "Peranan dikemas kini."
-                          )
-                        }}
-                      >
-                        <SelectTrigger size="sm" className="w-36">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ASSIGNABLE_ROLES.map((role) => (
-                            <SelectItem key={role} id={role}>
-                              {roleLabel(role)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        isDisabled={busy}
-                        onPress={() => {
-                          void run(
-                            repo.setMemberStatus(
-                              circleId,
-                              member.id,
-                              member.status === "suspended"
-                                ? "active"
-                                : "suspended"
-                            ),
-                            member.status === "suspended"
-                              ? "Ahli diaktifkan semula."
-                              : "Ahli digantung."
-                          )
-                        }}
-                      >
-                        {member.status === "suspended" ? "Aktifkan" : "Gantung"}
-                      </Button>
-                      {isOwner ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          isDisabled={busy}
-                          onPress={() => setTransferTarget(member)}
-                        >
-                          <IconCrown />
-                          Serah milik
-                        </Button>
-                      ) : null}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        isDisabled={busy}
-                        onPress={() => setRemoveTarget(member)}
-                      >
-                        <IconTrash />
-                        Buang
-                      </Button>
-                    </ItemActions>
-                  ) : null}
-                </Item>
-              ))}
-            </ItemGroup>
-          )}
-        </CardContent>
-      </Card>
+      <DataTable
+        columns={memberColumns}
+        data={members.data}
+        getRowId={(row) => row.id}
+        isLoading={members.isLoading}
+        errorMessage={
+          members.error ? messageForApiError(members.error) : undefined
+        }
+        onRetry={() => {
+          void members.reload()
+        }}
+        searchable
+        searchPlaceholder="Cari ahli..."
+        pageSize={10}
+        toolbarStart={
+          <div className="space-y-1">
+            <h2 className="font-heading text-lg tracking-tight">Ahli</h2>
+            <p className="text-sm text-muted-foreground">
+              Siapa dalam circle ini dan apa peranan mereka.
+            </p>
+          </div>
+        }
+        emptyIcon={<IconUser />}
+        emptyTitle="Tiada ahli aktif"
+        emptyDescription="Jemput seseorang dengan alamat e-mel mereka."
+      />
 
       {canInvite ? (
         <Card>
@@ -308,68 +374,34 @@ export function CircleDetail({ circleId }: { circleId: string }) {
       ) : null}
 
       {canReadInvites ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Jemputan menunggu</CardTitle>
-            <CardDescription>
-              Jemputan yang sudah diterima muncul sebagai ahli, bukan di sini.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <AsyncStateBanner
-              error={invitations.error}
-              onRetry={() => {
-                void invitations.reload()
-              }}
-              label="Gagal memuatkan jemputan."
-            />
-            {invitations.isLoading ? (
-              <Skeleton className="h-20 w-full" />
-            ) : invitations.data.length === 0 ? (
+        <DataTable
+          columns={invitationColumns}
+          data={invitations.data}
+          getRowId={(row) => row.id}
+          isLoading={invitations.isLoading}
+          errorMessage={
+            invitations.error
+              ? messageForApiError(invitations.error)
+              : undefined
+          }
+          onRetry={() => {
+            void invitations.reload()
+          }}
+          pageSize={5}
+          toolbarStart={
+            <div className="space-y-1">
+              <h2 className="font-heading text-lg tracking-tight">
+                Jemputan menunggu
+              </h2>
               <p className="text-sm text-muted-foreground">
-                Tiada jemputan menunggu.
+                Jemputan yang sudah diterima muncul sebagai ahli, bukan di sini.
               </p>
-            ) : (
-              <ItemGroup className="gap-3">
-                {invitations.data.map((invitation) => (
-                  <Item key={invitation.id} variant="muted">
-                    <ItemMedia variant="icon">
-                      <IconMailForward />
-                    </ItemMedia>
-                    <ItemContent>
-                      <ItemTitle>{invitation.email}</ItemTitle>
-                      <ItemDescription>
-                        {roleLabel(invitation.roleKey)} · tamat{" "}
-                        {date(invitation.expiresAt)}
-                      </ItemDescription>
-                    </ItemContent>
-                    {canInvite ? (
-                      <ItemActions>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          isDisabled={busy}
-                          onPress={() => {
-                            void run(
-                              getCircleRepository()
-                                .revokeInvitation(circleId, invitation.id)
-                                .then(() => invitations.reload()),
-                              "Jemputan dibatalkan.",
-                              false
-                            )
-                          }}
-                        >
-                          <IconMailOff />
-                          Batalkan
-                        </Button>
-                      </ItemActions>
-                    ) : null}
-                  </Item>
-                ))}
-              </ItemGroup>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+          }
+          emptyIcon={<IconMailForward />}
+          emptyTitle="Tiada jemputan menunggu"
+          emptyDescription="Setiap jemputan yang dihantar akan disenaraikan di sini sehingga diterima."
+        />
       ) : null}
 
       <Card>

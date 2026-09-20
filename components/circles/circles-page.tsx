@@ -4,7 +4,9 @@ import { useState } from "react"
 import { IconCheck, IconPlus, IconUsersGroup } from "@tabler/icons-react"
 import { toast } from "sonner"
 
+import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { usePlatform } from "@/components/platform/platform-provider"
+import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button, LinkButton } from "@/components/ui/button"
 import {
@@ -18,26 +20,17 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item"
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
 import { getCircleRepository } from "@/lib/composition/circle-repository"
 import {
   CIRCLE_TYPE_LABELS,
   roleLabel,
+  type CircleMembership,
   type CircleType,
 } from "@/lib/domain/circle"
 import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
@@ -87,6 +80,58 @@ export function CirclesPage() {
     }
   }
 
+  // Tanpa useMemo: React Compiler yang memoize komponen ini.
+  const helper = createDataTableColumnHelper<CircleMembership>()
+  const columns = helper.columns([
+    helper.accessor("name", {
+      header: "Nama",
+      cell: ({ row }) => (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-medium">{row.original.name}</span>
+          {row.original.id === activeCircle?.id ? <Badge>Aktif</Badge> : null}
+        </div>
+      ),
+    }),
+    helper.accessor((row) => CIRCLE_TYPE_LABELS[row.type] ?? String(row.type), {
+      id: "type",
+      header: "Jenis",
+    }),
+    helper.accessor((row) => roleLabel(row.roleKey), {
+      id: "role",
+      header: "Peranan anda",
+      cell: ({ getValue }) => <Badge variant="secondary">{getValue()}</Badge>,
+    }),
+    helper.display({
+      id: "action",
+      header: () => <span className="flex justify-end">Tindakan</span>,
+      enableSorting: false,
+      cell: ({ row }) => (
+        <TableActions>
+          {row.original.id === activeCircle?.id ? null : (
+            <TableActionButton
+              aria-label={`Jadikan ${row.original.name} aktif`}
+              isDisabled={switching !== null}
+              onPress={() => {
+                void makeActive(row.original.id)
+              }}
+            >
+              <IconCheck />
+              Jadikan aktif
+            </TableActionButton>
+          )}
+          <LinkButton
+            href={`/circles/${row.original.id}`}
+            variant="outline"
+            size="sm"
+            className="px-2"
+          >
+            Urus
+          </LinkButton>
+        </TableActions>
+      ),
+    }),
+  ])
+
   return (
     <div className="flex flex-col gap-5">
       <div className="space-y-1">
@@ -96,69 +141,26 @@ export function CirclesPage() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Circle anda</CardTitle>
-          <CardDescription>
-            Circle aktif menentukan apa yang anda boleh lihat dan buat.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading && circles.length === 0 ? (
-            <Skeleton className="h-24 w-full" />
-          ) : circles.length === 0 ? (
+      <DataTable
+        columns={columns}
+        data={circles}
+        getRowId={(row) => row.id}
+        isLoading={isLoading && circles.length === 0}
+        searchable={circles.length > 0}
+        searchPlaceholder="Cari circle..."
+        pageSize={10}
+        toolbarStart={
+          <div className="space-y-1">
+            <h2 className="font-heading text-lg tracking-tight">Circle anda</h2>
             <p className="text-sm text-muted-foreground">
-              Anda belum menyertai mana-mana circle. Cipta satu di bawah, atau
-              terima jemputan yang dihantar ke e-mel anda.
+              Circle aktif menentukan apa yang anda boleh lihat dan buat.
             </p>
-          ) : (
-            <ItemGroup className="gap-3">
-              {circles.map((circle) => {
-                const active = circle.id === activeCircle?.id
-                return (
-                  <Item key={circle.id} variant={active ? "outline" : "muted"}>
-                    <ItemMedia variant="icon">
-                      <IconUsersGroup />
-                    </ItemMedia>
-                    <ItemContent>
-                      <ItemTitle className="flex flex-wrap items-center gap-2">
-                        {circle.name}
-                        {active ? <Badge>Aktif</Badge> : null}
-                      </ItemTitle>
-                      <ItemDescription>
-                        {CIRCLE_TYPE_LABELS[circle.type] ?? circle.type} ·{" "}
-                        {roleLabel(circle.roleKey)}
-                      </ItemDescription>
-                    </ItemContent>
-                    <ItemActions className="gap-2">
-                      {active ? null : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          isDisabled={switching !== null}
-                          onPress={() => {
-                            void makeActive(circle.id)
-                          }}
-                        >
-                          <IconCheck />
-                          Jadikan aktif
-                        </Button>
-                      )}
-                      <LinkButton
-                        href={`/circles/${circle.id}`}
-                        variant="ghost"
-                        size="sm"
-                      >
-                        Urus
-                      </LinkButton>
-                    </ItemActions>
-                  </Item>
-                )
-              })}
-            </ItemGroup>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        }
+        emptyIcon={<IconUsersGroup />}
+        emptyTitle="Belum menyertai circle"
+        emptyDescription="Cipta satu di bawah, atau terima jemputan yang dihantar ke e-mel anda."
+      />
 
       <Card>
         <CardHeader>

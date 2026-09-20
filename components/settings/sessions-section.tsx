@@ -4,29 +4,14 @@ import { useState } from "react"
 import { IconDeviceDesktop, IconLogout } from "@tabler/icons-react"
 import { toast } from "sonner"
 
-import { AsyncStateBanner } from "@/components/shared/async-state"
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
+import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemMedia,
-  ItemTitle,
-} from "@/components/ui/item"
-import { Skeleton } from "@/components/ui/skeleton"
 import { useSessions } from "@/hooks/use-account-data"
 import { useDisplayFormat } from "@/lib/application/display-preferences"
+import type { UserSession } from "@/lib/domain/account"
+import { messageForApiError } from "@/lib/infrastructure/api/errors"
 
 /**
  * The list of live logins.
@@ -40,71 +25,80 @@ export function SessionsCard() {
   const { dateTime } = useDisplayFormat()
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null)
 
+  const helper = createDataTableColumnHelper<UserSession>()
+  const columns = helper.columns([
+    helper.accessor((row) => row.userAgent ?? "Peranti tidak dikenali", {
+      id: "device",
+      header: "Peranti",
+      cell: ({ row, getValue }) => (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-medium">{getValue()}</span>
+          {row.original.current ? (
+            <Badge variant="secondary">Peranti ini</Badge>
+          ) : null}
+        </div>
+      ),
+    }),
+    helper.accessor((row) => row.ipAddress ?? "-", {
+      id: "ip",
+      header: "Alamat IP",
+    }),
+    helper.accessor("createdAt", {
+      header: "Mula",
+      cell: ({ getValue }) => (
+        <span className="text-muted-foreground">{dateTime(getValue())}</span>
+      ),
+    }),
+    helper.display({
+      id: "action",
+      header: () => <span className="flex justify-end">Tindakan</span>,
+      enableSorting: false,
+      // Sesi semasa ditamatkan dengan log keluar, bukan dari senarai ini -
+      // "Tamatkan" di sini kelihatan seperti cara mengamankan akaun sedangkan
+      // ia hanya mengelog keluar peranti yang ada di depan pengguna.
+      cell: ({ row }) =>
+        row.original.current ? null : (
+          <TableActions>
+            <TableActionButton
+              aria-label="Tamatkan sesi ini"
+              onPress={() => setRevokeTarget(row.original.id)}
+            >
+              Tamatkan
+            </TableActionButton>
+          </TableActions>
+        ),
+    }),
+  ])
+
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Peranti yang log masuk</CardTitle>
-          <CardDescription>
-            Tidak kenal salah satu? Tamatkan sesi itu, kemudian tukar kata
-            laluan.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <AsyncStateBanner
-            error={sessions.error}
-            onRetry={() => {
-              void sessions.reload()
-            }}
-            label="Gagal memuatkan sesi."
-          />
-
-          {sessions.isLoading ? (
-            <Skeleton className="h-24 w-full" />
-          ) : sessions.data.length === 0 ? (
+      <DataTable
+        columns={columns}
+        data={sessions.data}
+        getRowId={(row) => row.id}
+        isLoading={sessions.isLoading}
+        errorMessage={
+          sessions.error ? messageForApiError(sessions.error) : undefined
+        }
+        onRetry={() => {
+          void sessions.reload()
+        }}
+        pageSize={5}
+        toolbarStart={
+          <div className="space-y-1">
+            <h2 className="font-heading text-lg tracking-tight">
+              Peranti yang log masuk
+            </h2>
             <p className="text-sm text-muted-foreground">
-              Tiada sesi aktif direkodkan.
+              Tidak kenal salah satu? Tamatkan sesi itu, kemudian tukar kata
+              laluan.
             </p>
-          ) : (
-            <ItemGroup className="gap-3">
-              {sessions.data.map((session) => (
-                <Item key={session.id} variant="muted">
-                  <ItemMedia variant="icon">
-                    <IconDeviceDesktop />
-                  </ItemMedia>
-                  <ItemContent>
-                    <ItemTitle className="flex flex-wrap items-center gap-2">
-                      {session.userAgent ?? "Peranti tidak dikenali"}
-                      {session.current ? (
-                        <Badge variant="secondary">Peranti ini</Badge>
-                      ) : null}
-                    </ItemTitle>
-                    <ItemDescription>
-                      {session.ipAddress ? `${session.ipAddress} · ` : ""}
-                      Mula {dateTime(session.createdAt)}
-                    </ItemDescription>
-                  </ItemContent>
-                  <ItemActions>
-                    {/* The current session is ended by logging out, not from
-                        this list - offering "Tamatkan" here would look like a
-                        way to secure the account while actually just signing
-                        the user out of the device in front of them. */}
-                    {session.current ? null : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onPress={() => setRevokeTarget(session.id)}
-                      >
-                        Tamatkan
-                      </Button>
-                    )}
-                  </ItemActions>
-                </Item>
-              ))}
-            </ItemGroup>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        }
+        emptyIcon={<IconDeviceDesktop />}
+        emptyTitle="Tiada sesi aktif"
+        emptyDescription="Sesi log masuk akan disenaraikan di sini."
+      />
 
       <ConfirmDialog
         isOpen={Boolean(revokeTarget)}

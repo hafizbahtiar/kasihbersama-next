@@ -21,11 +21,15 @@ export const primaryNav: AppNavItem[] = [
   // Tiada permission: senarai circle datang daripada bootstrap, dan pengguna
   // tanpa circle memerlukan skrin ini paling-paling untuk mencipta yang pertama.
   { href: "/circles", title: "Circle", icon: IconUsersGroup },
+]
+
+// Bahagian "Akaun" di bawah sidebar: pemberitahuan dan tetapan ialah hal AKAUN,
+// bukan hal circle - dan lencana belum dibaca sudah ada di navbar, jadi tempatnya
+// di sini dan bukan di puncak senarai jagaan.
+export const secondaryNav: AppNavItem[] = [
   { href: "/notifications", title: "Pemberitahuan", icon: IconBell },
   { href: "/settings", title: "Tetapan", icon: IconSettings },
 ]
-
-export const secondaryNav: AppNavItem[] = []
 
 const allNavItems = [...primaryNav, ...secondaryNav]
 
