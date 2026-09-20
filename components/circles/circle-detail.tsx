@@ -16,6 +16,7 @@ import { CircleSettingsSection } from "@/components/circles/circle-settings-sect
 import { PersonsSection } from "@/components/circles/persons-section"
 import { ResponsiveDialog } from "@/components/responsive-dialog"
 import { StatusChip } from "@/components/status-chip"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { usePlatform } from "@/components/platform/platform-provider"
 import { TableActionButton, TableActions } from "@/components/table-actions"
@@ -230,53 +231,108 @@ export function CircleDetail({ circleId }: { circleId: string }) {
   ])
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="space-y-1">
-        <h1 className="font-heading text-2xl tracking-tight">
-          {circle?.name ?? "Circle"}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {circle
-            ? `Peranan anda: ${roleLabel(circle.roleKey)}`
-            : "Circle ini tiada dalam senarai keahlian anda."}
-        </p>
-      </div>
+    <>
+      <Tabs defaultSelectedKey="members" className="gap-5">
+        <div className="space-y-1">
+          <h1 className="font-heading text-2xl tracking-tight">
+            {circle?.name ?? "Circle"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {circle
+              ? `Peranan anda: ${roleLabel(circle.roleKey)}`
+              : "Circle ini tiada dalam senarai keahlian anda."}
+          </p>
+        </div>
 
-      {circle && !isActive ? (
-        <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
-          Circle ini bukan circle aktif anda, jadi tindakan pengurusan
-          disembunyikan. Jadikan ia aktif dari halaman Circle dahulu.
-        </p>
-      ) : null}
+        {circle && !isActive ? (
+          <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
+            Circle ini bukan circle aktif anda, jadi tindakan pengurusan
+            disembunyikan. Jadikan ia aktif dari halaman Circle dahulu.
+          </p>
+        ) : null}
 
-      <DataTable
-        columns={memberColumns}
-        data={members.data}
-        getRowId={(row) => row.id}
-        isLoading={members.isLoading}
-        errorMessage={
-          members.error ? messageForApiError(members.error) : undefined
-        }
-        onRetry={() => {
-          void members.reload()
-        }}
-        searchable
-        searchPlaceholder="Cari ahli..."
-        pageSize={10}
-        addLabel="Jemput ahli"
-        onAdd={canInvite ? () => setIsInviteOpen(true) : undefined}
-        toolbarStart={
-          <div className="space-y-1">
-            <h2 className="font-heading text-lg tracking-tight">Ahli</h2>
-            <p className="text-sm text-muted-foreground">
-              Siapa dalam circle ini dan apa peranan mereka.
-            </p>
-          </div>
-        }
-        emptyIcon={<IconUser />}
-        emptyTitle="Tiada ahli aktif"
-        emptyDescription="Jemput seseorang dengan alamat e-mel mereka."
-      />
+        <TabsList variant="line" aria-label="Bahagian circle">
+          <TabsTrigger id="members">Ahli</TabsTrigger>
+          <TabsTrigger id="persons">Person</TabsTrigger>
+          <TabsTrigger id="settings">Tetapan</TabsTrigger>
+        </TabsList>
+
+        <TabsContent id="members">
+          <DataTable
+            columns={memberColumns}
+            data={members.data}
+            getRowId={(row) => row.id}
+            isLoading={members.isLoading}
+            errorMessage={
+              members.error ? messageForApiError(members.error) : undefined
+            }
+            onRetry={() => {
+              void members.reload()
+            }}
+            searchable
+            searchPlaceholder="Cari ahli..."
+            pageSize={10}
+            addLabel="Jemput ahli"
+            onAdd={canInvite ? () => setIsInviteOpen(true) : undefined}
+            toolbarStart={
+              <div className="space-y-1">
+                <h2 className="font-heading text-lg tracking-tight">Ahli</h2>
+                <p className="text-sm text-muted-foreground">
+                  Siapa dalam circle ini dan apa peranan mereka.
+                </p>
+              </div>
+            }
+            emptyIcon={<IconUser />}
+            emptyTitle="Tiada ahli aktif"
+            emptyDescription="Jemput seseorang dengan alamat e-mel mereka."
+          />
+        </TabsContent>
+
+        <TabsContent id="persons" className="flex flex-col gap-5">
+          <PersonsSection
+            circleId={circleId}
+            members={members.data}
+            canRead={canReadPersons}
+            canCreate={canCreatePerson}
+            canUpdate={canUpdatePerson}
+            canDelete={canDeletePerson}
+            canShare={canSharePerson}
+          />
+        </TabsContent>
+
+        <TabsContent id="settings" className="flex flex-col gap-5">
+          <CircleSettingsSection
+            circleId={circleId}
+            canUpdate={canUpdateCircle}
+            onSaved={() => {
+              // Nama circle muncul dalam navigasi dan header, dan kedua-duanya
+              // membaca bootstrap - jadi ia dibaca semula, bukan ditampal tempatan.
+              void refresh()
+            }}
+          />
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Keluar circle</CardTitle>
+              <CardDescription>
+                {isOwner
+                  ? "Pemilik mesti menyerahkan pemilikan sebelum boleh keluar."
+                  : "Anda hilang akses kepada semua rekod circle ini."}
+              </CardDescription>
+            </CardHeader>
+            <CardFooter className="justify-end">
+              <Button
+                variant="destructive"
+                isDisabled={busy || !circle}
+                onPress={() => setLeaveOpen(true)}
+              >
+                <IconDoorExit />
+                Keluar
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <ResponsiveDialog
         isOpen={isInviteOpen}
@@ -343,47 +399,6 @@ export function CircleDetail({ circleId }: { circleId: string }) {
           </Select>
         </Field>
       </ResponsiveDialog>
-
-      <PersonsSection
-        circleId={circleId}
-        members={members.data}
-        canRead={canReadPersons}
-        canCreate={canCreatePerson}
-        canUpdate={canUpdatePerson}
-        canDelete={canDeletePerson}
-        canShare={canSharePerson}
-      />
-
-      <CircleSettingsSection
-        circleId={circleId}
-        canUpdate={canUpdateCircle}
-        onSaved={() => {
-          // Nama circle muncul dalam navigasi dan header, dan kedua-duanya
-          // membaca bootstrap - jadi ia dibaca semula, bukan ditampal tempatan.
-          void refresh()
-        }}
-      />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Keluar circle</CardTitle>
-          <CardDescription>
-            {isOwner
-              ? "Pemilik mesti menyerahkan pemilikan sebelum boleh keluar."
-              : "Anda hilang akses kepada semua rekod circle ini."}
-          </CardDescription>
-        </CardHeader>
-        <CardFooter className="justify-end">
-          <Button
-            variant="destructive"
-            isDisabled={busy || !circle}
-            onPress={() => setLeaveOpen(true)}
-          >
-            <IconDoorExit />
-            Keluar
-          </Button>
-        </CardFooter>
-      </Card>
 
       <ConfirmDialog
         isOpen={Boolean(removeTarget)}
@@ -453,6 +468,6 @@ export function CircleDetail({ circleId }: { circleId: string }) {
           )
         }}
       />
-    </div>
+    </>
   )
 }
