@@ -13,6 +13,8 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { CircleSettingsSection } from "@/components/circles/circle-settings-section"
+import { PersonsSection } from "@/components/circles/persons-section"
 import { ResponsiveDialog } from "@/components/responsive-dialog"
 import { StatusChip } from "@/components/status-chip"
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
@@ -51,6 +53,12 @@ import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
 const PERM_INVITE = "circle.invitation.create"
 const PERM_READ_INVITE = "circle.invitation.read"
 const PERM_MANAGE_MEMBER = "circle.member.manage"
+const PERM_READ_PERSON = "core.person.read"
+const PERM_CREATE_PERSON = "core.person.create"
+const PERM_UPDATE_PERSON = "core.person.update"
+const PERM_DELETE_PERSON = "core.person.delete"
+const PERM_SHARE_PERSON = "core.person.share"
+const PERM_UPDATE_CIRCLE = "circle.circle.update"
 
 export function CircleDetail({ circleId }: { circleId: string }) {
   const router = useRouter()
@@ -76,6 +84,12 @@ export function CircleDetail({ circleId }: { circleId: string }) {
   const canInvite = isActive && can(PERM_INVITE)
   const canReadInvites = isActive && can(PERM_READ_INVITE)
   const canManage = isActive && can(PERM_MANAGE_MEMBER)
+  const canReadPersons = isActive && can(PERM_READ_PERSON)
+  const canCreatePerson = isActive && can(PERM_CREATE_PERSON)
+  const canUpdatePerson = isActive && can(PERM_UPDATE_PERSON)
+  const canDeletePerson = isActive && can(PERM_DELETE_PERSON)
+  const canSharePerson = isActive && can(PERM_SHARE_PERSON)
+  const canUpdateCircle = isActive && can(PERM_UPDATE_CIRCLE)
   const isOwner = circle?.roleKey === "owner"
   const invitations = useCircleInvitations(circleId, canReadInvites)
 
@@ -417,6 +431,26 @@ export function CircleDetail({ circleId }: { circleId: string }) {
           emptyDescription="Setiap jemputan yang dihantar akan disenaraikan di sini sehingga diterima."
         />
       ) : null}
+
+      <PersonsSection
+        circleId={circleId}
+        members={members.data}
+        canRead={canReadPersons}
+        canCreate={canCreatePerson}
+        canUpdate={canUpdatePerson}
+        canDelete={canDeletePerson}
+        canShare={canSharePerson}
+      />
+
+      <CircleSettingsSection
+        circleId={circleId}
+        canUpdate={canUpdateCircle}
+        onSaved={() => {
+          // Nama circle muncul dalam navigasi dan header, dan kedua-duanya
+          // membaca bootstrap - jadi ia dibaca semula, bukan ditampal tempatan.
+          void refresh()
+        }}
+      />
 
       <Card>
         <CardHeader>

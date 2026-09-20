@@ -2,8 +2,14 @@ import type {
   CircleInvitation,
   CircleMember,
   CirclePerson,
+  CirclePersonDetail,
+  CircleSettings,
+  CircleSettingsPatch,
   CircleType,
   MembershipStatus,
+  PersonAccessGrant,
+  PersonAccessLevel,
+  PersonPatch,
 } from "@/lib/domain/circle"
 import type { CircleRepository } from "@/lib/domain/circle-repository"
 import type { Page } from "@/lib/domain/pagination"
@@ -29,6 +35,37 @@ type ApiInvitation = {
   expires_at: string
 }
 
+type ApiPersonListRow = {
+  id: string
+  full_name: string
+  preferred_name?: string
+  sex?: string
+  age_years?: number
+  access_level: string
+}
+
+type ApiPersonDetail = ApiPersonListRow & {
+  circle_id: string
+  date_of_birth?: string
+  notes?: string
+  fields_readable?: string[]
+}
+
+type ApiPersonAccessGrant = {
+  member_id: string
+  display_name: string
+  email?: string
+  level: string
+}
+
+type ApiCircle = {
+  id: string
+  name: string
+  type: string
+  timezone: string
+  currency: string
+}
+
 function mapMember(api: ApiMember): CircleMember {
   return {
     id: api.id,
@@ -51,6 +88,37 @@ function mapInvitation(api: ApiInvitation): CircleInvitation {
     roleKey: api.role_key,
     status: api.status,
     expiresAt: api.expires_at,
+  }
+}
+
+function mapPersonRow(api: ApiPersonListRow): CirclePerson {
+  return {
+    id: api.id,
+    fullName: api.full_name,
+    preferredName: api.preferred_name,
+    sex: api.sex,
+    ageYears: api.age_years,
+    accessLevel: api.access_level as PersonAccessLevel,
+  }
+}
+
+function mapPersonDetail(api: ApiPersonDetail): CirclePersonDetail {
+  return {
+    ...mapPersonRow(api),
+    circleId: api.circle_id,
+    dateOfBirth: api.date_of_birth,
+    notes: api.notes,
+    fieldsReadable: api.fields_readable ?? [],
+  }
+}
+
+function mapCircle(api: ApiCircle): CircleSettings {
+  return {
+    id: api.id,
+    name: api.name,
+    type: api.type as CircleType,
+    timezone: api.timezone,
+    currency: api.currency,
   }
 }
 
@@ -162,25 +230,114 @@ export class ApiCircleRepository implements CircleRepository {
       dateOfBirth?: string
       sex?: string
     }
-  ): Promise<CirclePerson> {
+  ) {
+    return this.client.request<void>(`/circles/${circleId}/persons`, {
+      method: "POST",
+      body: JSON.stringify({
+        full_name: input.fullName,
+        preferred_name: input.preferredName,
+        date_of_birth: input.dateOfBirth,
+        sex: input.sex,
+      }),
+    })
+  }
+
+  listPersons(circleId: string) {
     return this.client
-      .request<{ person: { id: string; circle_id: string; full_name: string } }>(
-        `/circles/${circleId}/persons`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            full_name: input.fullName,
-            preferred_name: input.preferredName,
-            date_of_birth: input.dateOfBirth,
-            sex: input.sex,
-          }),
-        }
+      .request<{ data: ApiPersonListRow[] }>(`/circles/${circleId}/persons`)
+      .then((body) => (body.data ?? []).map(mapPersonRow))
+  }
+
+  getPerson(circleId: string, personId: string) {
+    return this.client
+      .request<{ person: ApiPersonDetail }>(
+        `/circles/${circleId}/persons/${personId}`
       )
-      .then((body) => ({
-        id: body.person.id,
-        circleId: body.person.circle_id,
-        fullName: body.person.full_name,
-      }))
+      .then((body) => mapPersonDetail(body.person))
+  }
+
+  updatePerson(circleId: string, personId: string, patch: PersonPatch) {
+    // Sparse body, same contract as everywhere else: a key that is absent is
+    // left alone. That is what keeps a summary-level reader - who never
+    // received `date_of_birth` or `notes` - from blanking them by saving a
+    // form it could not fill.
+    const body: Record<string, unknown> = {}
+    if (patch.fullName !== undefined) body.full_name = patch.fullName
+    if (patch.preferredName !== undefined) {
+      body.preferred_name = patch.preferredName
+    }
+    if (patch.dateOfBirth !== undefined) body.date_of_birth = patch.dateOfBirth
+    if (patch.sex !== undefined) body.sex = patch.sex
+    if (patch.notes !== undefined) body.notes = patch.notes
+
+    return this.client.request<void>(
+      `/circles/${circleId}/persons/${personId}`,
+      { method: "PATCH", body: JSON.stringify(body) }
+    )
+  }
+
+  deletePerson(circleId: string, personId: string) {
+    return this.client.request<void>(
+      `/circles/${circleId}/persons/${personId}`,
+      { method: "DELETE" }
+    )
+  }
+
+  listPersonAccess(circleId: string, personId: string) {
+    return this.client
+      .request<{ data: ApiPersonAccessGrant[] }>(
+        `/circles/${circleId}/persons/${personId}/access`
+      )
+      .then((body) =>
+        (body.data ?? []).map(
+          (row): PersonAccessGrant => ({
+            memberId: row.member_id,
+            displayName: row.display_name,
+            email: row.email ?? "",
+            level: row.level as PersonAccessLevel,
+          })
+        )
+      )
+  }
+
+  grantPersonAccess(
+    circleId: string,
+    personId: string,
+    memberId: string,
+    level: PersonAccessLevel
+  ) {
+    return this.client.request<void>(
+      `/circles/${circleId}/persons/${personId}/access/${memberId}`,
+      { method: "PUT", body: JSON.stringify({ level }) }
+    )
+  }
+
+  revokePersonAccess(circleId: string, personId: string, memberId: string) {
+    return this.client.request<void>(
+      `/circles/${circleId}/persons/${personId}/access/${memberId}`,
+      { method: "DELETE" }
+    )
+  }
+
+  getCircle(circleId: string) {
+    return this.client
+      .request<{ circle: ApiCircle }>(`/circles/${circleId}`)
+      .then((body) => mapCircle(body.circle))
+  }
+
+  updateCircle(circleId: string, patch: CircleSettingsPatch) {
+    const body: Record<string, unknown> = {}
+    if (patch.name !== undefined) body.name = patch.name
+    if (patch.type !== undefined) body.type = patch.type
+    if (patch.timezone !== undefined) body.timezone = patch.timezone
+    if (patch.currency !== undefined) body.currency = patch.currency
+
+    return this.client
+      .request<{ circle: ApiCircle }>(`/circles/${circleId}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      })
+      .then((response) => mapCircle(response.circle))
   }
 
   switchCircle(circleId: string) {
