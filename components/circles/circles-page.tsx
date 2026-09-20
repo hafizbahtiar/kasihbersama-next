@@ -35,7 +35,7 @@ const CIRCLE_TYPES = Object.keys(CIRCLE_TYPE_LABELS) as CircleType[]
 
 export function CirclesPage() {
   const {
-    bootstrap,
+    canCreateCircle,
     circles,
     activeCircle,
     isLoading,
@@ -49,14 +49,9 @@ export function CirclesPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [switching, setSwitching] = useState<string | null>(null)
 
-  // Circles the account OWNS, not the ones it merely joined: the free plan limits how
-  // many you may own (docs/09 §2), and being invited to someone else's circle must never
-  // count against that.
-  const userId = bootstrap?.account?.user.id
-  const ownedCircles = circles.filter(
-    (circle) => circle.ownerUserId === userId
-  ).length
-  const atOwnedLimit = ownedCircles >= limits.maxOwnedCircles
+  // Kiraan circle MILIK dan had datang daripada provider: dua tempat yang mengira
+  // perkara yang sama akan berselisih, dan sidebar memerlukan angka yang sama.
+  const atOwnedLimit = !canCreateCircle
 
   async function createCircle() {
     if (!name.trim()) {
@@ -153,7 +148,9 @@ export function CirclesPage() {
       <div className="space-y-1">
         <h1 className="font-heading text-2xl tracking-tight">Circle</h1>
         <p className="text-sm text-muted-foreground">
-          Keluarga atau kumpulan penjagaan yang anda sertai.
+          Keluarga atau kumpulan penjagaan yang anda sertai. Anda boleh
+          menyertai seberapa banyak circle orang lain; pelan percuma membenarkan{" "}
+          {limits.maxOwnedCircles} circle milik sendiri.
         </p>
       </div>
 

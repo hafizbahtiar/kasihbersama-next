@@ -27,6 +27,13 @@ type BootstrapContextValue = {
   appBuild: number
   /** Circles the account belongs to. Empty is a real state: render onboarding. */
   circles: CircleMembership[]
+  /**
+   * Circles this account OWNS. Joining other people's circles is unlimited; only
+   * owning is capped (free plan: one), so this is the number the cap applies to.
+   */
+  ownedCircles: CircleMembership[]
+  /** False when the owned-circle limit is reached - hide "create", do not fail on submit. */
+  canCreateCircle: boolean
   activeCircle: CircleMembership | null
   /**
    * True when the active circle grants this permission key. It hides the
@@ -85,6 +92,9 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     const account = bootstrap?.account
     const circles = account?.circles ?? []
     const permissions = new Set(account?.permissions ?? [])
+    const ownedCircles = circles.filter(
+      (circle) => circle.ownerUserId === account?.user.id
+    )
     return {
       bootstrap,
       isLoading,
@@ -94,6 +104,11 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       forceUpdate: bootstrap?.platform.forceUpdate ?? false,
       appBuild,
       circles,
+      ownedCircles,
+      canCreateCircle:
+        ownedCircles.length <
+        (bootstrap?.platform.limits.maxOwnedCircles ??
+          DEFAULT_PLATFORM_LIMITS.maxOwnedCircles),
       activeCircle:
         circles.find((c) => c.id === account?.activeCircleId) ?? null,
       can: (permission) => permissions.has(permission),

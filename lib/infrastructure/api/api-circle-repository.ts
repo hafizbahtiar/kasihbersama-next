@@ -325,6 +325,12 @@ export class ApiCircleRepository implements CircleRepository {
       .then((body) => mapCircle(body.circle))
   }
 
+  deleteCircle(circleId: string) {
+    return this.client.request<void>(`/circles/${circleId}`, {
+      method: "DELETE",
+    })
+  }
+
   updateCircle(circleId: string, patch: CircleSettingsPatch) {
     const body: Record<string, unknown> = {}
     if (patch.name !== undefined) body.name = patch.name

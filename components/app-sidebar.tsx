@@ -7,6 +7,7 @@ import { IconDotsVertical } from "@tabler/icons-react"
 import { AccountMenu, accountInitials } from "@/components/account-menu"
 import { useAuth } from "@/components/auth/auth-provider"
 import { LogoMark } from "@/components/brand/logo-mark"
+import { CircleSwitcher } from "@/components/circles/circle-switcher"
 import { usePlatform } from "@/components/platform/platform-provider"
 import { isNavActive, primaryNav, secondaryNav } from "@/lib/app-nav"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -65,13 +66,12 @@ export function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
 
-        {/*
-          The only other ProfileSwitcher is in the header at `hidden sm:flex`,
-          so on a phone there was no way to choose or even see the active
-          profile - while every care form depends on one and told the user to
-          "pilih profil jagaan di header". The sidebar exists at every width.
-        */}
+        {/* Circle aktif ialah rangka setiap skrin di bawahnya, jadi penukarnya
+            duduk di atas navigasi dan bukan di dalam satu halaman. Disembunyikan
+            pada rail yang runtuh: tiada ruang untuk nama, dan ikon sahaja tidak
+            memberitahu circle mana yang aktif. */}
         <div className="px-1 pt-1 group-data-[collapsible=icon]:hidden">
+          <CircleSwitcher />
         </div>
       </SidebarHeader>
 

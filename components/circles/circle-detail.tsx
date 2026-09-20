@@ -72,6 +72,7 @@ export function CircleDetail({ circleId }: { circleId: string }) {
     null
   )
   const [leaveOpen, setLeaveOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const [isInviteOpen, setIsInviteOpen] = useState(false)
 
   // Permissions are resolved for the ACTIVE circle only, so this screen can
@@ -87,6 +88,16 @@ export function CircleDetail({ circleId }: { circleId: string }) {
   const canSharePerson = isActive && can(PERM_SHARE_PERSON)
   const canUpdateCircle = isActive && can(PERM_UPDATE_CIRCLE)
   const isOwner = circle?.roleKey === "owner"
+
+  // Keluar bermakna perkara yang BERBEZA bagi pemilik, bergantung pada siapa lagi
+  // yang tinggal - dan hanya satu daripada tiga keadaan itu boleh diteka dengan
+  // selamat (lihat `ownerLeaves` di backend).
+  const otherMembers = members.data.filter(
+    (member) => member.id !== circle?.memberId
+  )
+  const heir = otherMembers.length === 1 ? otherMembers[0] : null
+  const isLastMember = isOwner && otherMembers.length === 0
+  const mustTransferFirst = isOwner && otherMembers.length > 1
 
   // useCallback kerana ia dirujuk dalam sel jadual: fungsi baharu setiap render
   // bermakna lajur dibina semula setiap render juga.
@@ -313,22 +324,39 @@ export function CircleDetail({ circleId }: { circleId: string }) {
 
           <Card>
             <CardHeader>
-              <CardTitle>Keluar circle</CardTitle>
+              <CardTitle>
+                {isLastMember ? "Padam circle" : "Keluar circle"}
+              </CardTitle>
               <CardDescription>
-                {isOwner
-                  ? "Pemilik mesti menyerahkan pemilikan sebelum boleh keluar."
-                  : "Anda hilang akses kepada semua rekod circle ini."}
+                {isLastMember
+                  ? "Anda ahli terakhir. Circle ini dan rekodnya akan dipadam."
+                  : mustTransferFirst
+                    ? "Serahkan pemilikan kepada seorang ahli dahulu, dari senarai ahli."
+                    : heir && isOwner
+                      ? `${heir.displayName} akan menjadi pemilik circle ini apabila anda keluar.`
+                      : "Anda hilang akses kepada semua rekod circle ini."}
               </CardDescription>
             </CardHeader>
             <CardFooter className="justify-end">
-              <Button
-                variant="destructive"
-                isDisabled={busy || !circle}
-                onPress={() => setLeaveOpen(true)}
-              >
-                <IconDoorExit />
-                Keluar
-              </Button>
+              {isLastMember ? (
+                <Button
+                  variant="destructive"
+                  isDisabled={busy || !circle}
+                  onPress={() => setDeleteOpen(true)}
+                >
+                  <IconTrash />
+                  Padam circle
+                </Button>
+              ) : (
+                <Button
+                  variant="destructive"
+                  isDisabled={busy || !circle || mustTransferFirst}
+                  onPress={() => setLeaveOpen(true)}
+                >
+                  <IconDoorExit />
+                  Keluar
+                </Button>
+              )}
             </CardFooter>
           </Card>
         </TabsContent>
@@ -449,10 +477,35 @@ export function CircleDetail({ circleId }: { circleId: string }) {
       />
 
       <ConfirmDialog
+        isOpen={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Padam circle ini?"
+        description="Circle dan rekod di dalamnya dipadam. Kuota circle anda terbuka semula selepas ini."
+        confirmLabel="Padam"
+        variant="destructive"
+        icon={<IconTrash />}
+        onConfirm={() => {
+          setDeleteOpen(false)
+          void run(
+            repo
+              .deleteCircle(circleId)
+              .then(() => refresh())
+              .then(() => router.push("/circles")),
+            "Circle dipadam.",
+            false
+          )
+        }}
+      />
+
+      <ConfirmDialog
         isOpen={leaveOpen}
         onOpenChange={setLeaveOpen}
         title="Keluar dari circle?"
-        description="Anda perlu dijemput semula untuk masuk balik."
+        description={
+          heir && isOwner
+            ? `${heir.displayName} menjadi pemilik, dan anda perlu dijemput semula untuk masuk balik.`
+            : "Anda perlu dijemput semula untuk masuk balik."
+        }
         confirmLabel="Keluar"
         variant="destructive"
         icon={<IconDoorExit />}

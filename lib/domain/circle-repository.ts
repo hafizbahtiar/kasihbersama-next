@@ -87,6 +87,11 @@ export interface CircleRepository {
   ): Promise<void>
 
   getCircle(circleId: string): Promise<CircleSettings>
+  /**
+   * Soft delete, and only when the owner is the last member left - deleting a
+   * circle that still has members destroys other people's records.
+   */
+  deleteCircle(circleId: string): Promise<void>
   updateCircle(
     circleId: string,
     patch: CircleSettingsPatch
