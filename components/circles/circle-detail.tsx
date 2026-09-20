@@ -253,7 +253,7 @@ export function CircleDetail({ circleId }: { circleId: string }) {
 
         <TabsList variant="line" aria-label="Bahagian circle">
           <TabsTrigger id="members">Ahli</TabsTrigger>
-          <TabsTrigger id="persons">Person</TabsTrigger>
+          <TabsTrigger id="persons">Orang</TabsTrigger>
           <TabsTrigger id="settings">Tetapan</TabsTrigger>
         </TabsList>
 

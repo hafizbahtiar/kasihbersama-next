@@ -83,7 +83,7 @@ function UsageCard({ data }: { data: PlanUsage }) {
         {usage.circle ? (
           <>
             <UsageRow
-              label="Person dalam circle ini"
+              label="Orang dalam circle ini"
               used={String(usage.circle.personCount)}
               limit={
                 limits.personsPerCircle === undefined
@@ -118,7 +118,7 @@ function UsageCard({ data }: { data: PlanUsage }) {
           </>
         ) : (
           <p className="pt-2 text-sm text-muted-foreground">
-            Pilih circle aktif untuk melihat penggunaan person, ahli dan storannya.
+            Pilih circle aktif untuk melihat penggunaan orang, ahli dan storannya.
           </p>
         )}
       </div>

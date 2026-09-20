@@ -217,19 +217,19 @@ export function PersonsSection({
             { label: "Ringkasan", value: "summary" },
           ],
         }}
-        addLabel="Tambah person"
+        addLabel="Tambah orang"
         onAdd={canCreate ? () => setIsCreateOpen(true) : undefined}
         toolbarStart={
           <div className="space-y-1">
-            <h2 className="font-heading text-lg tracking-tight">Person</h2>
+            <h2 className="font-heading text-lg tracking-tight">Orang</h2>
             <p className="text-sm text-muted-foreground">
-              Orang yang circle ini simpan rekodnya. Senarai ini hanya
-              menunjukkan person yang anda ada akses.
+              Sesiapa yang circle ini simpan rekodnya - dengan atau tanpa akaun.
+              Senarai ini hanya menunjukkan yang anda ada akses.
             </p>
           </div>
         }
         emptyIcon={<IconUsers />}
-        emptyTitle="Tiada person"
+        emptyTitle="Tiada orang"
         emptyDescription="Tambah seseorang untuk mula menyimpan rekod."
       />
 
@@ -237,7 +237,7 @@ export function PersonsSection({
         <ResponsiveDialog
           isOpen
           onOpenChange={setIsCreateOpen}
-          title="Tambah person"
+          title="Tambah orang"
           description="Rekod ini untuk seseorang dalam circle, dengan atau tanpa akaun."
           footer={
             <>
@@ -265,7 +265,7 @@ export function PersonsSection({
                         setSex("")
                         setIsCreateOpen(false)
                       }),
-                    "Person ditambah."
+                    "Orang ditambah."
                   )
                 }}
               >
@@ -368,8 +368,8 @@ export function PersonsSection({
             setDeleteTarget(null)
           }
         }}
-        title="Padam person?"
-        description={`${deleteTarget?.fullName ?? "Person"} tidak lagi muncul dalam senarai. Rekod modul lain yang merujuknya kekal.`}
+        title="Padam orang ini?"
+        description={`${deleteTarget?.fullName ?? "Orang"} tidak lagi muncul dalam senarai. Rekod modul lain yang merujuknya kekal.`}
         confirmLabel="Padam"
         variant="destructive"
         icon={<IconTrash />}
@@ -379,7 +379,7 @@ export function PersonsSection({
           if (target) {
             void run(
               getCircleRepository().deletePerson(circleId, target.id),
-              "Person dipadam."
+              "Orang dipadam."
             )
           }
         }}

@@ -142,7 +142,7 @@ export function PersonAccessDialog({
     <ResponsiveDialog
       isOpen
       onOpenChange={onOpenChange}
-      title="Akses kepada person"
+      title="Akses kepada orang ini"
       description={`Siapa boleh melihat ${person.fullName}.`}
       className="sm:max-w-2xl"
       footer={
@@ -231,7 +231,7 @@ export function PersonAccessDialog({
         showColumnToggle={false}
         emptyIcon={<IconShieldLock />}
         emptyTitle="Tiada geran akses"
-        emptyDescription="Hanya pencipta person boleh melihatnya sehingga geran pertama diberi."
+        emptyDescription="Hanya orang yang mencipta rekod ini boleh melihatnya sehingga geran pertama diberi."
       />
     </ResponsiveDialog>
   )

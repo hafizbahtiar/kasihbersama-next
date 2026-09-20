@@ -97,7 +97,7 @@ export function PersonEditDialog({
           setLoadError(
             isApiError(cause)
               ? messageForApiError(cause)
-              : "Gagal memuatkan person."
+              : "Gagal memuatkan orang."
           )
         }
       } finally {
@@ -141,12 +141,12 @@ export function PersonEditDialog({
     setIsSaving(true)
     try {
       await getCircleRepository().updatePerson(circleId, person.id, patch)
-      toast.success("Person dikemas kini.")
+      toast.success("Orang dikemas kini.")
       onSaved()
       onOpenChange(false)
     } catch (cause) {
       toast.error(
-        isApiError(cause) ? messageForApiError(cause) : "Gagal menyimpan person."
+        isApiError(cause) ? messageForApiError(cause) : "Gagal menyimpan orang."
       )
     } finally {
       setIsSaving(false)
@@ -157,7 +157,7 @@ export function PersonEditDialog({
     <ResponsiveDialog
       isOpen
       onOpenChange={onOpenChange}
-      title="Kemas kini person"
+      title="Kemas kini orang"
       description={person.fullName}
       footer={
         <>
