@@ -32,14 +32,13 @@ export function AppSidebar() {
   const { user } = useAuth()
   const { state } = useSidebar()
   const collapsed = state === "collapsed"
-  const { isFeatureEnabled } = usePlatform()
+  const { can } = usePlatform()
 
-  // Penapis permission dibuang bersama RBAC care v0.1. Bila RBAC v0.2 sampai, ia
-  // ditapis di sini semula - tetapi dengan permission circle sebenar, bukan tebakan
-  // berasaskan profil yang dipilih.
+  // Ditapis dengan permission circle AKTIF daripada bootstrap (docs/00 §6.8).
+  // Menyembunyikan sahaja: setiap laluan tetap menegakkan kebenarannya sendiri.
   const visiblePrimaryNav = useMemo(
-    () => primaryNav.filter((item) => !item.feature || isFeatureEnabled(item.feature)),
-    [isFeatureEnabled]
+    () => primaryNav.filter((item) => !item.permission || can(item.permission)),
+    [can]
   )
 
   return (

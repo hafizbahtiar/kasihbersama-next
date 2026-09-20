@@ -1,61 +1,60 @@
-export type PlatformFeature =
-  | "doctor_summary"
-  | "profile_claim"
-  | "document_upload"
-  | "caregiver_mode"
-  | "growth_chart"
-
-export type PlatformFeatures = Record<PlatformFeature, boolean>
-
-export type PlanId = "free" | "family" | "care_home"
+/**
+ * What the client must know before the first screen renders - one call,
+ * `GET /v1/bootstrap` (docs/00 §6.8).
+ *
+ * The `platform` block always comes back, with or without a token: the version
+ * gate has to reach the user on an old build who can no longer sign in. The
+ * `account` block only appears when a valid token was sent, and an expired one
+ * is not an error - it means "not signed in".
+ */
+import type { AuthUser } from "@/lib/domain/auth"
+import type { CircleMembership } from "@/lib/domain/circle"
 
 export type PlatformLimits = {
-  maxUploadMb: number
-  maxProfilesFree: number
-  maxMembersFree: number
+  maxImageMb: number
+  maxPdfMb: number
+  maxCircleStorageMb: number
 }
 
-export type BootstrapConfig = {
+export type PlatformInfo = {
   apiVersion: string
   serverTime: string
   minSupportedBuild: number
   latestBuild: number
   forceUpdate: boolean
-  features: PlatformFeatures
-  /** Free-plan catalogue. Pricing page free column. */
   limits: PlatformLimits
-  /** This account's live caps. Absent when bootstrap had no usable token. */
-  accountLimits?: PlatformLimits
-  plan?: PlanId
 }
 
-export const DEFAULT_PLATFORM_FEATURES: PlatformFeatures = {
-  growth_chart: false,
-  doctor_summary: false,
-  profile_claim: false,
-  document_upload: false,
-  caregiver_mode: false,
+export type BootstrapAccount = {
+  user: AuthUser
+  /**
+   * The session's active circle, or null when the account has joined none - or
+   * has more than one and has not chosen. Null is a valid state: render
+   * onboarding or a picker, never an empty screen.
+   */
+  activeCircleId: string | null
+  circles: CircleMembership[]
+  /**
+   * Effective permission keys for the ACTIVE circle. They exist to hide the
+   * impossible, never to replace the server's checks - every route still
+   * enforces its own, and a UI that hides too little only earns a 403.
+   */
+  permissions: string[]
+  unreadNotifications: number
 }
 
+export type Bootstrap = {
+  platform: PlatformInfo
+  account?: BootstrapAccount
+}
+
+/**
+ * Used until bootstrap answers, and if it never does. They are the storage
+ * ceilings from the backend's own constants, so a page that renders before the
+ * call lands shows the same numbers it will settle on.
+ */
 export const DEFAULT_PLATFORM_LIMITS: PlatformLimits = {
-  maxUploadMb: 10,
-  maxProfilesFree: 1,
-  maxMembersFree: 3,
-}
-
-export function parsePlanId(value: string | undefined): PlanId | undefined {
-  if (value === "free" || value === "family" || value === "care_home") {
-    return value
-  }
-  return undefined
-}
-
-export function planDisplayName(plan?: PlanId): string {
-  if (plan === "family") {
-    return "Keluarga"
-  }
-  if (plan === "care_home") {
-    return "Rumah Jagaan"
-  }
-  return "Percuma"
+  maxImageMb: 5,
+  maxPdfMb: 10,
+  maxCircleStorageMb: 2048,
 }

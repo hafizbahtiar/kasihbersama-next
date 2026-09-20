@@ -1,5 +1,3 @@
-import type { PlanId } from "@/lib/domain/platform"
-
 /** `delivery_channel` dalam docs/05 §4. `inapp` sentiasa dikunci. */
 export type NotificationChannel = "push" | "email" | "sms" | "inapp"
 
@@ -218,27 +216,4 @@ export const DELETION_BLOCK_LABELS: Record<DeletionBlockReason, string> = {
 export const DELETION_BLOCK_FIXES: Record<DeletionBlockReason, string> = {
   sole_admin: "Lantik pentadbir lain dahulu.",
   shared_subject: "Serahkan profil ini atau arkibkannya dahulu.",
-}
-
-/**
- * Current counts against this account's live limits (`GET /me/usage`).
- *
- * Profile `used` excludes the own-health record. Storage is live R2 bytes
- * against `limits.maxStorageMb`.
- */
-export type AccountUsage = {
-  plan: PlanId
-  limits: {
-    maxProfiles: number
-    maxMembers: number
-    maxUploadMb: number
-    maxStorageMb: number
-  }
-  profiles: { used: number }
-  storage: { usedBytes: number }
-  members: Array<{
-    careProfileId: string
-    displayName: string
-    used: number
-  }>
 }

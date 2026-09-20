@@ -1,6 +1,5 @@
 import type { AccountRepository } from "@/lib/domain/account-repository"
 import type {
-  AccountUsage,
   AuthDevice,
   DeviceToken,
   DistanceUnit,
@@ -15,7 +14,6 @@ import type {
   UserSettingsPatch,
   WeekStart,
 } from "@/lib/domain/account"
-import { parsePlanId } from "@/lib/domain/platform"
 import type { ApiClient } from "@/lib/infrastructure/api/client"
 import { ApiError, isApiError } from "@/lib/infrastructure/api/errors"
 import { mapAuthUser } from "@/lib/infrastructure/api/mappers/auth"
@@ -167,42 +165,6 @@ function mapSettings(api: ApiSettings): UserSettings {
   }
 }
 
-type ApiUsageResponse = {
-  plan: string
-  limits: {
-    max_profiles: number
-    max_members: number
-    max_upload_mb: number
-    max_storage_mb: number
-  }
-  profiles: { used: number }
-  storage: { used_bytes: number }
-  members: Array<{
-    care_profile_id: string
-    display_name: string
-    used: number
-  }>
-}
-
-function mapUsage(api: ApiUsageResponse): AccountUsage {
-  return {
-    plan: parsePlanId(api.plan) ?? "free",
-    limits: {
-      maxProfiles: api.limits.max_profiles,
-      maxMembers: api.limits.max_members,
-      maxUploadMb: api.limits.max_upload_mb,
-      maxStorageMb: api.limits.max_storage_mb,
-    },
-    profiles: { used: api.profiles.used },
-    storage: { usedBytes: api.storage.used_bytes },
-    members: (api.members ?? []).map((row) => ({
-      careProfileId: row.care_profile_id,
-      displayName: row.display_name,
-      used: row.used,
-    })),
-  }
-}
-
 export class ApiAccountRepository implements AccountRepository {
   constructor(private readonly client: ApiClient) {}
 
@@ -318,12 +280,6 @@ export class ApiAccountRepository implements AccountRepository {
    */
   exportAccount() {
     return this.notYetAvailable(this.client.requestText("/me/export"))
-  }
-
-  getUsage() {
-    return this.notYetAvailable(
-      this.client.request<ApiUsageResponse>("/me/usage").then(mapUsage)
-    )
   }
 
   getSettings() {

@@ -18,18 +18,15 @@ export type ApiErrorBody = {
 }
 
 /**
- * Paginated list envelope from backend (`internal/transport/http/v1/pagination.go`).
- *
- * Query: `page` (default 1), `per_page` (default 20, max 100).
- * Mapped to domain `PaginatedResult` via `mapPaginated()` (camelCase fields).
+ * The v0.2 list envelope: a page of rows plus the cursor for the next one
+ * (docs/00 §6.1). Mapped to the domain `Page<T>` by each repository.
  */
-export type PaginatedResponse<T> = {
+export type PageResponse<T> = {
   data: T[]
-  total: number
-  page: number
-  per_page: number
-  total_pages: number
-  has_more: boolean
+  meta: {
+    has_more: boolean
+    next_cursor?: string
+  }
 }
 
 /**

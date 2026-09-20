@@ -1,6 +1,5 @@
 import type { AuthUser } from "@/lib/domain/auth"
 import type {
-  AccountUsage,
   AuthDevice,
   DeviceToken,
   NotificationPreferences,
@@ -63,9 +62,6 @@ export interface AccountRepository {
 
   /** The caller's own data, as a JSON string ready to save to a file. */
   exportAccount(): Promise<string>
-
-  /** Current counts against the limits this account is held to. */
-  getUsage(): Promise<AccountUsage>
 
   /** Display preferences. Defaults are returned until the account saves one. */
   getSettings(): Promise<UserSettings>

@@ -35,8 +35,8 @@ export function ForceUpdateGate({ children }: { children: React.ReactNode }) {
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           {bootstrap ? (
             <>
-              <p>Build minimum: {bootstrap.minSupportedBuild}</p>
-              <p>Build terkini: {bootstrap.latestBuild}</p>
+              <p>Build minimum: {bootstrap.platform.minSupportedBuild}</p>
+              <p>Build terkini: {bootstrap.platform.latestBuild}</p>
             </>
           ) : null}
         </CardContent>

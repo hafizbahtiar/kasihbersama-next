@@ -10,38 +10,38 @@ import {
   type ReactNode,
 } from "react"
 
-import { getAppBuild } from "@/lib/infrastructure/config"
 import { getPlatformRepository } from "@/lib/composition/platform-repository"
-import type {
-  BootstrapConfig,
-  PlatformFeature,
-  PlatformLimits,
-  PlanId,
-} from "@/lib/domain/platform"
-import {
-  DEFAULT_PLATFORM_FEATURES,
-  DEFAULT_PLATFORM_LIMITS,
-} from "@/lib/domain/platform"
+import { getCircleRepository } from "@/lib/composition/circle-repository"
+import type { CircleMembership } from "@/lib/domain/circle"
+import type { Bootstrap, PlatformLimits } from "@/lib/domain/platform"
+import { DEFAULT_PLATFORM_LIMITS } from "@/lib/domain/platform"
+import { getAppBuild } from "@/lib/infrastructure/config"
 
-type PlatformContextValue = {
-  bootstrap: BootstrapConfig | null
+type BootstrapContextValue = {
+  bootstrap: Bootstrap | null
   isLoading: boolean
   loadError: string | null
   refresh: () => Promise<void>
-  isFeatureEnabled: (feature: PlatformFeature) => boolean
-  /** Free-plan catalogue. Pricing matrix. */
   limits: PlatformLimits
-  /** Caps this account is held to. Falls back to `limits` when unknown. */
-  accountLimits: PlatformLimits
-  plan?: PlanId
   forceUpdate: boolean
   appBuild: number
+  /** Circles the account belongs to. Empty is a real state: render onboarding. */
+  circles: CircleMembership[]
+  activeCircle: CircleMembership | null
+  /**
+   * True when the active circle grants this permission key. It hides the
+   * impossible; the server still enforces every route.
+   */
+  can: (permission: string) => boolean
+  unreadNotifications: number
+  /** Switches the session's circle, then re-reads bootstrap - permissions change with it. */
+  switchCircle: (circleId: string) => Promise<void>
 }
 
-const PlatformContext = createContext<PlatformContextValue | null>(null)
+const BootstrapContext = createContext<BootstrapContextValue | null>(null)
 
 export function PlatformProvider({ children }: { children: ReactNode }) {
-  const [bootstrap, setBootstrap] = useState<BootstrapConfig | null>(null)
+  const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const appBuild = getAppBuild()
@@ -50,8 +50,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
     setLoadError(null)
     try {
-      const next = await getPlatformRepository().getBootstrap(appBuild)
-      setBootstrap(next)
+      setBootstrap(await getPlatformRepository().getBootstrap(appBuild))
     } catch (error) {
       setLoadError(
         error instanceof Error
@@ -72,38 +71,46 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     void refresh()
   }, [refresh])
 
-  const value = useMemo<PlatformContextValue>(
-    () => ({
+  const switchCircle = useCallback(
+    async (circleId: string) => {
+      await getCircleRepository().switchCircle(circleId)
+      // Bootstrap is re-read rather than patched locally: the permission set
+      // belongs to the new circle, and the server is the only one that knows it.
+      await refresh()
+    },
+    [refresh]
+  )
+
+  const value = useMemo<BootstrapContextValue>(() => {
+    const account = bootstrap?.account
+    const circles = account?.circles ?? []
+    const permissions = new Set(account?.permissions ?? [])
+    return {
       bootstrap,
       isLoading,
       loadError,
       refresh,
-      isFeatureEnabled(feature) {
-        return (
-          bootstrap?.features[feature] ?? DEFAULT_PLATFORM_FEATURES[feature]
-        )
-      },
-      limits: bootstrap?.limits ?? DEFAULT_PLATFORM_LIMITS,
-      accountLimits:
-        bootstrap?.accountLimits ??
-        bootstrap?.limits ??
-        DEFAULT_PLATFORM_LIMITS,
-      plan: bootstrap?.plan,
-      forceUpdate: bootstrap?.forceUpdate ?? false,
+      limits: bootstrap?.platform.limits ?? DEFAULT_PLATFORM_LIMITS,
+      forceUpdate: bootstrap?.platform.forceUpdate ?? false,
       appBuild,
-    }),
-    [appBuild, bootstrap, isLoading, loadError, refresh]
-  )
+      circles,
+      activeCircle:
+        circles.find((c) => c.id === account?.activeCircleId) ?? null,
+      can: (permission) => permissions.has(permission),
+      unreadNotifications: account?.unreadNotifications ?? 0,
+      switchCircle,
+    }
+  }, [appBuild, bootstrap, isLoading, loadError, refresh, switchCircle])
 
   return (
-    <PlatformContext.Provider value={value}>
+    <BootstrapContext.Provider value={value}>
       {children}
-    </PlatformContext.Provider>
+    </BootstrapContext.Provider>
   )
 }
 
 export function usePlatform() {
-  const context = useContext(PlatformContext)
+  const context = useContext(BootstrapContext)
   if (!context) {
     throw new Error("usePlatform must be used within PlatformProvider")
   }

@@ -1,7 +1,5 @@
 import type { ComponentType, SVGProps } from "react"
-import { IconSettings } from "@tabler/icons-react"
-
-import type { PlatformFeature } from "@/lib/domain/platform"
+import { IconBell, IconSettings, IconUsersGroup } from "@tabler/icons-react"
 
 export type AppNavIcon = ComponentType<SVGProps<SVGSVGElement>>
 
@@ -9,13 +7,21 @@ export type AppNavItem = {
   href: string
   title: string
   icon: AppNavIcon
-  feature?: PlatformFeature
+  /**
+   * Hidden unless the ACTIVE circle grants this permission key. Hiding only;
+   * the route itself is still enforced server-side.
+   */
+  permission?: string
 }
 
 // Navigasi v0.2 bermula semula. Setiap pautan modul v0.1 dibuang bersama skrinnya -
 // pautan ke laluan yang sudah tiada ialah 404 yang kelihatan seperti pepijat. Modul
 // v0.2 menambah entrinya sendiri bila skrinnya wujud.
 export const primaryNav: AppNavItem[] = [
+  // Tiada permission: senarai circle datang daripada bootstrap, dan pengguna
+  // tanpa circle memerlukan skrin ini paling-paling untuk mencipta yang pertama.
+  { href: "/circles", title: "Circle", icon: IconUsersGroup },
+  { href: "/notifications", title: "Pemberitahuan", icon: IconBell },
   { href: "/settings", title: "Tetapan", icon: IconSettings },
 ]
 
