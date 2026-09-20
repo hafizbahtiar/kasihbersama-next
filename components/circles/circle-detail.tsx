@@ -5,7 +5,6 @@ import {
   IconCrown,
   IconDoorExit,
   IconMailForward,
-  IconMailOff,
   IconTrash,
   IconUser,
 } from "@tabler/icons-react"
@@ -37,21 +36,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useCircleInvitations } from "@/hooks/use-circle-invitations"
 import { useCircleMembers } from "@/hooks/use-circle-members"
 import { useDisplayFormat } from "@/lib/application/display-preferences"
 import { getCircleRepository } from "@/lib/composition/circle-repository"
 import {
   ASSIGNABLE_ROLES,
   roleLabel,
-  type CircleInvitation,
   type CircleMember,
 } from "@/lib/domain/circle"
 import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
 
 /** Permission keys this screen hides behind (docs/02 §4). */
 const PERM_INVITE = "circle.invitation.create"
-const PERM_READ_INVITE = "circle.invitation.read"
 const PERM_MANAGE_MEMBER = "circle.member.manage"
 const PERM_READ_PERSON = "core.person.read"
 const PERM_CREATE_PERSON = "core.person.create"
@@ -82,7 +78,6 @@ export function CircleDetail({ circleId }: { circleId: string }) {
   // circle the writes stay hidden and the server remains the authority.
   const isActive = activeCircle?.id === circleId
   const canInvite = isActive && can(PERM_INVITE)
-  const canReadInvites = isActive && can(PERM_READ_INVITE)
   const canManage = isActive && can(PERM_MANAGE_MEMBER)
   const canReadPersons = isActive && can(PERM_READ_PERSON)
   const canCreatePerson = isActive && can(PERM_CREATE_PERSON)
@@ -91,7 +86,6 @@ export function CircleDetail({ circleId }: { circleId: string }) {
   const canSharePerson = isActive && can(PERM_SHARE_PERSON)
   const canUpdateCircle = isActive && can(PERM_UPDATE_CIRCLE)
   const isOwner = circle?.roleKey === "owner"
-  const invitations = useCircleInvitations(circleId, canReadInvites)
 
   // useCallback kerana ia dirujuk dalam sel jadual: fungsi baharu setiap render
   // bermakna lajur dibina semula setiap render juga.
@@ -235,54 +229,6 @@ export function CircleDetail({ circleId }: { circleId: string }) {
     }),
   ])
 
-  const invitationHelper = createDataTableColumnHelper<CircleInvitation>()
-  const invitationColumns = invitationHelper.columns([
-    invitationHelper.accessor("email", { header: "E-mel" }),
-    invitationHelper.accessor((row) => roleLabel(row.roleKey), {
-      id: "role",
-      header: "Peranan",
-    }),
-    invitationHelper.accessor("status", {
-      header: "Status",
-      filterFn: "equalsString",
-      // Senarai ini hanya membawa jemputan yang menunggu, jadi satu-satunya nada
-      // yang betul ialah "menunggu seseorang".
-      cell: () => <StatusChip tone="attention" label="Menunggu" />,
-    }),
-    invitationHelper.accessor("expiresAt", {
-      header: "Tamat",
-      cell: ({ getValue }) => (
-        <span className="text-muted-foreground">{date(getValue())}</span>
-      ),
-    }),
-    invitationHelper.display({
-      id: "action",
-      header: () => <span className="flex justify-end">Tindakan</span>,
-      enableSorting: false,
-      cell: ({ row }) =>
-        canInvite ? (
-          <TableActions>
-            <TableActionButton
-              aria-label={`Batalkan jemputan ${row.original.email}`}
-              isDisabled={busy}
-              onPress={() => {
-                void run(
-                  repo
-                    .revokeInvitation(circleId, row.original.id)
-                    .then(() => invitations.reload()),
-                  "Jemputan dibatalkan.",
-                  false
-                )
-              }}
-            >
-              <IconMailOff />
-              Batalkan
-            </TableActionButton>
-          </TableActions>
-        ) : null,
-    }),
-  ])
-
   return (
     <div className="flex flex-col gap-5">
       <div className="space-y-1">
@@ -354,8 +300,7 @@ export function CircleDetail({ circleId }: { circleId: string }) {
                     .then(() => {
                       setEmail("")
                       setIsInviteOpen(false)
-                    })
-                    .then(() => invitations.reload()),
+                    }),
                   "Jemputan dihantar.",
                   false
                 )
@@ -398,39 +343,6 @@ export function CircleDetail({ circleId }: { circleId: string }) {
           </Select>
         </Field>
       </ResponsiveDialog>
-
-      {canReadInvites ? (
-        <DataTable
-          columns={invitationColumns}
-          data={invitations.data}
-          getRowId={(row) => row.id}
-          isLoading={invitations.isLoading}
-          errorMessage={
-            invitations.error
-              ? messageForApiError(invitations.error)
-              : undefined
-          }
-          onRetry={() => {
-            void invitations.reload()
-          }}
-          pageSize={5}
-          addLabel="Jemput ahli"
-          onAdd={canInvite ? () => setIsInviteOpen(true) : undefined}
-          toolbarStart={
-            <div className="space-y-1">
-              <h2 className="font-heading text-lg tracking-tight">
-                Jemputan menunggu
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Jemputan yang sudah diterima muncul sebagai ahli, bukan di sini.
-              </p>
-            </div>
-          }
-          emptyIcon={<IconMailForward />}
-          emptyTitle="Tiada jemputan menunggu"
-          emptyDescription="Setiap jemputan yang dihantar akan disenaraikan di sini sehingga diterima."
-        />
-      ) : null}
 
       <PersonsSection
         circleId={circleId}

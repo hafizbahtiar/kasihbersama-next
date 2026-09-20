@@ -217,3 +217,31 @@ export const DELETION_BLOCK_FIXES: Record<DeletionBlockReason, string> = {
   sole_admin: "Lantik pentadbir lain dahulu.",
   shared_subject: "Serahkan profil ini atau arkibkannya dahulu.",
 }
+
+/**
+ * `GET /v1/me/usage` - the effective plan, its ceilings, and what has been used.
+ *
+ * `null` in `limits` means "no limit"; a missing key means "no scope" (there is no
+ * circle to count against), and zero means zero. The three are deliberately
+ * different shapes, because a reader who confuses them either hides a real
+ * ceiling or promises one that does not exist.
+ */
+export type PlanUsage = {
+  /** Plan key the server applied, e.g. "free". Everything below belongs to it. */
+  plan: string
+  limits: {
+    ownedCircles: number | null
+    personsPerCircle?: number | null
+    membersPerCircle?: number | null
+    storageBytesPerCircle?: number | null
+  }
+  usage: {
+    ownedCircles: number
+    circle: {
+      id: string
+      personCount: number
+      memberCount: number
+      storageBytes: number
+    } | null
+  }
+}

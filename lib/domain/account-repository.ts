@@ -1,6 +1,7 @@
 import type { AuthUser } from "@/lib/domain/auth"
 import type {
   AuthDevice,
+  PlanUsage,
   DeviceToken,
   NotificationPreferences,
   NotificationPreferencesPatch,
@@ -11,6 +12,9 @@ import type {
 
 export interface AccountRepository {
   updateDisplayName(displayName: string): Promise<AuthUser>
+  /** Plan ceilings and usage. `circleId` scopes the per-circle counts; without it
+   *  only the account-level numbers come back. */
+  getUsage(circleId?: string): Promise<PlanUsage>
   getNotificationPreferences(): Promise<NotificationPreferences>
   /** Sparse, like `updateSettings`. Resolves with the full preferences as the
    *  server stored them, so a refused switch snaps back to the truth. */

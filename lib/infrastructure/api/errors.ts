@@ -86,6 +86,10 @@ const CODE_MESSAGES: Record<string, string> = {
   // distinction away at the last step.
   too_many_pending_uploads:
     "Terlalu banyak muat naik belum selesai. Tunggu ia siap atau cuba lagi sebentar.",
+  // Plan ceilings (docs/09). The server's message names the limit and the object
+  // ("Pelan percuma terhad kepada 3 person bagi setiap circle."), which is better than
+  // anything generic here - so this entry defers to it rather than restating it.
+  "billing.limit.reached": "",
   // The most common validation code. Without an entry it fell through to the
   // 400 fallback, which says the request was invalid without saying what.
   // Handlers put the specific reason in error.message, so this defers to it.

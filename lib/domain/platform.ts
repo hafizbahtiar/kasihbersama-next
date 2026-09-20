@@ -14,6 +14,12 @@ export type PlatformLimits = {
   maxImageMb: number
   maxPdfMb: number
   maxCircleStorageMb: number
+  /**
+   * How many circles the account may OWN. Circles joined by invitation never count
+   * against it (docs/09 §2), which is why the client compares it to the circles whose
+   * `ownerUserId` is its own.
+   */
+  maxOwnedCircles: number
 }
 
 export type PlatformInfo = {
@@ -49,12 +55,13 @@ export type Bootstrap = {
 }
 
 /**
- * Used until bootstrap answers, and if it never does. They are the storage
- * ceilings from the backend's own constants, so a page that renders before the
- * call lands shows the same numbers it will settle on.
+ * Used until bootstrap answers, and if it never does. They are the free plan's own
+ * numbers (docs/09 §1), so a page that renders before the call lands shows the same
+ * ceilings it will settle on.
  */
 export const DEFAULT_PLATFORM_LIMITS: PlatformLimits = {
   maxImageMb: 5,
   maxPdfMb: 10,
-  maxCircleStorageMb: 2048,
+  maxCircleStorageMb: 250,
+  maxOwnedCircles: 1,
 }

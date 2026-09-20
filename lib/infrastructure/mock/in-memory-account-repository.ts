@@ -34,6 +34,27 @@ export class InMemoryAccountRepository implements AccountRepository {
     return structuredClone(this.state.user)
   }
 
+  async getUsage(circleId?: string) {
+    // The same free-plan ceilings the server enforces, so mock mode never promises a
+    // plan the backend would refuse. Usage itself is reported empty: this mock keeps
+    // no circle or person store - the platform and circle mocks do.
+    return {
+      plan: "free",
+      limits: {
+        ownedCircles: 1,
+        personsPerCircle: 3,
+        membersPerCircle: 3,
+        storageBytesPerCircle: 250 << 20,
+      },
+      usage: {
+        ownedCircles: 0,
+        circle: circleId
+          ? { id: circleId, personCount: 0, memberCount: 0, storageBytes: 0 }
+          : null,
+      },
+    }
+  }
+
   async getNotificationPreferences() {
     return structuredClone(this.state.prefs)
   }

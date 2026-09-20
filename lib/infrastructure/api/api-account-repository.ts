@@ -7,6 +7,7 @@ import type {
   NotificationChannel,
   NotificationPreferences,
   NotificationPreferencesPatch,
+  PlanUsage,
   ThemePreference,
   TimeFormat,
   UserSession,
@@ -162,6 +163,48 @@ function mapSettings(api: ApiSettings): UserSettings {
     weekStartsOn: api.week_starts_on as WeekStart,
     distanceUnit: api.distance_unit as DistanceUnit,
     preferences: api.preferences ?? {},
+  }
+}
+
+type ApiUsage = {
+  plan: string
+  limits: {
+    owned_circles: number | null
+    persons_per_circle?: number | null
+    members_per_circle?: number | null
+    storage_bytes_per_circle?: number | null
+  }
+  usage: {
+    owned_circles: number
+    circle: {
+      id: string
+      person_count: number
+      member_count: number
+      storage_bytes: number
+    } | null
+  }
+}
+
+function mapUsage(api: ApiUsage): PlanUsage {
+  return {
+    plan: api.plan,
+    limits: {
+      ownedCircles: api.limits.owned_circles,
+      personsPerCircle: api.limits.persons_per_circle,
+      membersPerCircle: api.limits.members_per_circle,
+      storageBytesPerCircle: api.limits.storage_bytes_per_circle,
+    },
+    usage: {
+      ownedCircles: api.usage.owned_circles,
+      circle: api.usage.circle
+        ? {
+            id: api.usage.circle.id,
+            personCount: api.usage.circle.person_count,
+            memberCount: api.usage.circle.member_count,
+            storageBytes: api.usage.circle.storage_bytes,
+          }
+        : null,
+    },
   }
 }
 
@@ -355,6 +398,13 @@ export class ApiAccountRepository implements AccountRepository {
    * dijumpai." - a lie that reads as data loss. Only those routes go through
    * here; a 404 from `/auth/*` is a real bug and keeps its own message.
    */
+  getUsage(circleId?: string) {
+    const query = circleId ? `?circle_id=${encodeURIComponent(circleId)}` : ""
+    return this.client
+      .request<ApiUsage>(`/me/usage${query}`)
+      .then(mapUsage)
+  }
+
   private async notYetAvailable<T>(request: Promise<T>): Promise<T> {
     try {
       return await request

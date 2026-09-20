@@ -4,6 +4,7 @@ import { useState } from "react"
 import {
   IconBell,
   IconCalendar,
+  IconChartPie,
   IconDatabase,
   IconDeviceMobile,
   IconLock,
@@ -48,12 +49,14 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { UsageSection } from "@/components/settings/usage-section"
 import { useDeviceTokens } from "@/hooks/use-account-data"
 import { fieldValue } from "@/lib/application/form-value"
 import { cn } from "@/lib/utils"
 
 const settingsNav = [
   { id: "account", label: "Akaun", icon: IconUser },
+  { id: "usage", label: "Penggunaan", icon: IconChartPie },
   { id: "display", label: "Paparan", icon: IconCalendar },
   { id: "security", label: "Keselamatan", icon: IconLock },
   { id: "data", label: "Data & akaun", icon: IconDatabase },
@@ -233,6 +236,8 @@ export function SettingsPage() {
               </Card>
             </div>
           ) : null}
+
+          {section === "usage" ? <UsageSection /> : null}
 
           {section === "display" ? <DisplaySection /> : null}
 

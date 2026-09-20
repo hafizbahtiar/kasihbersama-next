@@ -1,14 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { IconCheck, IconUsersGroup } from "@tabler/icons-react"
+import { IconCheck, IconInfoCircle, IconUsersGroup } from "@tabler/icons-react"
 import { toast } from "sonner"
 
+import { PendingInvitations } from "@/components/circles/pending-invitations"
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { usePlatform } from "@/components/platform/platform-provider"
 import { ResponsiveDialog } from "@/components/responsive-dialog"
 import { StatusChip } from "@/components/status-chip"
 import { TableActionButton, TableActions } from "@/components/table-actions"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button, LinkButton } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -19,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getCircleRepository } from "@/lib/composition/circle-repository"
 import {
   CIRCLE_TYPE_LABELS,
@@ -31,13 +34,29 @@ import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
 const CIRCLE_TYPES = Object.keys(CIRCLE_TYPE_LABELS) as CircleType[]
 
 export function CirclesPage() {
-  const { circles, activeCircle, isLoading, refresh, switchCircle } =
-    usePlatform()
+  const {
+    bootstrap,
+    circles,
+    activeCircle,
+    isLoading,
+    limits,
+    refresh,
+    switchCircle,
+  } = usePlatform()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [name, setName] = useState("")
   const [type, setType] = useState<CircleType>("family")
   const [isSaving, setIsSaving] = useState(false)
   const [switching, setSwitching] = useState<string | null>(null)
+
+  // Circles the account OWNS, not the ones it merely joined: the free plan limits how
+  // many you may own (docs/09 §2), and being invited to someone else's circle must never
+  // count against that.
+  const userId = bootstrap?.account?.user.id
+  const ownedCircles = circles.filter(
+    (circle) => circle.ownerUserId === userId
+  ).length
+  const atOwnedLimit = ownedCircles >= limits.maxOwnedCircles
 
   async function createCircle() {
     if (!name.trim()) {
@@ -130,7 +149,7 @@ export function CirclesPage() {
   ])
 
   return (
-    <div className="flex flex-col gap-5">
+    <Tabs defaultSelectedKey="circles" className="gap-5">
       <div className="space-y-1">
         <h1 className="font-heading text-2xl tracking-tight">Circle</h1>
         <p className="text-sm text-muted-foreground">
@@ -138,20 +157,43 @@ export function CirclesPage() {
         </p>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={circles}
-        getRowId={(row) => row.id}
-        isLoading={isLoading && circles.length === 0}
-        searchable={circles.length > 0}
-        searchPlaceholder="Cari circle..."
-        pageSize={10}
-        addLabel="Cipta circle"
-        onAdd={() => setIsCreateOpen(true)}
-        emptyIcon={<IconUsersGroup />}
-        emptyTitle="Belum menyertai circle"
-        emptyDescription="Cipta satu, atau terima jemputan yang dihantar ke e-mel anda."
-      />
+      <TabsList variant="line" aria-label="Bahagian circle">
+        <TabsTrigger id="circles">Circle</TabsTrigger>
+        <TabsTrigger id="invitations">Jemputan</TabsTrigger>
+      </TabsList>
+
+      <TabsContent id="circles" className="flex flex-col gap-5">
+        {atOwnedLimit ? (
+          // Butang cipta disembunyikan, bukan dibiarkan menghasilkan ralat: klien tahu
+          // hadnya daripada bootstrap, dan pelayan tetap menyemak setiap laluan.
+          <Alert>
+            <IconInfoCircle />
+            <AlertTitle>Had plan percuma dicapai</AlertTitle>
+            <AlertDescription>
+              {`Plan percuma membenarkan ${limits.maxOwnedCircles} circle dimiliki. Pelan premium akan datang - ketika itu anda boleh menambah lagi.`}
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
+        <DataTable
+          columns={columns}
+          data={circles}
+          getRowId={(row) => row.id}
+          isLoading={isLoading && circles.length === 0}
+          searchable={circles.length > 0}
+          searchPlaceholder="Cari circle..."
+          pageSize={10}
+          addLabel="Cipta circle"
+          onAdd={atOwnedLimit ? undefined : () => setIsCreateOpen(true)}
+          emptyIcon={<IconUsersGroup />}
+          emptyTitle="Belum menyertai circle"
+          emptyDescription="Cipta satu, atau terima jemputan yang dihantar ke e-mel anda."
+        />
+      </TabsContent>
+
+      <TabsContent id="invitations">
+        <PendingInvitations />
+      </TabsContent>
 
       <ResponsiveDialog
         isOpen={isCreateOpen}
@@ -204,6 +246,6 @@ export function CirclesPage() {
           </Select>
         </Field>
       </ResponsiveDialog>
-    </div>
+    </Tabs>
   )
 }

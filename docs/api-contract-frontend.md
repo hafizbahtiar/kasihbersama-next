@@ -64,6 +64,34 @@ The care endpoints still answer the v0.1 shape (`details` as an object, bare
 codes). `deletionBlockersFromError()` and `api-growth-repository.ts` carry a
 narrow cast for it; both go when the care endpoints move to v0.2.
 
+### Plan limits (docs/09)
+
+| Code | HTTP | Frontend message (default) |
+|------|------|----------------------------|
+| `billing.limit.reached` | 403 | *(empty - the server's message names the limit and the object, e.g. "Pelan percuma terhad kepada 3 person bagi setiap circle.")* |
+| `storage.quota.exceeded` | 413 | Kuota storan circle penuh |
+
+A plan limit is **not** a permission refusal: the caller may do this on a paid
+plan, so the copy names the ceiling rather than the role. Storage stays 413
+because it is an entity-size limit, and the copy tells the reader to free space.
+
+`GET /v1/me/usage` (`lib/infrastructure/api/api-account-repository.ts`) is the
+only place the client learns the ceilings:
+
+```json
+{
+  "plan": "free",
+  "limits": { "owned_circles": 1, "persons_per_circle": 3, "members_per_circle": 3, "storage_bytes_per_circle": 262144000 },
+  "usage": { "owned_circles": 1, "circle": { "id": "…", "person_count": 2, "member_count": 2, "storage_bytes": 0 } }
+}
+```
+
+Three states, three shapes in `limits`: **absent** = no scope (no `circle_id`
+sent), **null** = no ceiling, **number** = the ceiling. `usage.circle` is null
+when the caller has no active circle. Bootstrap also carries
+`platform.limits.max_owned_circles`, which is what hides the "Cipta circle"
+button before the server has to refuse it.
+
 ## Auth (backend v0.2)
 
 Base: browser calls same-origin `/api/v1/*`; the rewrite sends it to the

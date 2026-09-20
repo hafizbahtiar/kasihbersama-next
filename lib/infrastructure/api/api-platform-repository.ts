@@ -17,6 +17,7 @@ type ApiBootstrap = {
       max_image_mb: number
       max_pdf_mb: number
       max_circle_storage_mb: number
+      max_owned_circles: number
     }
   }
   account?: {
@@ -50,6 +51,7 @@ function mapBootstrap(api: ApiBootstrap): Bootstrap {
         maxImageMb: p.limits.max_image_mb,
         maxPdfMb: p.limits.max_pdf_mb,
         maxCircleStorageMb: p.limits.max_circle_storage_mb,
+        maxOwnedCircles: p.limits.max_owned_circles,
       },
     },
   }
