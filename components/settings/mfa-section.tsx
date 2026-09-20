@@ -15,7 +15,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field"
 import {
   InputOTP,
   InputOTPGroup,
@@ -131,7 +136,7 @@ export function MfaCard() {
                 <p className="text-muted-foreground">
                   Tidak boleh imbas? Masukkan rahsia ini secara manual:
                 </p>
-                <code className="block break-all rounded-md bg-muted px-2 py-1 font-mono text-xs">
+                <code className="block rounded-md bg-muted px-2 py-1 font-mono text-xs break-all">
                   {enrolment.secret}
                 </code>
               </div>

@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { usePlatform } from "@/components/platform/platform-provider"
 import { TableActionButton, TableActions } from "@/components/table-actions"
-import { Badge } from "@/components/ui/badge"
+import { StatusChip } from "@/components/status-chip"
 import { Button } from "@/components/ui/button"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useDisplayFormat } from "@/lib/application/display-preferences"
@@ -61,14 +61,14 @@ export function NotificationInbox() {
       cell: ({ row }) => (
         <div className="flex flex-wrap gap-1.5">
           {row.original.readAt ? (
-            <Badge variant="secondary">Dibaca</Badge>
+            <StatusChip tone="neutral" label="Dibaca" />
           ) : (
-            <Badge>Baharu</Badge>
+            <StatusChip tone="attention" label="Baharu" />
           )}
           {/* Diakui BERBEZA daripada dibaca: melihat peringatan dos bukan
                 bermakna dos sudah diberi (docs/05 §6). */}
           {row.original.acknowledgedAt ? (
-            <Badge variant="outline">Diakui</Badge>
+            <StatusChip tone="positive" label="Diakui" />
           ) : null}
         </div>
       ),

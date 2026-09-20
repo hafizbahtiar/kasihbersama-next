@@ -13,14 +13,14 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { ResponsiveDialog } from "@/components/responsive-dialog"
+import { StatusChip } from "@/components/status-chip"
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { usePlatform } from "@/components/platform/platform-provider"
 import { TableActionButton, TableActions } from "@/components/table-actions"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -67,6 +67,7 @@ export function CircleDetail({ circleId }: { circleId: string }) {
     null
   )
   const [leaveOpen, setLeaveOpen] = useState(false)
+  const [isInviteOpen, setIsInviteOpen] = useState(false)
 
   // Permissions are resolved for the ACTIVE circle only, so this screen can
   // only trust them when the circle it shows IS the active one. On any other
@@ -149,16 +150,17 @@ export function CircleDetail({ circleId }: { circleId: string }) {
             </SelectContent>
           </Select>
         ) : (
-          <Badge variant="secondary">{roleLabel(row.original.roleKey)}</Badge>
+          <span>{roleLabel(row.original.roleKey)}</span>
         ),
     }),
     memberHelper.accessor("status", {
       header: "Status",
+      filterFn: "equalsString",
       cell: ({ getValue }) =>
         getValue() === "suspended" ? (
-          <Badge variant="destructive">Digantung</Badge>
+          <StatusChip tone="critical" label="Digantung" />
         ) : (
-          <Badge variant="outline">Aktif</Badge>
+          <StatusChip tone="positive" label="Aktif" />
         ),
     }),
     memberHelper.accessor("joinedAt", {
@@ -225,7 +227,13 @@ export function CircleDetail({ circleId }: { circleId: string }) {
     invitationHelper.accessor((row) => roleLabel(row.roleKey), {
       id: "role",
       header: "Peranan",
-      cell: ({ getValue }) => <Badge variant="secondary">{getValue()}</Badge>,
+    }),
+    invitationHelper.accessor("status", {
+      header: "Status",
+      filterFn: "equalsString",
+      // Senarai ini hanya membawa jemputan yang menunggu, jadi satu-satunya nada
+      // yang betul ialah "menunggu seseorang".
+      cell: () => <StatusChip tone="attention" label="Menunggu" />,
     }),
     invitationHelper.accessor("expiresAt", {
       header: "Tamat",
@@ -295,6 +303,8 @@ export function CircleDetail({ circleId }: { circleId: string }) {
         searchable
         searchPlaceholder="Cari ahli..."
         pageSize={10}
+        addLabel="Jemput ahli"
+        onAdd={canInvite ? () => setIsInviteOpen(true) : undefined}
         toolbarStart={
           <div className="space-y-1">
             <h2 className="font-heading text-lg tracking-tight">Ahli</h2>
@@ -308,48 +318,16 @@ export function CircleDetail({ circleId }: { circleId: string }) {
         emptyDescription="Jemput seseorang dengan alamat e-mel mereka."
       />
 
-      {canInvite ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Jemput ahli</CardTitle>
-            <CardDescription>
-              Pautan jemputan dihantar ke e-mel itu; ia tidak pernah dipaparkan
-              di sini.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <Field>
-              <FieldLabel htmlFor="invite-email">E-mel</FieldLabel>
-              <Input
-                id="invite-email"
-                type="email"
-                value={email}
-                placeholder="nama@contoh.com"
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel>Peranan</FieldLabel>
-              <Select
-                className="w-full"
-                aria-label="Peranan jemputan"
-                value={inviteRole}
-                onChange={(key) => setInviteRole(String(key ?? "member"))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ASSIGNABLE_ROLES.map((role) => (
-                    <SelectItem key={role} id={role}>
-                      {roleLabel(role)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-          </CardContent>
-          <CardFooter className="justify-end">
+      <ResponsiveDialog
+        isOpen={isInviteOpen}
+        onOpenChange={setIsInviteOpen}
+        title="Jemput ahli"
+        description="Pautan jemputan dihantar ke e-mel itu; ia tidak pernah dipaparkan di sini."
+        footer={
+          <>
+            <Button variant="outline" onPress={() => setIsInviteOpen(false)}>
+              Batal
+            </Button>
             <Button
               isDisabled={busy || email.trim().length === 0}
               onPress={() => {
@@ -359,7 +337,10 @@ export function CircleDetail({ circleId }: { circleId: string }) {
                       email: email.trim(),
                       roleKey: inviteRole,
                     })
-                    .then(() => setEmail(""))
+                    .then(() => {
+                      setEmail("")
+                      setIsInviteOpen(false)
+                    })
                     .then(() => invitations.reload()),
                   "Jemputan dihantar.",
                   false
@@ -369,9 +350,40 @@ export function CircleDetail({ circleId }: { circleId: string }) {
               <IconMailForward />
               Hantar jemputan
             </Button>
-          </CardFooter>
-        </Card>
-      ) : null}
+          </>
+        }
+      >
+        <Field>
+          <FieldLabel htmlFor="invite-email">E-mel</FieldLabel>
+          <Input
+            id="invite-email"
+            type="email"
+            value={email}
+            placeholder="nama@contoh.com"
+            onChange={(event) => setEmail(event.target.value)}
+          />
+        </Field>
+        <Field>
+          <FieldLabel>Peranan</FieldLabel>
+          <Select
+            className="w-full"
+            aria-label="Peranan jemputan"
+            value={inviteRole}
+            onChange={(key) => setInviteRole(String(key ?? "member"))}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ASSIGNABLE_ROLES.map((role) => (
+                <SelectItem key={role} id={role}>
+                  {roleLabel(role)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      </ResponsiveDialog>
 
       {canReadInvites ? (
         <DataTable
@@ -388,6 +400,8 @@ export function CircleDetail({ circleId }: { circleId: string }) {
             void invitations.reload()
           }}
           pageSize={5}
+          addLabel="Jemput ahli"
+          onAdd={canInvite ? () => setIsInviteOpen(true) : undefined}
           toolbarStart={
             <div className="space-y-1">
               <h2 className="font-heading text-lg tracking-tight">

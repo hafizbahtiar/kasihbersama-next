@@ -1,7 +1,16 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { IconSearch } from "@tabler/icons-react"
+import { IconColumns3, IconPlus, IconSearch } from "@tabler/icons-react"
+
+import { Button } from "@/components/ui/button"
+import { ButtonGroup } from "@/components/ui/button-group"
+import {
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import {
   Empty,
@@ -35,6 +44,14 @@ export type DataTableFilter = {
   options: DataTableFilterOption[]
 }
 
+/** One hideable column, flattened so the toolbar never touches table generics. */
+export type DataTableColumnToggle = {
+  id: string
+  label: string
+  isVisible: boolean
+  toggle: () => void
+}
+
 export function DataTableToolbar({
   actions,
   searchable,
@@ -44,6 +61,9 @@ export function DataTableToolbar({
   filter,
   filterValue,
   onFilterChange,
+  columnToggles,
+  addLabel,
+  onAdd,
 }: {
   actions?: ReactNode
   searchable?: boolean
@@ -53,8 +73,13 @@ export function DataTableToolbar({
   filter?: DataTableFilter
   filterValue: string
   onFilterChange: (value: string) => void
+  columnToggles?: DataTableColumnToggle[]
+  addLabel?: string
+  onAdd?: () => void
 }) {
-  const hasControls = searchable || filter || actions
+  const hasToggles = Boolean(columnToggles && columnToggles.length > 0)
+  const hasControls =
+    searchable || filter || actions || hasToggles || Boolean(onAdd)
 
   if (!hasControls) {
     return null
@@ -105,8 +130,49 @@ export function DataTableToolbar({
         ) : null}
       </div>
 
-      {actions ? (
-        <div className="flex flex-wrap items-center gap-2">{actions}</div>
+      {/* Kanan, sebaris dengan medan carian: kawalan jadual (lajur) dan tindakan
+          utama (tambah) tinggal bersama supaya setiap jadual dalam app ini
+          meletakkannya di tempat yang sama. */}
+      {hasToggles || onAdd || actions ? (
+        <ButtonGroup className="justify-end">
+          {actions}
+          {hasToggles ? (
+            <DropdownMenuTrigger>
+              <Button variant="outline" size="sm">
+                <IconColumns3 />
+                Lajur
+              </Button>
+              <DropdownMenu
+                placement="bottom end"
+                selectionMode="multiple"
+                selectedKeys={(columnToggles ?? [])
+                  .filter((column) => column.isVisible)
+                  .map((column) => column.id)}
+                onSelectionChange={() => {
+                  // Tidak digunakan: setiap item menogol lajurnya sendiri dalam
+                  // onAction, supaya menu tidak perlu memiliki keadaan itu.
+                }}
+              >
+                <DropdownMenuLabel>Papar lajur</DropdownMenuLabel>
+                {(columnToggles ?? []).map((column) => (
+                  <DropdownMenuItem
+                    key={column.id}
+                    id={column.id}
+                    onAction={column.toggle}
+                  >
+                    {column.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenu>
+            </DropdownMenuTrigger>
+          ) : null}
+          {onAdd ? (
+            <Button size="sm" onPress={onAdd}>
+              <IconPlus />
+              {addLabel ?? "Tambah"}
+            </Button>
+          ) : null}
+        </ButtonGroup>
       ) : null}
     </div>
   )

@@ -5,11 +5,7 @@ import { IconBell, IconCheck } from "@tabler/icons-react"
 
 import { usePlatform } from "@/components/platform/platform-provider"
 import { Button, LinkButton } from "@/components/ui/button"
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverTitle,
-} from "@/components/ui/popover"
+import { Popover, PopoverTrigger, PopoverTitle } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useNotifications } from "@/hooks/use-notifications"

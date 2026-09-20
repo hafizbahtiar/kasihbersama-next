@@ -8,6 +8,7 @@ import {
 } from "@tabler/icons-react"
 import {
   columnFilteringFeature,
+  columnVisibilityFeature,
   createColumnHelper,
   createFilteredRowModel,
   createPaginatedRowModel,
@@ -28,6 +29,7 @@ import { DataTablePagination } from "@/components/data-table-pagination"
 import {
   DataTableEmpty,
   DataTableToolbar,
+  type DataTableColumnToggle,
   type DataTableFilter,
 } from "@/components/data-table-toolbar"
 import { Button } from "@/components/ui/button"
@@ -44,6 +46,7 @@ import { cn } from "@/lib/utils"
 
 const dataTableFeatures = tableFeatures({
   columnFilteringFeature,
+  columnVisibilityFeature,
   globalFilteringFeature,
   filteredRowModel: createFilteredRowModel(),
   rowSortingFeature,
@@ -86,6 +89,11 @@ interface DataTableProps<TData extends RowData> {
   filter?: DataTableFilter
   toolbarStart?: ReactNode
   toolbarActions?: ReactNode
+  /** Butang utama jadual, di kanan sebaris dengan carian. */
+  onAdd?: () => void
+  addLabel?: string
+  /** Menu "Lajur". Matikan hanya bila setiap lajur wajib dilihat. */
+  showColumnToggle?: boolean
   getRowId?: (originalRow: TData, index: number) => string
   isLoading?: boolean
   errorMessage?: string
@@ -114,6 +122,9 @@ export function DataTable<TData extends RowData>({
   filter,
   toolbarStart,
   toolbarActions,
+  onAdd,
+  addLabel,
+  showColumnToggle = true,
   getRowId,
   isLoading = false,
   errorMessage,
@@ -145,6 +156,7 @@ export function DataTable<TData extends RowData>({
       pagination: state.pagination,
       globalFilter: state.globalFilter,
       columnFilters: state.columnFilters,
+      columnVisibility: state.columnVisibility,
     })
   )
 
@@ -183,6 +195,23 @@ export function DataTable<TData extends RowData>({
     table.setPageIndex(0)
   }
 
+  // Lajur tindakan tidak boleh disembunyikan: menyembunyikannya membuang
+  // satu-satunya jalan ke setiap tindakan baris.
+  const columnToggles: DataTableColumnToggle[] = showColumnToggle
+    ? table
+      .getAllColumns()
+      .filter((column) => column.getCanHide() && column.id !== "action")
+      .map((column) => ({
+        id: column.id,
+        label:
+          typeof column.columnDef.header === "string"
+            ? column.columnDef.header
+            : column.id,
+        isVisible: column.getIsVisible(),
+        toggle: () => column.toggleVisibility(),
+      }))
+    : []
+
   const sourceEmpty = data.length === 0 && !isLoading && !errorMessage
 
   const defaultEmpty = (
@@ -200,7 +229,10 @@ export function DataTable<TData extends RowData>({
             Kosongkan carian
           </Button>
         ) : (
-          emptyAction
+          (emptyAction ??
+            (onAdd ? (
+              <Button onPress={onAdd}>{addLabel ?? "Tambah"}</Button>
+            ) : null))
         )
       }
     />
@@ -220,6 +252,9 @@ export function DataTable<TData extends RowData>({
             table.setGlobalFilter(value)
             table.setPageIndex(0)
           }}
+          columnToggles={sourceEmpty ? [] : columnToggles}
+          addLabel={addLabel}
+          onAdd={onAdd}
           filter={sourceEmpty ? undefined : filter}
           filterValue={filterValue}
           onFilterChange={(value) => {

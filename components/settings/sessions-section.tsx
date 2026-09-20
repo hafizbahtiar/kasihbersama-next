@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { TableActionButton, TableActions } from "@/components/table-actions"
-import { Badge } from "@/components/ui/badge"
+import { StatusChip } from "@/components/status-chip"
 import { useSessions } from "@/hooks/use-account-data"
 import { useDisplayFormat } from "@/lib/application/display-preferences"
 import type { UserSession } from "@/lib/domain/account"
@@ -30,14 +30,18 @@ export function SessionsCard() {
     helper.accessor((row) => row.userAgent ?? "Peranti tidak dikenali", {
       id: "device",
       header: "Peranti",
-      cell: ({ row, getValue }) => (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-medium">{getValue()}</span>
-          {row.original.current ? (
-            <Badge variant="secondary">Peranti ini</Badge>
-          ) : null}
-        </div>
-      ),
+      cell: ({ getValue }) => <span className="font-medium">{getValue()}</span>,
+    }),
+    helper.accessor((row) => (row.current ? "semasa" : "lain"), {
+      id: "status",
+      header: "Status",
+      filterFn: "equalsString",
+      cell: ({ getValue }) =>
+        getValue() === "semasa" ? (
+          <StatusChip tone="positive" label="Peranti ini" />
+        ) : (
+          <StatusChip tone="neutral" label="Sesi lain" />
+        ),
     }),
     helper.accessor((row) => row.ipAddress ?? "-", {
       id: "ip",

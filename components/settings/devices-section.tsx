@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { TableActionButton, TableActions } from "@/components/table-actions"
-import { Badge } from "@/components/ui/badge"
+import { StatusChip } from "@/components/status-chip"
 import { useAuthDevices } from "@/hooks/use-account-data"
 import { useDisplayFormat } from "@/lib/application/display-preferences"
 import { platformLabel, type AuthDevice } from "@/lib/domain/account"
@@ -56,9 +56,9 @@ export function DevicesCard() {
       filterFn: "equalsString",
       cell: ({ row }) =>
         row.original.isTrusted ? (
-          <Badge variant="secondary">Dipercayai</Badge>
+          <StatusChip tone="positive" label="Dipercayai" />
         ) : (
-          <Badge variant="outline">Belum dipercayai</Badge>
+          <StatusChip tone="attention" label="Belum dipercayai" />
         ),
     }),
     helper.accessor((row) => row.lastSeenAt ?? row.createdAt, {

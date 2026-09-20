@@ -136,7 +136,7 @@ export function NotificationsCard() {
               data.categories.map((category) => (
                 <div key={category.key} className="space-y-2">
                   <div className="space-y-0.5">
-                    <p className="font-medium text-sm">{category.name}</p>
+                    <p className="text-sm font-medium">{category.name}</p>
                     {category.isMandatory ? (
                       <p className="text-xs text-muted-foreground">
                         Wajib - tidak boleh dimatikan.
@@ -169,7 +169,8 @@ export function NotificationsCard() {
                                   preferences: [
                                     {
                                       categoryKey: category.key,
-                                      channel: channel.channel as NotificationChannel,
+                                      channel:
+                                        channel.channel as NotificationChannel,
                                       isEnabled,
                                     },
                                   ],
@@ -258,7 +259,10 @@ function QuietHoursFields({
             Kosongkan
           </Button>
         ) : null}
-        <Button isDisabled={!dirty || isSaving} onPress={() => onSave(draftStart, draftEnd)}>
+        <Button
+          isDisabled={!dirty || isSaving}
+          onPress={() => onSave(draftStart, draftEnd)}
+        >
           Simpan waktu senyap
         </Button>
       </div>

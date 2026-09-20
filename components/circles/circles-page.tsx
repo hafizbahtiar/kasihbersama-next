@@ -1,22 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { IconCheck, IconPlus, IconUsersGroup } from "@tabler/icons-react"
+import { IconCheck, IconUsersGroup } from "@tabler/icons-react"
 import { toast } from "sonner"
 
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { usePlatform } from "@/components/platform/platform-provider"
+import { ResponsiveDialog } from "@/components/responsive-dialog"
+import { StatusChip } from "@/components/status-chip"
 import { TableActionButton, TableActions } from "@/components/table-actions"
-import { Badge } from "@/components/ui/badge"
 import { Button, LinkButton } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
@@ -40,6 +33,7 @@ const CIRCLE_TYPES = Object.keys(CIRCLE_TYPE_LABELS) as CircleType[]
 export function CirclesPage() {
   const { circles, activeCircle, isLoading, refresh, switchCircle } =
     usePlatform()
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [name, setName] = useState("")
   const [type, setType] = useState<CircleType>("family")
   const [isSaving, setIsSaving] = useState(false)
@@ -53,8 +47,9 @@ export function CirclesPage() {
     try {
       await getCircleRepository().createCircle({ name: name.trim(), type })
       setName("")
-      // The new circle - and the membership that came with it - only exist in
-      // bootstrap's answer, so the list is re-read rather than appended to.
+      setIsCreateOpen(false)
+      // Circle baharu - dan keahlian yang datang bersamanya - hanya wujud dalam
+      // jawapan bootstrap, jadi senarai dibaca semula dan bukan ditambah sendiri.
       await refresh()
       toast.success("Circle dicipta.")
     } catch (cause) {
@@ -83,15 +78,7 @@ export function CirclesPage() {
   // Tanpa useMemo: React Compiler yang memoize komponen ini.
   const helper = createDataTableColumnHelper<CircleMembership>()
   const columns = helper.columns([
-    helper.accessor("name", {
-      header: "Nama",
-      cell: ({ row }) => (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="font-medium">{row.original.name}</span>
-          {row.original.id === activeCircle?.id ? <Badge>Aktif</Badge> : null}
-        </div>
-      ),
-    }),
+    helper.accessor("name", { header: "Nama" }),
     helper.accessor((row) => CIRCLE_TYPE_LABELS[row.type] ?? String(row.type), {
       id: "type",
       header: "Jenis",
@@ -99,7 +86,17 @@ export function CirclesPage() {
     helper.accessor((row) => roleLabel(row.roleKey), {
       id: "role",
       header: "Peranan anda",
-      cell: ({ getValue }) => <Badge variant="secondary">{getValue()}</Badge>,
+    }),
+    helper.accessor((row) => (row.id === activeCircle?.id ? "aktif" : "lain"), {
+      id: "status",
+      header: "Status",
+      filterFn: "equalsString",
+      cell: ({ getValue }) =>
+        getValue() === "aktif" ? (
+          <StatusChip tone="positive" label="Aktif" />
+        ) : (
+          <StatusChip tone="neutral" label="Tidak aktif" />
+        ),
     }),
     helper.display({
       id: "action",
@@ -149,69 +146,64 @@ export function CirclesPage() {
         searchable={circles.length > 0}
         searchPlaceholder="Cari circle..."
         pageSize={10}
-        toolbarStart={
-          <div className="space-y-1">
-            <h2 className="font-heading text-lg tracking-tight">Circle anda</h2>
-            <p className="text-sm text-muted-foreground">
-              Circle aktif menentukan apa yang anda boleh lihat dan buat.
-            </p>
-          </div>
-        }
+        addLabel="Cipta circle"
+        onAdd={() => setIsCreateOpen(true)}
         emptyIcon={<IconUsersGroup />}
         emptyTitle="Belum menyertai circle"
-        emptyDescription="Cipta satu di bawah, atau terima jemputan yang dihantar ke e-mel anda."
+        emptyDescription="Cipta satu, atau terima jemputan yang dihantar ke e-mel anda."
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Cipta circle</CardTitle>
-          <CardDescription>
-            Anda menjadi pemilik, dan boleh menjemput ahli selepas itu.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <Field>
-            <FieldLabel htmlFor="circle-name">Nama</FieldLabel>
-            <Input
-              id="circle-name"
-              value={name}
-              placeholder="Contoh: Rumah Bukit"
-              onChange={(event) => setName(event.target.value)}
-            />
-          </Field>
-          <Field>
-            <FieldLabel>Jenis</FieldLabel>
-            <Select
-              className="w-full"
-              aria-label="Jenis circle"
-              value={type}
-              onChange={(key) => setType(String(key ?? "family") as CircleType)}
+      <ResponsiveDialog
+        isOpen={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        title="Cipta circle"
+        description="Anda menjadi pemilik, dan boleh menjemput ahli selepas itu."
+        footer={
+          <>
+            <Button variant="outline" onPress={() => setIsCreateOpen(false)}>
+              Batal
+            </Button>
+            <Button
+              isDisabled={isSaving || name.trim().length === 0}
+              onPress={() => {
+                void createCircle()
+              }}
             >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CIRCLE_TYPES.map((key) => (
-                  <SelectItem key={key} id={key}>
-                    {CIRCLE_TYPE_LABELS[key]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-        </CardContent>
-        <CardFooter className="justify-end">
-          <Button
-            isDisabled={isSaving || name.trim().length === 0}
-            onPress={() => {
-              void createCircle()
-            }}
+              Cipta
+            </Button>
+          </>
+        }
+      >
+        <Field>
+          <FieldLabel htmlFor="circle-name">Nama</FieldLabel>
+          <Input
+            id="circle-name"
+            value={name}
+            placeholder="Contoh: Rumah Bukit"
+            onChange={(event) => setName(event.target.value)}
+          />
+        </Field>
+        <Field>
+          <FieldLabel>Jenis</FieldLabel>
+          <Select
+            className="w-full"
+            aria-label="Jenis circle"
+            value={type}
+            onChange={(key) => setType(String(key ?? "family") as CircleType)}
           >
-            <IconPlus />
-            Cipta circle
-          </Button>
-        </CardFooter>
-      </Card>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CIRCLE_TYPES.map((key) => (
+                <SelectItem key={key} id={key}>
+                  {CIRCLE_TYPE_LABELS[key]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      </ResponsiveDialog>
     </div>
   )
 }
