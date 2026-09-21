@@ -94,6 +94,12 @@ const CODE_MESSAGES: Record<string, string> = {
   // 400 fallback, which says the request was invalid without saying what.
   // Handlers put the specific reason in error.message, so this defers to it.
   invalid_request: "",
+  // Circle role guards (backend docs/02 §5.2): the server's messages name the
+  // fix ("Pindahkan ahli yang memegang role ini dahulu"), where the 409/404
+  // fallbacks only say a conflict or a missing record.
+  "circle.role.in_use": "",
+  "circle.role.exists": "",
+  "circle.role.not_found": "",
   deletion_blocked:
     "Selesaikan profil jagaan di bawah sebelum memadam akaun anda.",
   pending_invites:
