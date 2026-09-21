@@ -16,7 +16,7 @@ import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { ResponsiveDialog } from "@/components/responsive-dialog"
 import { StatusChip } from "@/components/status-chip"
 import { TableActionButton, TableActions } from "@/components/table-actions"
-import { Button } from "@/components/ui/button"
+import { Button, LinkButton } from "@/components/ui/button"
 import { DateField } from "@/components/ui/date-field"
 import {
   Field,
@@ -153,6 +153,17 @@ export function PersonsSection({
       cell: ({ row }) =>
         canUpdate || canShare || canDelete ? (
           <TableActions>
+            {/* Rekod kesihatan ialah halamannya sendiri: ia mengandungi tiga
+                senarai, dan tiga senarai dalam satu dialog ialah dialog yang
+                tiada siapa boleh baca. */}
+            <LinkButton
+              href={`/circles/${circleId}/persons/${row.original.id}`}
+              variant="outline"
+              size="sm"
+              className="px-2"
+            >
+              Kesihatan
+            </LinkButton>
             {canUpdate ? (
               <TableActionButton
                 aria-label={`Kemas kini ${row.original.fullName}`}
@@ -241,10 +252,7 @@ export function PersonsSection({
           description="Rekod ini untuk seseorang dalam circle, dengan atau tanpa akaun."
           footer={
             <>
-              <Button
-                variant="outline"
-                onPress={() => setIsCreateOpen(false)}
-              >
+              <Button variant="outline" onPress={() => setIsCreateOpen(false)}>
                 Batal
               </Button>
               <Button
