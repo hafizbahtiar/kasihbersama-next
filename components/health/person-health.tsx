@@ -971,7 +971,7 @@ function EmergencyCard({
  * Satu muka kad. `backface-hidden` ialah bahagian yang penting: tanpanya, muka
  * belakang terbaca secara terbalik menembusi muka depan.
  */
-function CardFace({
+export function CardFace({
   className,
   children,
 }: {
@@ -990,7 +990,7 @@ function CardFace({
   )
 }
 
-function FaceRow({
+export function FaceRow({
   label,
   children,
 }: {

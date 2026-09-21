@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePlanUsage } from "@/hooks/use-plan-usage"
 import type { PlanUsage } from "@/lib/domain/account"
@@ -29,6 +30,17 @@ function formatBytes(bytes: number) {
 }
 
 /**
+ * Peratusan untuk bar kemajuan. Bar hanya masuk akal bila ada SILING angka; `null`
+ * (tanpa had) dan `undefined` (tidak terpakai) kekal baris teks tanpa bar.
+ */
+function percentageOf(used: number, limit?: number | null) {
+  if (typeof limit !== "number" || limit <= 0) {
+    return undefined
+  }
+  return Math.min(100, Math.round((used / limit) * 100))
+}
+
+/**
  * One line of the usage list.
  *
  * `limit` absent means the number does not apply to this account (no circle chosen);
@@ -39,17 +51,24 @@ function UsageRow({
   label,
   used,
   limit,
+  percentage,
 }: {
   label: string
   used: string
   limit?: string | null
+  percentage?: number
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b py-2 last:border-b-0">
-      <span className="text-sm">{label}</span>
-      <span className="font-medium tabular-nums">
-        {limit === undefined ? used : `${used} / ${limit ?? "tanpa had"}`}
-      </span>
+    <div className="space-y-1.5 border-b py-2.5 last:border-b-0">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-sm">{label}</span>
+        <span className="font-medium tabular-nums">
+          {limit === undefined ? used : `${used} / ${limit ?? "tanpa had"}`}
+        </span>
+      </div>
+      {percentage !== undefined ? (
+        <Progress value={percentage} aria-label={`Penggunaan ${label}`} />
+      ) : null}
     </div>
   )
 }
@@ -79,6 +98,7 @@ function UsageCard({ data }: { data: PlanUsage }) {
           limit={
             limits.ownedCircles === null ? null : String(limits.ownedCircles)
           }
+          percentage={percentageOf(usage.ownedCircles, limits.ownedCircles)}
         />
         {usage.circle ? (
           <>
@@ -92,6 +112,10 @@ function UsageCard({ data }: { data: PlanUsage }) {
                     ? null
                     : String(limits.personsPerCircle)
               }
+              percentage={percentageOf(
+                usage.circle.personCount,
+                limits.personsPerCircle
+              )}
             />
             <UsageRow
               label="Ahli aktif dalam circle ini"
@@ -103,6 +127,10 @@ function UsageCard({ data }: { data: PlanUsage }) {
                     ? null
                     : String(limits.membersPerCircle)
               }
+              percentage={percentageOf(
+                usage.circle.memberCount,
+                limits.membersPerCircle
+              )}
             />
             <UsageRow
               label="Storan circle ini"
@@ -114,6 +142,10 @@ function UsageCard({ data }: { data: PlanUsage }) {
                     ? null
                     : formatBytes(limits.storageBytesPerCircle)
               }
+              percentage={percentageOf(
+                usage.circle.storageBytes,
+                limits.storageBytesPerCircle
+              )}
             />
           </>
         ) : (
