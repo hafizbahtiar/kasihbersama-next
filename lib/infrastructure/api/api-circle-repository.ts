@@ -1,6 +1,9 @@
 import type {
   CircleInvitation,
   CircleMember,
+  CircleRole,
+  CircleRoleInput,
+  CircleRolePatch,
   CirclePerson,
   CirclePersonDetail,
   CircleSettings,
@@ -9,6 +12,10 @@ import type {
   MembershipStatus,
   PersonAccessGrant,
   PersonAccessLevel,
+  PersonAddress,
+  PersonAddressInput,
+  PersonRelationship,
+  RelationshipKind,
   PersonPatch,
 } from "@/lib/domain/circle"
 import type { CircleRepository } from "@/lib/domain/circle-repository"
@@ -65,6 +72,63 @@ type ApiCircle = {
   type: string
   timezone: string
   currency: string
+}
+
+type ApiAddress = {
+  id: string
+  label: string
+  line1: string
+  line2?: string
+  city: string
+  postcode?: string
+  state?: string
+  country: string
+  notes?: string
+  is_primary: boolean
+}
+
+type ApiRelationship = {
+  id: string
+  related_person_id: string
+  related_person_name?: string
+  kind: string
+  label?: string
+}
+
+function addressBody(input: PersonAddressInput) {
+  return JSON.stringify({
+    label: input.label,
+    line1: input.line1,
+    line2: input.line2,
+    city: input.city,
+    postcode: input.postcode,
+    state: input.state,
+    country: input.country,
+    notes: input.notes,
+    is_primary: input.isPrimary,
+  })
+}
+
+type ApiRole = {
+  id: string
+  key: string
+  name: string
+  description?: string
+  rank: number
+  is_system: boolean
+  perm_keys: string[]
+}
+
+function mapRole(api: ApiRole): CircleRole {
+  return {
+    id: api.id,
+    key: api.key,
+    name: api.name,
+    description: api.description,
+    rank: api.rank,
+    isSystem: api.is_system,
+    permKeys: api.perm_keys ?? [],
+  }
 }
 
 function mapMember(api: ApiMember): CircleMember {
@@ -183,9 +247,50 @@ export class ApiCircleRepository implements CircleRepository {
   }
 
   transferOwnership(circleId: string, memberId: string) {
-    return this.client.request<void>(`/circles/${circleId}/transfer-ownership`, {
+    return this.client.request<void>(
+      `/circles/${circleId}/transfer-ownership`,
+      {
+        method: "POST",
+        body: JSON.stringify({ new_owner_member_id: memberId }),
+      }
+    )
+  }
+
+  listRoles(circleId: string) {
+    return this.client
+      .request<{ roles: ApiRole[] }>(`/circles/${circleId}/roles`)
+      .then((body) => (body.roles ?? []).map(mapRole))
+  }
+
+  createRole(circleId: string, input: CircleRoleInput) {
+    return this.client.request<void>(`/circles/${circleId}/roles`, {
       method: "POST",
-      body: JSON.stringify({ new_owner_member_id: memberId }),
+      body: JSON.stringify({
+        key: input.key,
+        name: input.name,
+        description: input.description,
+        rank: input.rank,
+        perm_keys: input.permKeys,
+      }),
+    })
+  }
+
+  updateRole(circleId: string, roleId: string, patch: CircleRolePatch) {
+    const body: Record<string, unknown> = {}
+    if (patch.name !== undefined) body.name = patch.name
+    if (patch.description !== undefined) body.description = patch.description
+    if (patch.rank !== undefined) body.rank = patch.rank
+    if (patch.permKeys !== undefined) body.perm_keys = patch.permKeys
+
+    return this.client.request<void>(`/circles/${circleId}/roles/${roleId}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    })
+  }
+
+  deleteRole(circleId: string, roleId: string) {
+    return this.client.request<void>(`/circles/${circleId}/roles/${roleId}`, {
+      method: "DELETE",
     })
   }
 
@@ -291,14 +396,12 @@ export class ApiCircleRepository implements CircleRepository {
         `/circles/${circleId}/persons/${personId}/access`
       )
       .then((body) =>
-        (body.data ?? []).map(
-          (row): PersonAccessGrant => ({
-            memberId: row.member_id,
-            displayName: row.display_name,
-            email: row.email ?? "",
-            level: row.level as PersonAccessLevel,
-          })
-        )
+        (body.data ?? []).map((row): PersonAccessGrant => ({
+          memberId: row.member_id,
+          displayName: row.display_name,
+          email: row.email ?? "",
+          level: row.level as PersonAccessLevel,
+        }))
       )
   }
 
@@ -317,6 +420,98 @@ export class ApiCircleRepository implements CircleRepository {
   revokePersonAccess(circleId: string, personId: string, memberId: string) {
     return this.client.request<void>(
       `/circles/${circleId}/persons/${personId}/access/${memberId}`,
+      { method: "DELETE" }
+    )
+  }
+
+  listAddresses(circleId: string, personId: string) {
+    return this.client
+      .request<{ addresses: ApiAddress[] }>(
+        `/circles/${circleId}/persons/${personId}/addresses`
+      )
+      .then((body) =>
+        (body.addresses ?? []).map((a): PersonAddress => ({
+          id: a.id,
+          label: a.label,
+          line1: a.line1,
+          line2: a.line2,
+          city: a.city,
+          postcode: a.postcode,
+          state: a.state,
+          country: a.country,
+          notes: a.notes,
+          isPrimary: a.is_primary,
+        }))
+      )
+  }
+
+  createAddress(circleId: string, personId: string, input: PersonAddressInput) {
+    return this.client.request<void>(
+      `/circles/${circleId}/persons/${personId}/addresses`,
+      { method: "POST", body: addressBody(input) }
+    )
+  }
+
+  updateAddress(
+    circleId: string,
+    personId: string,
+    addressId: string,
+    input: PersonAddressInput
+  ) {
+    return this.client.request<void>(
+      `/circles/${circleId}/persons/${personId}/addresses/${addressId}`,
+      { method: "PATCH", body: addressBody(input) }
+    )
+  }
+
+  deleteAddress(circleId: string, personId: string, addressId: string) {
+    return this.client.request<void>(
+      `/circles/${circleId}/persons/${personId}/addresses/${addressId}`,
+      { method: "DELETE" }
+    )
+  }
+
+  listRelationships(circleId: string, personId: string) {
+    return this.client
+      .request<{ relationships: ApiRelationship[] }>(
+        `/circles/${circleId}/persons/${personId}/relationships`
+      )
+      .then((body) =>
+        (body.relationships ?? []).map((r): PersonRelationship => ({
+          id: r.id,
+          relatedPersonId: r.related_person_id,
+          relatedPersonName: r.related_person_name ?? "Tanpa nama",
+          kind: r.kind as RelationshipKind,
+          label: r.label,
+        }))
+      )
+  }
+
+  createRelationship(
+    circleId: string,
+    personId: string,
+    input: { relatedPersonId: string; kind: RelationshipKind; label?: string }
+  ) {
+    return this.client.request<void>(
+      `/circles/${circleId}/persons/${personId}/relationships`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          related_person_id: input.relatedPersonId,
+          kind: input.kind,
+          label: input.label,
+        }),
+      }
+    )
+  }
+
+  deleteRelationship(
+    circleId: string,
+    personId: string,
+    relationshipId: string
+  ) {
+    return this.client.request<void>(
+      `/circles/${circleId}/persons/${personId}/relationships/${relationshipId}`,
       { method: "DELETE" }
     )
   }

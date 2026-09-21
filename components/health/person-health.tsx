@@ -43,6 +43,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { PersonAddresses } from "@/components/circles/person-addresses"
+import { PersonRelationships } from "@/components/circles/person-relationships"
 import { Textarea } from "@/components/ui/textarea"
 import { usePersonHealth } from "@/hooks/use-person-health"
 import { useDisplayFormat } from "@/lib/application/display-preferences"
@@ -95,11 +97,14 @@ export function PersonHealth({
   circleId,
   personId,
   canWrite,
+  canUpdatePerson,
 }: {
   circleId: string
   personId: string
   /** Akses ringkasan membaca sahaja - pelayan menolaknya, jadi UI tidak menawarkannya. */
   canWrite: boolean
+  /** `core.person.update` - alamat dan hubungan milik rekod person, bukan health. */
+  canUpdatePerson: boolean
 }) {
   const health = usePersonHealth(circleId, personId)
   const { date, dateTime } = useDisplayFormat()
@@ -454,6 +459,8 @@ export function PersonHealth({
           <TabsTrigger id="immunisations">Imunisasi</TabsTrigger>
           <TabsTrigger id="appointments">Janji temu</TabsTrigger>
           <TabsTrigger id="visits">Lawatan</TabsTrigger>
+          <TabsTrigger id="addresses">Alamat</TabsTrigger>
+          <TabsTrigger id="relationships">Hubungan</TabsTrigger>
         </TabsList>
 
         <TabsContent id="emergency" className="flex flex-col gap-4">
@@ -516,7 +523,8 @@ export function PersonHealth({
             onAdd={canWrite ? () => setIsAllergyOpen(true) : undefined}
             toolbarStart={
               <p className="text-sm text-muted-foreground">
-                Paling teruk di baris pertama - senarai ini dibaca semasa tergesa.
+                Paling teruk di baris pertama - senarai ini dibaca semasa
+                tergesa.
               </p>
             }
             emptyIcon={<IconAlertTriangle />}
@@ -542,8 +550,8 @@ export function PersonHealth({
 
         <TabsContent id="doses" className="flex flex-col gap-4">
           <TabHint icon={<IconCircleCheck />}>
-            Yang perlu diambil HARI INI. Dah makan atau langkau - ia dicatat
-            dan sejarahnya kekal.
+            Yang perlu diambil HARI INI. Dah makan atau langkau - ia dicatat dan
+            sejarahnya kekal.
           </TabHint>
           <PersonDoses
             circleId={circleId}
@@ -631,6 +639,22 @@ export function PersonHealth({
             emptyIcon={<IconStethoscope />}
             emptyTitle="Tiada lawatan direkodkan"
             emptyDescription="Rekod lawatan selepas ia berlaku - tarikh masa depan ialah janji temu."
+          />
+        </TabsContent>
+
+        <TabsContent id="addresses" className="flex flex-col gap-4">
+          <PersonAddresses
+            circleId={circleId}
+            personId={personId}
+            canWrite={canUpdatePerson}
+          />
+        </TabsContent>
+
+        <TabsContent id="relationships" className="flex flex-col gap-4">
+          <PersonRelationships
+            circleId={circleId}
+            personId={personId}
+            canWrite={canUpdatePerson}
           />
         </TabsContent>
       </Tabs>
@@ -790,13 +814,7 @@ export function PersonHealth({
 }
 
 /** Satu baris penerangan di puncak setiap tab: tab yang tidak dijelaskan diisi salah. */
-function TabHint({
-  icon,
-  children,
-}: {
-  icon: ReactNode
-  children: ReactNode
-}) {
+function TabHint({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
     <Alert>
       {icon}
@@ -1157,7 +1175,9 @@ function EmergencyDialog({
           id="health-notes"
           rows={3}
           value={draft.notes ?? ""}
-          onChange={(event) => setDraft({ ...draft, notes: event.target.value })}
+          onChange={(event) =>
+            setDraft({ ...draft, notes: event.target.value })
+          }
         />
       </Field>
     </ResponsiveDialog>
@@ -1440,7 +1460,9 @@ function AppointmentDialog({
           value={endsAt}
           onChange={(event) => setEndsAt(event.target.value)}
         />
-        <FieldDescription>Pilihan - biar kosong kalau tidak pasti.</FieldDescription>
+        <FieldDescription>
+          Pilihan - biar kosong kalau tidak pasti.
+        </FieldDescription>
       </Field>
       <Field>
         <FieldLabel htmlFor="appointment-location">Tempat</FieldLabel>

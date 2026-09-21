@@ -40,18 +40,30 @@ export type CircleMember = {
 }
 
 /**
- * The roles an invite or a role change may name. `owner` is deliberately absent:
- * there is exactly one, and it moves only through transfer-ownership.
+ * A circle role - one of the six system roles, or a custom one this circle
+ * defined (docs/02 §5.2). The server enforces every fence; `rank` is here so the
+ * pickers can hide what the caller could never grant.
  */
-export const ASSIGNABLE_ROLES = [
-  "admin",
-  "caregiver",
-  "member",
-  "viewer",
-  "child",
-] as const
+export type CircleRole = {
+  id: string
+  key: string
+  name: string
+  description?: string
+  rank: number
+  isSystem: boolean
+  permKeys: string[]
+}
 
-export type AssignableRole = (typeof ASSIGNABLE_ROLES)[number]
+export type CircleRoleInput = {
+  key: string
+  name: string
+  description?: string
+  rank: number
+  permKeys: string[]
+}
+
+/** Sparse: an absent key is "do not touch". `key` never changes. */
+export type CircleRolePatch = Partial<Omit<CircleRoleInput, "key">>
 
 export const ROLE_LABELS: Record<string, string> = {
   owner: "Pemilik",
@@ -185,4 +197,51 @@ export function ageLabel(years?: number, months?: number) {
     return `${years} tahun ${months} bulan`
   }
   return `${years} tahun`
+}
+
+/** One address of a person (`person_addresses`). Full access only. */
+export type PersonAddress = {
+  id: string
+  label: string
+  line1: string
+  line2?: string
+  city: string
+  postcode?: string
+  state?: string
+  country: string
+  notes?: string
+  isPrimary: boolean
+}
+
+export type PersonAddressInput = Omit<PersonAddress, "id">
+
+export type RelationshipKind =
+  | "parent"
+  | "child"
+  | "spouse"
+  | "sibling"
+  | "grandparent"
+  | "grandchild"
+  | "guardian"
+  | "other"
+
+/** Read as "person ini ialah <label> kepada <related person>" - (A, B, parent) = A ibu B. */
+export const RELATIONSHIP_KIND_LABELS: Record<RelationshipKind, string> = {
+  parent: "Ibu/bapa",
+  child: "Anak",
+  spouse: "Pasangan",
+  sibling: "Adik-beradik",
+  grandparent: "Datuk/nenek",
+  grandchild: "Cucu",
+  guardian: "Penjaga",
+  other: "Lain-lain",
+}
+
+/** One edge, seen from the person being viewed. The server writes the inverse. */
+export type PersonRelationship = {
+  id: string
+  relatedPersonId: string
+  relatedPersonName: string
+  kind: RelationshipKind
+  label?: string
 }

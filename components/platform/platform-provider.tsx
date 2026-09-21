@@ -40,6 +40,8 @@ type BootstrapContextValue = {
    * impossible; the server still enforces every route.
    */
   can: (permission: string) => boolean
+  /** Every key `can` answers true for - what a custom role may be given (docs/02 §5.2 fence 3). */
+  permissions: string[]
   unreadNotifications: number
   /** Switches the session's circle, then re-reads bootstrap - permissions change with it. */
   switchCircle: (circleId: string) => Promise<void>
@@ -112,6 +114,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       activeCircle:
         circles.find((c) => c.id === account?.activeCircleId) ?? null,
       can: (permission) => permissions.has(permission),
+      permissions: [...permissions],
       unreadNotifications: account?.unreadNotifications ?? 0,
       switchCircle,
     }

@@ -2,6 +2,9 @@ import type {
   CircleInvitation,
   CircleMember,
   CircleMembership,
+  CircleRole,
+  CircleRoleInput,
+  CircleRolePatch,
   CirclePerson,
   CirclePersonDetail,
   CircleSettings,
@@ -10,6 +13,10 @@ import type {
   MembershipStatus,
   PersonAccessGrant,
   PersonAccessLevel,
+  PersonAddress,
+  PersonAddressInput,
+  PersonRelationship,
+  RelationshipKind,
   PersonPatch,
 } from "@/lib/domain/circle"
 import type { Page } from "@/lib/domain/pagination"
@@ -36,6 +43,17 @@ export interface CircleRepository {
   removeMember(circleId: string, memberId: string): Promise<void>
   leaveCircle(circleId: string): Promise<void>
   transferOwnership(circleId: string, memberId: string): Promise<void>
+
+  /** System roles and this circle's custom ones - the role pickers' source. */
+  listRoles(circleId: string): Promise<CircleRole[]>
+  createRole(circleId: string, input: CircleRoleInput): Promise<void>
+  updateRole(
+    circleId: string,
+    roleId: string,
+    patch: CircleRolePatch
+  ): Promise<void>
+  /** Refused (409) while any member still holds the role. */
+  deleteRole(circleId: string, roleId: string): Promise<void>
 
   /** Invitations still waiting - accepted ones are members, so they are not here. */
   listInvitations(circleId: string): Promise<CircleInvitation[]>
@@ -84,6 +102,42 @@ export interface CircleRepository {
     circleId: string,
     personId: string,
     memberId: string
+  ): Promise<void>
+
+  listAddresses(circleId: string, personId: string): Promise<PersonAddress[]>
+  /** Marking one primary unsets the old primary in the same transaction. */
+  createAddress(
+    circleId: string,
+    personId: string,
+    input: PersonAddressInput
+  ): Promise<void>
+  updateAddress(
+    circleId: string,
+    personId: string,
+    addressId: string,
+    input: PersonAddressInput
+  ): Promise<void>
+  deleteAddress(
+    circleId: string,
+    personId: string,
+    addressId: string
+  ): Promise<void>
+
+  /** Edges out of this person; ones the caller may not read are left out. */
+  listRelationships(
+    circleId: string,
+    personId: string
+  ): Promise<PersonRelationship[]>
+  createRelationship(
+    circleId: string,
+    personId: string,
+    input: { relatedPersonId: string; kind: RelationshipKind; label?: string }
+  ): Promise<void>
+  /** Removes both directions. */
+  deleteRelationship(
+    circleId: string,
+    personId: string,
+    relationshipId: string
   ): Promise<void>
 
   getCircle(circleId: string): Promise<CircleSettings>

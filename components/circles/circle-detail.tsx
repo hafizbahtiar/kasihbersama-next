@@ -14,6 +14,7 @@ import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { CircleSettingsSection } from "@/components/circles/circle-settings-section"
 import { PersonsSection } from "@/components/circles/persons-section"
+import { RolesSection } from "@/components/circles/roles-section"
 import { ResponsiveDialog } from "@/components/responsive-dialog"
 import { StatusChip } from "@/components/status-chip"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -38,13 +39,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useCircleMembers } from "@/hooks/use-circle-members"
+import { useCircleRoles } from "@/hooks/use-circle-roles"
 import { useDisplayFormat } from "@/lib/application/display-preferences"
 import { getCircleRepository } from "@/lib/composition/circle-repository"
-import {
-  ASSIGNABLE_ROLES,
-  roleLabel,
-  type CircleMember,
-} from "@/lib/domain/circle"
+import { roleLabel, type CircleMember } from "@/lib/domain/circle"
 import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
 
 /** Permission keys this screen hides behind (docs/02 §4). */
@@ -56,11 +54,14 @@ const PERM_UPDATE_PERSON = "core.person.update"
 const PERM_DELETE_PERSON = "core.person.delete"
 const PERM_SHARE_PERSON = "core.person.share"
 const PERM_UPDATE_CIRCLE = "circle.circle.update"
+const PERM_READ_ROLE = "circle.role.read"
+const PERM_MANAGE_ROLE = "circle.role.manage"
 
 export function CircleDetail({ circleId }: { circleId: string }) {
   const router = useRouter()
-  const { circles, activeCircle, can, refresh } = usePlatform()
+  const { circles, activeCircle, can, permissions, refresh } = usePlatform()
   const members = useCircleMembers(circleId)
+  const roles = useCircleRoles(circleId)
   const { date } = useDisplayFormat()
 
   const circle = circles.find((c) => c.id === circleId) ?? null
@@ -87,7 +88,19 @@ export function CircleDetail({ circleId }: { circleId: string }) {
   const canDeletePerson = isActive && can(PERM_DELETE_PERSON)
   const canSharePerson = isActive && can(PERM_SHARE_PERSON)
   const canUpdateCircle = isActive && can(PERM_UPDATE_CIRCLE)
+  const canReadRoles = isActive && can(PERM_READ_ROLE)
+  const canManageRoles = isActive && can(PERM_MANAGE_ROLE)
   const isOwner = circle?.roleKey === "owner"
+
+  // Pangkat sendiri menapis pemilih: role di atasnya akan ditolak pelayan
+  // (docs/02 §5.2 pagar 2), dan `owner` hanya berpindah melalui serah milik.
+  const actorRank =
+    roles.data.find((role) => role.key === circle?.roleKey)?.rank ?? 0
+  const assignableRoles = roles.data.filter(
+    (role) => role.key !== "owner" && role.rank <= actorRank
+  )
+  const nameOf = (key: string) =>
+    roles.data.find((role) => role.key === key)?.name ?? roleLabel(key)
 
   // Keluar bermakna perkara yang BERBEZA bagi pemilik, bergantung pada siapa lagi
   // yang tinggal - dan hanya satu daripada tiga keadaan itu boleh diteka dengan
@@ -138,11 +151,13 @@ export function CircleDetail({ circleId }: { circleId: string }) {
         </div>
       ),
     }),
-    memberHelper.accessor((row) => roleLabel(row.roleKey), {
+    memberHelper.accessor((row) => nameOf(row.roleKey), {
       id: "role",
       header: "Peranan",
       cell: ({ row }) =>
-        canManage && row.original.roleKey !== "owner" ? (
+        canManage &&
+        row.original.roleKey !== "owner" &&
+        assignableRoles.some((role) => role.key === row.original.roleKey) ? (
           <Select
             aria-label={`Peranan ${row.original.displayName}`}
             value={row.original.roleKey}
@@ -162,15 +177,15 @@ export function CircleDetail({ circleId }: { circleId: string }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {ASSIGNABLE_ROLES.map((role) => (
-                <SelectItem key={role} id={role}>
-                  {roleLabel(role)}
+              {assignableRoles.map((role) => (
+                <SelectItem key={role.key} id={role.key}>
+                  {role.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         ) : (
-          <span>{roleLabel(row.original.roleKey)}</span>
+          <span>{nameOf(row.original.roleKey)}</span>
         ),
     }),
     memberHelper.accessor("status", {
@@ -251,7 +266,7 @@ export function CircleDetail({ circleId }: { circleId: string }) {
           </h1>
           <p className="text-sm text-muted-foreground">
             {circle
-              ? `Peranan anda: ${roleLabel(circle.roleKey)}`
+              ? `Peranan anda: ${nameOf(circle.roleKey)}`
               : "Circle ini tiada dalam senarai keahlian anda."}
           </p>
         </div>
@@ -266,6 +281,7 @@ export function CircleDetail({ circleId }: { circleId: string }) {
         <TabsList variant="line" aria-label="Bahagian circle">
           <TabsTrigger id="members">Ahli</TabsTrigger>
           <TabsTrigger id="persons">Orang</TabsTrigger>
+          {canReadRoles ? <TabsTrigger id="roles">Peranan</TabsTrigger> : null}
           <TabsTrigger id="settings">Tetapan</TabsTrigger>
         </TabsList>
 
@@ -311,6 +327,21 @@ export function CircleDetail({ circleId }: { circleId: string }) {
             canShare={canSharePerson}
           />
         </TabsContent>
+
+        {canReadRoles ? (
+          <TabsContent id="roles">
+            <RolesSection
+              circleId={circleId}
+              roles={roles.data}
+              isLoading={roles.isLoading}
+              error={roles.error}
+              reload={roles.reload}
+              canManage={canManageRoles}
+              actorRank={actorRank}
+              permissions={permissions}
+            />
+          </TabsContent>
+        ) : null}
 
         <TabsContent id="settings" className="flex flex-col gap-5">
           <CircleSettingsSection
@@ -419,9 +450,9 @@ export function CircleDetail({ circleId }: { circleId: string }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {ASSIGNABLE_ROLES.map((role) => (
-                <SelectItem key={role} id={role}>
-                  {roleLabel(role)}
+              {assignableRoles.map((role) => (
+                <SelectItem key={role.key} id={role.key}>
+                  {role.name}
                 </SelectItem>
               ))}
             </SelectContent>

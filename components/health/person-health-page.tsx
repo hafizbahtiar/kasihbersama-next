@@ -22,7 +22,9 @@ export function PersonHealthPage({
   // Kebenaran diselesaikan untuk circle AKTIF sahaja, jadi skrin ini hanya boleh
   // mempercayainya bila circle yang dipaparkan ialah circle aktif. Di luar itu ia
   // baca sahaja, dan pelayan kekal menjadi pihak yang memutuskan.
-  const canWrite = activeCircle?.id === circleId && can(PERM_WRITE)
+  const isActive = activeCircle?.id === circleId
+  const canWrite = isActive && can(PERM_WRITE)
+  const canUpdatePerson = isActive && can("core.person.update")
 
   return (
     <div className="flex flex-col gap-5">
@@ -32,6 +34,7 @@ export function PersonHealthPage({
         circleId={circleId}
         personId={personId}
         canWrite={canWrite}
+        canUpdatePerson={canUpdatePerson}
       />
     </div>
   )
