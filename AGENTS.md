@@ -113,7 +113,38 @@ dalam satu jadual dan kelabu dalam jadual seterusnya, dan pembaca terpaksa belaj
 setiap jadual secara berasingan. `Badge` masih betul untuk label BUKAN status (kiraan,
 jenis, tag).
 
-## 4. Setiap primitif UI datang daripada shadcn
+## 4. Dialog tidak boleh jadi anak LANGSUNG `<Tabs>`
+
+`<Tabs>` react-aria membina koleksinya dengan merender anak-anak langsungnya sekali
+lagi dalam laluan tersembunyi. Komponen biasa tidak apa-apa - laluan itu tidak
+dilukis. Tetapi dialog membuat PORTAL, dan portal terlepas ke `document.body` walaupun
+dari laluan tersembunyi itu:
+
+```tsx
+// SALAH: dua <div data-slot="dialog-overlay"> dalam body, kedua-duanya ditanda
+// `inert` oleh react-aria. Medan borang tidak boleh diklik, klik mendarat pada
+// backdrop, dan backdrop yang boleh ditutup menutup dialog.
+<Tabs>
+  <TabsList>…</TabsList>
+  <TabsContent id="a">…</TabsContent>
+  <ResponsiveDialog … />
+</Tabs>
+
+// BETUL: dialog di luar <Tabs>.
+<>
+  <Tabs>
+    <TabsList>…</TabsList>
+    <TabsContent id="a">…</TabsContent>
+  </Tabs>
+  <ResponsiveDialog … />
+</>
+```
+
+Dialog yang hidup DI DALAM satu `<TabsContent>` (atau dalam komponen anak di
+dalamnya) selamat - ia bukan anak langsung koleksi itu. Yang dilarang ialah anak
+langsung `<Tabs>` yang bukan `TabsList`/`TabsContent`.
+
+## 5. Setiap primitif UI datang daripada shadcn
 
 Import daripada `components/ui/*` sahaja. Tiada `<button>`, `<input>`, `<table>`,
 `<select>`, `<dialog>` HTML mentah dalam kod ciri; tiada pustaka UI kedua. Kalau

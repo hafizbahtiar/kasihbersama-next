@@ -64,11 +64,20 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+/**
+ * Where a signed-in person lands. `/circles` and not `/home`: v0.1's home screen was
+ * deleted with its module, and every login was landing on a 404.
+ *
+ * It is also the right frame to start in - which circle you are in decides what every
+ * other screen shows, and a person with no circle yet needs this screen most of all.
+ */
+const AFTER_LOGIN = "/circles"
+
 /** Only in-app paths; an absolute or protocol-relative URL is someone else's site. */
 function safeDestination(redirectTo?: string) {
   return redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
     ? redirectTo
-    : "/home"
+    : AFTER_LOGIN
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

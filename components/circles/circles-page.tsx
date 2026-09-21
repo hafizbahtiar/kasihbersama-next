@@ -144,54 +144,61 @@ export function CirclesPage() {
   ])
 
   return (
-    <Tabs defaultSelectedKey="circles" className="gap-5">
-      <div className="space-y-1">
-        <h1 className="font-heading text-2xl tracking-tight">Circle</h1>
-        <p className="text-sm text-muted-foreground">
-          Keluarga atau kumpulan penjagaan yang anda sertai. Anda boleh
-          menyertai seberapa banyak circle orang lain; pelan percuma membenarkan{" "}
-          {limits.maxOwnedCircles} circle milik sendiri.
-        </p>
-      </div>
+    <>
+      <Tabs defaultSelectedKey="circles" className="gap-5">
+        <div className="space-y-1">
+          <h1 className="font-heading text-2xl tracking-tight">Circle</h1>
+          <p className="text-sm text-muted-foreground">
+            Keluarga atau kumpulan penjagaan yang anda sertai. Anda boleh
+            menyertai seberapa banyak circle orang lain; pelan percuma
+            membenarkan {limits.maxOwnedCircles} circle milik sendiri.
+          </p>
+        </div>
 
-      <TabsList variant="line" aria-label="Bahagian circle">
-        <TabsTrigger id="circles">Circle</TabsTrigger>
-        <TabsTrigger id="invitations">Jemputan</TabsTrigger>
-      </TabsList>
+        <TabsList variant="line" aria-label="Bahagian circle">
+          <TabsTrigger id="circles">Circle</TabsTrigger>
+          <TabsTrigger id="invitations">Jemputan</TabsTrigger>
+        </TabsList>
 
-      <TabsContent id="circles" className="flex flex-col gap-5">
-        {atOwnedLimit ? (
-          // Butang cipta disembunyikan, bukan dibiarkan menghasilkan ralat: klien tahu
-          // hadnya daripada bootstrap, dan pelayan tetap menyemak setiap laluan.
-          <Alert>
-            <IconInfoCircle />
-            <AlertTitle>Had plan percuma dicapai</AlertTitle>
-            <AlertDescription>
-              {`Plan percuma membenarkan ${limits.maxOwnedCircles} circle dimiliki. Pelan premium akan datang - ketika itu anda boleh menambah lagi.`}
-            </AlertDescription>
-          </Alert>
-        ) : null}
+        <TabsContent id="circles" className="flex flex-col gap-5">
+          {atOwnedLimit ? (
+            // Butang cipta disembunyikan, bukan dibiarkan menghasilkan ralat: klien tahu
+            // hadnya daripada bootstrap, dan pelayan tetap menyemak setiap laluan.
+            <Alert>
+              <IconInfoCircle />
+              <AlertTitle>Had plan percuma dicapai</AlertTitle>
+              <AlertDescription>
+                {`Plan percuma membenarkan ${limits.maxOwnedCircles} circle dimiliki. Pelan premium akan datang - ketika itu anda boleh menambah lagi.`}
+              </AlertDescription>
+            </Alert>
+          ) : null}
 
-        <DataTable
-          columns={columns}
-          data={circles}
-          getRowId={(row) => row.id}
-          isLoading={isLoading && circles.length === 0}
-          searchable={circles.length > 0}
-          searchPlaceholder="Cari circle..."
-          pageSize={10}
-          addLabel="Cipta circle"
-          onAdd={atOwnedLimit ? undefined : () => setIsCreateOpen(true)}
-          emptyIcon={<IconUsersGroup />}
-          emptyTitle="Belum menyertai circle"
-          emptyDescription="Cipta satu, atau terima jemputan yang dihantar ke e-mel anda."
-        />
-      </TabsContent>
+          <DataTable
+            columns={columns}
+            data={circles}
+            getRowId={(row) => row.id}
+            isLoading={isLoading && circles.length === 0}
+            searchable={circles.length > 0}
+            searchPlaceholder="Cari circle..."
+            pageSize={10}
+            addLabel="Cipta circle"
+            onAdd={atOwnedLimit ? undefined : () => setIsCreateOpen(true)}
+            emptyIcon={<IconUsersGroup />}
+            emptyTitle="Belum menyertai circle"
+            emptyDescription="Cipta satu, atau terima jemputan yang dihantar ke e-mel anda."
+          />
+        </TabsContent>
 
-      <TabsContent id="invitations">
-        <PendingInvitations />
-      </TabsContent>
+        <TabsContent id="invitations">
+          <PendingInvitations />
+        </TabsContent>
+      </Tabs>
 
+      {/* DI LUAR <Tabs>: RAC membina koleksinya dengan merender kandungan sekali
+          lagi dalam laluan tersembunyi, jadi dialog yang diletakkan di dalamnya
+          diportalkan DUA KALI - dan react-aria menandakan kedua-dua salinan
+          `inert`, menjadikan medan borang tidak boleh diklik. Klik itu mendarat
+          pada backdrop, dan backdrop yang boleh ditutup menutup dialog. */}
       <ResponsiveDialog
         isOpen={isCreateOpen}
         onOpenChange={setIsCreateOpen}
@@ -243,6 +250,6 @@ export function CirclesPage() {
           </Select>
         </Field>
       </ResponsiveDialog>
-    </Tabs>
+    </>
   )
 }

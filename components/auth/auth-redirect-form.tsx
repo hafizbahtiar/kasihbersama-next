@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 export function AuthRedirectForm({
   children,
   className,
-  href = "/home",
+  href = "/circles",
 }: {
   children: ReactNode
   className?: string

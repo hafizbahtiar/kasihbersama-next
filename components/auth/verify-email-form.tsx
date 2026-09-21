@@ -121,7 +121,7 @@ export function VerifyEmailForm({
         <Button
           size="xl"
           className="w-full"
-          onPress={() => router.push(user ? "/home" : "/")}
+          onPress={() => router.push(user ? "/circles" : "/")}
         >
           {user ? "Pergi ke laman utama" : "Log masuk"}
         </Button>
