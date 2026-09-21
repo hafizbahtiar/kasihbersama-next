@@ -1,5 +1,10 @@
 import type { ComponentType, SVGProps } from "react"
-import { IconBell, IconSettings, IconUsersGroup } from "@tabler/icons-react"
+import {
+  IconBell,
+  IconHeartHandshake,
+  IconSettings,
+  IconUsersGroup,
+} from "@tabler/icons-react"
 
 export type AppNavIcon = ComponentType<SVGProps<SVGSVGElement>>
 
@@ -21,6 +26,9 @@ export const primaryNav: AppNavItem[] = [
   // Tiada permission: senarai circle datang daripada bootstrap, dan pengguna
   // tanpa circle memerlukan skrin ini paling-paling untuk mencipta yang pertama.
   { href: "/circles", title: "Circle", icon: IconUsersGroup },
+  // Pintasan merentas circle. Ia tiada permission kerana senarainya ditapis oleh
+  // `person_access` di pelayan: ahli tanpa geran nampak skrin kosong, bukan 403.
+  { href: "/persons", title: "Orang dijaga", icon: IconHeartHandshake },
 ]
 
 // Bahagian "Akaun" di bawah sidebar: pemberitahuan dan tetapan ialah hal AKAUN,
@@ -60,6 +68,7 @@ export type Crumb = { id: string; label: string; href?: string }
  */
 const SCREENS: { path: string; label: string }[] = [
   { path: "/circles", label: "Circle" },
+  { path: "/persons", label: "Orang dijaga" },
   { path: "/circles/:circleId", label: "Circle ini" },
   { path: "/circles/:circleId/persons/:personId", label: "Rekod kesihatan" },
   { path: "/notifications", label: "Pemberitahuan" },

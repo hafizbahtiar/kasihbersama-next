@@ -51,7 +51,7 @@ export function AppSidebar() {
               size="lg"
               href="/settings"
               tooltip="Kasih Bersama"
-              className="group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
+              className="group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0!"
             >
               <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-white p-1 ring-1 ring-border dark:bg-white">
                 <LogoMark className="size-full" decorative />
@@ -86,7 +86,6 @@ export function AppSidebar() {
                     href={item.href}
                     isActive={isNavActive(pathname, item.href)}
                     tooltip={item.title}
-                    className="group-data-[collapsible=icon]:justify-center"
                   >
                     <item.icon />
                     <span>{item.title}</span>
@@ -107,7 +106,6 @@ export function AppSidebar() {
                     href={item.href}
                     isActive={isNavActive(pathname, item.href)}
                     tooltip={item.title}
-                    className="group-data-[collapsible=icon]:justify-center"
                   >
                     <item.icon />
                     <span>{item.title}</span>
@@ -144,7 +142,7 @@ export function AppSidebar() {
               <SidebarMenuButton
                 size="lg"
                 aria-label={`Menu akaun: ${user?.displayName ?? "Pengguna"}`}
-                className="group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
+                className="group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0!"
               >
                 <Avatar size="sm" className="size-6">
                   <AvatarFallback>

@@ -41,6 +41,7 @@ type ApiPersonListRow = {
   preferred_name?: string
   sex?: string
   age_years?: number
+  age_months?: number
   access_level: string
 }
 
@@ -98,6 +99,7 @@ function mapPersonRow(api: ApiPersonListRow): CirclePerson {
     preferredName: api.preferred_name,
     sex: api.sex,
     ageYears: api.age_years,
+    ageMonths: api.age_months,
     accessLevel: api.access_level as PersonAccessLevel,
   }
 }

@@ -228,6 +228,7 @@ export function CircleDetail({ circleId }: { circleId: string }) {
               </TableActionButton>
             ) : null}
             <TableActionButton
+              tone="danger"
               aria-label={`Buang ${row.original.displayName}`}
               isDisabled={busy}
               onPress={() => setRemoveTarget(row.original)}

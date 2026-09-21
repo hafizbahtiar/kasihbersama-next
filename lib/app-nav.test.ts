@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 
-import { buildCrumbs } from "./app-nav"
+import { buildCrumbs, isNavActive } from "./app-nav"
 
 const names: Record<string, string> = { "c-1": "Keluarga Amin" }
 const crumbs = (path: string) =>
@@ -33,6 +33,14 @@ test("modul lain juga berjejak, bukan circle sahaja", () => {
   expect(crumbs("/accept/invite")).toEqual([
     ["Terima jemputan", "/accept/invite"],
   ])
+  expect(crumbs("/persons")).toEqual([["Orang dijaga", "/persons"]])
+})
+
+test("pintasan /persons tidak dikelirukan dengan person dalam circle", () => {
+  // Dua laluan berkongsi perkataan "persons" tetapi bukan awalan yang sama.
+  expect(isNavActive("/circles/c-1/persons/p-1", "/persons")).toBe(false)
+  expect(isNavActive("/circles/c-1/persons/p-1", "/circles")).toBe(true)
+  expect(isNavActive("/persons", "/persons")).toBe(true)
 })
 
 test("laluan tidak dikenali bersembunyi, bukan mereka label", () => {

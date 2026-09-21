@@ -36,6 +36,7 @@ import { useCirclePersons } from "@/hooks/use-circle-persons"
 import { getCircleRepository } from "@/lib/composition/circle-repository"
 import {
   ACCESS_LEVEL_LABELS,
+  ageLabel,
   SEX_OPTIONS,
   sexLabel,
   type CircleMember,
@@ -119,14 +120,11 @@ export function PersonsSection({
     }),
     helper.accessor("ageYears", {
       header: "Umur",
-      cell: ({ getValue }) => {
-        const age = getValue()
-        return (
-          <span className="text-muted-foreground">
-            {typeof age === "number" ? `${age} tahun` : "—"}
-          </span>
-        )
-      },
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">
+          {ageLabel(row.original.ageYears, row.original.ageMonths)}
+        </span>
+      ),
     }),
     helper.accessor((row) => (row.sex ? sexLabel(row.sex) : ""), {
       id: "sex",
@@ -186,6 +184,7 @@ export function PersonsSection({
             ) : null}
             {canDelete ? (
               <TableActionButton
+                tone="danger"
                 aria-label={`Padam ${row.original.fullName}`}
                 isDisabled={busy}
                 onPress={() => setDeleteTarget(row.original)}

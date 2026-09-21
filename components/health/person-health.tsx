@@ -1,30 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import {
   IconAlertTriangle,
   IconCalendarEvent,
+  IconDroplet,
   IconHeartbeat,
+  IconPencil,
+  IconPhone,
+  IconRotate,
   IconStethoscope,
   IconTrash,
+  IconUrgent,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { ResponsiveDialog } from "@/components/responsive-dialog"
 import { StatusChip, type StatusTone } from "@/components/status-chip"
 import { AsyncStateBanner } from "@/components/shared/async-state"
 import { TableActionButton, TableActions } from "@/components/table-actions"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
@@ -55,9 +53,11 @@ import {
   type HealthAllergy,
   type HealthAppointment,
   type HealthCondition,
+  type HealthProfile,
   type HealthVisit,
 } from "@/lib/domain/health"
 import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
+import { cn } from "@/lib/utils"
 
 /** Nada cip mengikut MAKNA: sembuh ialah sejarah, aktif ialah sesuatu yang berjalan. */
 const STATUS_TONE: Record<ConditionStatus, StatusTone> = {
@@ -195,6 +195,7 @@ export function PersonHealth({
               </TableActionButton>
             )}
             <TableActionButton
+              tone="danger"
               aria-label={`Padam ${row.original.name}`}
               isDisabled={busy}
               onPress={() => setConditionTarget(row.original)}
@@ -240,6 +241,7 @@ export function PersonHealth({
         canWrite ? (
           <TableActions>
             <TableActionButton
+              tone="danger"
               aria-label={`Padam ${row.original.allergen}`}
               isDisabled={busy}
               onPress={() => setAllergyTarget(row.original)}
@@ -334,6 +336,7 @@ export function PersonHealth({
               </>
             ) : null}
             <TableActionButton
+              tone="danger"
               aria-label={`Padam janji temu ${row.original.purpose}`}
               isDisabled={busy}
               onPress={() => setAppointmentTarget(row.original)}
@@ -400,6 +403,7 @@ export function PersonHealth({
         canWrite ? (
           <TableActions>
             <TableActionButton
+              tone="danger"
               aria-label={`Padam lawatan ${date(row.original.visitedOn)}`}
               isDisabled={busy}
               onPress={() => setVisitTarget(row.original)}
@@ -420,7 +424,7 @@ export function PersonHealth({
             Rekod kesihatan
           </h1>
           <p className="text-sm text-muted-foreground">
-            Kad kecemasan, keadaan dan alahan.
+            Kad kecemasan, keadaan, alahan, janji temu dan lawatan.
           </p>
         </div>
 
@@ -440,7 +444,11 @@ export function PersonHealth({
           <TabsTrigger id="visits">Lawatan</TabsTrigger>
         </TabsList>
 
-        <TabsContent id="emergency">
+        <TabsContent id="emergency" className="flex flex-col gap-4">
+          <TabHint icon={<IconUrgent />}>
+            Apa yang paramedik atau doktor perlu tahu dalam sepuluh saat
+            pertama. Balikkan kad untuk insurans dan nota.
+          </TabHint>
           {health.isLoading ? (
             <Skeleton className="h-48 w-full" />
           ) : (
@@ -449,12 +457,18 @@ export function PersonHealth({
               personId={personId}
               canWrite={canWrite}
               profile={health.profile}
+              allergies={health.allergies}
               onSaved={() => health.reload()}
             />
           )}
         </TabsContent>
 
-        <TabsContent id="conditions">
+        <TabsContent id="conditions" className="flex flex-col gap-4">
+          <TabHint icon={<IconHeartbeat />}>
+            Keadaan berpanjangan yang perlu diingat - kencing manis, darah
+            tinggi, asma. Tandakan sembuh dan bukan padam, supaya sejarahnya
+            kekal.
+          </TabHint>
           <DataTable
             columns={conditionColumns}
             data={health.conditions}
@@ -474,7 +488,12 @@ export function PersonHealth({
           />
         </TabsContent>
 
-        <TabsContent id="allergies">
+        <TabsContent id="allergies" className="flex flex-col gap-4">
+          <TabHint icon={<IconAlertTriangle />}>
+            Apa yang tidak boleh diberi kepadanya. Diisih paling teruk dahulu
+            kerana senarai ini dibaca semasa tergesa, dan ia muncul pada kad
+            kecemasan.
+          </TabHint>
           <DataTable
             columns={allergyColumns}
             data={health.allergies}
@@ -493,7 +512,12 @@ export function PersonHealth({
             emptyDescription="Kosong bermakna belum direkod, bukan tiada alahan."
           />
         </TabsContent>
-        <TabsContent id="appointments">
+        <TabsContent id="appointments" className="flex flex-col gap-4">
+          <TabHint icon={<IconCalendarEvent />}>
+            Yang BELUM berlaku: klinik, pakar, ambil darah. Selepas ia berlaku,
+            tandakan hadir - kemudian rekodkan apa yang berlaku dalam tab
+            Lawatan.
+          </TabHint>
           <DataTable
             columns={appointmentColumns}
             data={health.appointments}
@@ -513,7 +537,11 @@ export function PersonHealth({
           />
         </TabsContent>
 
-        <TabsContent id="visits">
+        <TabsContent id="visits" className="flex flex-col gap-4">
+          <TabHint icon={<IconStethoscope />}>
+            Yang SUDAH berlaku: apa kata doktor, berapa kosnya, dan bila dia
+            patut pergi semula.
+          </TabHint>
           <DataTable
             columns={visitColumns}
             data={health.visits}
@@ -688,21 +716,239 @@ export function PersonHealth({
   )
 }
 
+/** Satu baris penerangan di puncak setiap tab: tab yang tidak dijelaskan diisi salah. */
+function TabHint({
+  icon,
+  children,
+}: {
+  icon: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <Alert>
+      {icon}
+      <AlertDescription>{children}</AlertDescription>
+    </Alert>
+  )
+}
+
 /**
- * Kad kecemasan. Borang penuh, bukan tampalan: apa yang dipaparkan ialah apa yang
- * disimpan, dan medan yang dikosongkan memang bermakna "buang".
+ * Kad kecemasan sebagai kad sebenar, bukan borang.
+ *
+ * Depan membawa apa yang dibaca dalam sepuluh saat pertama: jenis darah, alahan
+ * paling teruk, siapa yang perlu dihubungi. Belakang membawa yang dibaca di
+ * kaunter - insurans dan nota. Menyunting berlaku dalam dialog, jadi kad ini
+ * kekal boleh dibaca dan tidak pernah kelihatan separuh disunting.
  */
 function EmergencyCard({
   circleId,
   personId,
   canWrite,
   profile,
+  allergies,
   onSaved,
 }: {
   circleId: string
   personId: string
   canWrite: boolean
-  profile: import("@/lib/domain/health").HealthProfile
+  profile: HealthProfile
+  allergies: HealthAllergy[]
+  onSaved: () => void
+}) {
+  const [isFlipped, setIsFlipped] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+
+  // Tiga sahaja: kad ini dipandang, bukan dibaca. Yang selebihnya ada dalam tab
+  // Alahan, dan senarai itu sudah diisih paling teruk dahulu oleh pelayan.
+  const worst = allergies.slice(0, 3)
+  const rest = allergies.length - worst.length
+
+  return (
+    <div className="flex max-w-md flex-col gap-3">
+      <div className="perspective-distant">
+        <div
+          className={cn(
+            "relative min-h-72 transition-transform duration-500 ease-out transform-3d",
+            isFlipped && "rotate-y-180"
+          )}
+        >
+          <CardFace className="relative">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-0.5">
+                <p className="text-xs tracking-wide text-muted-foreground uppercase">
+                  Kad kecemasan
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Sepuluh saat pertama
+                </p>
+              </div>
+              <div className="flex items-center gap-2 rounded-xl border bg-muted/40 px-3 py-2">
+                <IconDroplet className="size-5 text-destructive" />
+                <span className="font-heading text-2xl leading-none tabular-nums">
+                  {profile.bloodType ?? "?"}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              <FaceRow label="Alahan">
+                {worst.length === 0 ? (
+                  <span className="text-sm text-muted-foreground">
+                    Belum direkod
+                  </span>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {worst.map((a) => (
+                      <StatusChip
+                        key={a.id}
+                        tone={SEVERITY_TONE[a.severity]}
+                        label={`${a.allergen} - ${SEVERITY_LABELS[a.severity]}`}
+                      />
+                    ))}
+                    {rest > 0 ? (
+                      <StatusChip tone="neutral" label={`+${rest} lagi`} />
+                    ) : null}
+                  </div>
+                )}
+              </FaceRow>
+
+              <FaceRow label="Hubungi">
+                <p className="text-sm font-medium">
+                  {profile.emergencyContactName || "Kenalan belum diisi"}
+                </p>
+                {profile.emergencyContactPhone ? (
+                  <a
+                    href={`tel:${profile.emergencyContactPhone}`}
+                    className="inline-flex items-center gap-1.5 text-sm underline underline-offset-4"
+                  >
+                    <IconPhone className="size-4" />
+                    {profile.emergencyContactPhone}
+                  </a>
+                ) : (
+                  <span className="text-sm text-muted-foreground">
+                    Nombor belum diisi
+                  </span>
+                )}
+              </FaceRow>
+
+              {profile.isOrganDonor ? (
+                <StatusChip tone="positive" label="Penderma organ" />
+              ) : null}
+            </div>
+          </CardFace>
+
+          <CardFace className="absolute inset-0 rotate-y-180">
+            <p className="text-xs tracking-wide text-muted-foreground uppercase">
+              Di kaunter
+            </p>
+            <div className="mt-4 space-y-3">
+              <FaceRow label="Insurans">
+                <span className="text-sm">
+                  {profile.insuranceProvider || "Tiada"}
+                </span>
+              </FaceRow>
+              <FaceRow label="Nombor polisi">
+                <span className="text-sm tabular-nums">
+                  {profile.insurancePolicyNo || "Tiada"}
+                </span>
+              </FaceRow>
+              <FaceRow label="Nota">
+                <p className="text-sm whitespace-pre-line">
+                  {profile.notes || "Tiada nota."}
+                </p>
+              </FaceRow>
+            </div>
+          </CardFace>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onPress={() => setIsFlipped((v) => !v)}
+        >
+          <IconRotate />
+          {isFlipped ? "Tunjuk depan" : "Balikkan kad"}
+        </Button>
+        {canWrite ? (
+          <Button size="sm" onPress={() => setIsEditing(true)}>
+            <IconPencil />
+            Sunting kad
+          </Button>
+        ) : null}
+      </div>
+
+      <EmergencyDialog
+        isOpen={isEditing}
+        onOpenChange={setIsEditing}
+        circleId={circleId}
+        personId={personId}
+        profile={profile}
+        onSaved={() => {
+          setIsEditing(false)
+          onSaved()
+        }}
+      />
+    </div>
+  )
+}
+
+/**
+ * Satu muka kad. `backface-hidden` ialah bahagian yang penting: tanpanya, muka
+ * belakang terbaca secara terbalik menembusi muka depan.
+ */
+function CardFace({
+  className,
+  children,
+}: {
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <div
+      className={cn(
+        "min-h-72 rounded-xl border bg-card p-5 text-card-foreground shadow-sm backface-hidden",
+        className
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+function FaceRow({
+  label,
+  children,
+}: {
+  label: string
+  children: ReactNode
+}) {
+  return (
+    <div className="space-y-1">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      {children}
+    </div>
+  )
+}
+
+/**
+ * Borang kad. Tulisan PENUH, bukan tampalan: medan yang dikosongkan pengguna
+ * memang bermakna "buang", dan pelayan memperlakukannya begitu.
+ */
+function EmergencyDialog({
+  isOpen,
+  onOpenChange,
+  circleId,
+  personId,
+  profile,
+  onSaved,
+}: {
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+  circleId: string
+  personId: string
+  profile: HealthProfile
   onSaved: () => void
 }) {
   const [draft, setDraft] = useState(profile)
@@ -724,126 +970,124 @@ function EmergencyCard({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Kad kecemasan</CardTitle>
-        <CardDescription>
-          Apa yang paramedik atau doktor perlu tahu dalam sepuluh saat pertama.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2">
-        <Field>
-          <FieldLabel>Jenis darah</FieldLabel>
-          <Select
-            className="w-full"
-            aria-label="Jenis darah"
-            isDisabled={!canWrite}
-            value={draft.bloodType ?? ""}
-            onChange={(key) =>
-              setDraft({ ...draft, bloodType: (key || undefined) as BloodType })
-            }
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {BLOOD_TYPES.map((type) => (
-                <SelectItem key={type} id={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-
-        <Field orientation="horizontal">
-          <div className="min-w-0 space-y-0.5">
-            <FieldLabel>Penderma organ</FieldLabel>
-            <FieldDescription>Seperti tercatat pada kad.</FieldDescription>
-          </div>
-          <Switch
-            aria-label="Penderma organ"
-            isSelected={draft.isOrganDonor ?? false}
-            isDisabled={!canWrite}
-            onChange={(value) => setDraft({ ...draft, isOrganDonor: value })}
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="emergency-name">Kenalan kecemasan</FieldLabel>
-          <Input
-            id="emergency-name"
-            value={draft.emergencyContactName ?? ""}
-            disabled={!canWrite}
-            onChange={(event) =>
-              setDraft({ ...draft, emergencyContactName: event.target.value })
-            }
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="emergency-phone">Nombor telefon</FieldLabel>
-          <Input
-            id="emergency-phone"
-            type="tel"
-            value={draft.emergencyContactPhone ?? ""}
-            disabled={!canWrite}
-            onChange={(event) =>
-              setDraft({ ...draft, emergencyContactPhone: event.target.value })
-            }
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="insurer">Insurans</FieldLabel>
-          <Input
-            id="insurer"
-            value={draft.insuranceProvider ?? ""}
-            disabled={!canWrite}
-            onChange={(event) =>
-              setDraft({ ...draft, insuranceProvider: event.target.value })
-            }
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="policy">Nombor polisi</FieldLabel>
-          <Input
-            id="policy"
-            value={draft.insurancePolicyNo ?? ""}
-            disabled={!canWrite}
-            onChange={(event) =>
-              setDraft({ ...draft, insurancePolicyNo: event.target.value })
-            }
-          />
-        </Field>
-
-        <Field className="sm:col-span-2">
-          <FieldLabel htmlFor="health-notes">Nota</FieldLabel>
-          <Textarea
-            id="health-notes"
-            rows={3}
-            value={draft.notes ?? ""}
-            disabled={!canWrite}
-            onChange={(event) =>
-              setDraft({ ...draft, notes: event.target.value })
-            }
-          />
-        </Field>
-      </CardContent>
-      {canWrite ? (
-        <CardFooter className="justify-end">
+    <ResponsiveDialog
+      isOpen={isOpen}
+      onOpenChange={(open) => {
+        // Membuka semula mesti menunjukkan apa yang TERSIMPAN, bukan suntingan
+        // yang ditinggalkan separuh jalan.
+        if (open) {
+          setDraft(profile)
+        }
+        onOpenChange(open)
+      }}
+      title="Sunting kad kecemasan"
+      description="Medan yang dikosongkan akan dibuang."
+      footer={
+        <>
+          <Button variant="outline" onPress={() => onOpenChange(false)}>
+            Batal
+          </Button>
           <Button
             isDisabled={isSaving}
             onPress={() => {
               void save()
             }}
           >
-            Simpan kad
+            Simpan
           </Button>
-        </CardFooter>
-      ) : null}
-    </Card>
+        </>
+      }
+    >
+      <Field>
+        <FieldLabel>Jenis darah</FieldLabel>
+        <Select
+          className="w-full"
+          aria-label="Jenis darah"
+          value={draft.bloodType ?? ""}
+          onChange={(key) =>
+            setDraft({ ...draft, bloodType: (key || undefined) as BloodType })
+          }
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {BLOOD_TYPES.map((type) => (
+              <SelectItem key={type} id={type}>
+                {type}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+
+      <Field orientation="horizontal">
+        <div className="min-w-0 space-y-0.5">
+          <FieldLabel>Penderma organ</FieldLabel>
+          <FieldDescription>Seperti tercatat pada kad.</FieldDescription>
+        </div>
+        <Switch
+          aria-label="Penderma organ"
+          isSelected={draft.isOrganDonor ?? false}
+          onChange={(value) => setDraft({ ...draft, isOrganDonor: value })}
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="emergency-name">Kenalan kecemasan</FieldLabel>
+        <Input
+          id="emergency-name"
+          value={draft.emergencyContactName ?? ""}
+          onChange={(event) =>
+            setDraft({ ...draft, emergencyContactName: event.target.value })
+          }
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="emergency-phone">Nombor telefon</FieldLabel>
+        <Input
+          id="emergency-phone"
+          type="tel"
+          value={draft.emergencyContactPhone ?? ""}
+          onChange={(event) =>
+            setDraft({ ...draft, emergencyContactPhone: event.target.value })
+          }
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="insurer">Insurans</FieldLabel>
+        <Input
+          id="insurer"
+          value={draft.insuranceProvider ?? ""}
+          onChange={(event) =>
+            setDraft({ ...draft, insuranceProvider: event.target.value })
+          }
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="policy">Nombor polisi</FieldLabel>
+        <Input
+          id="policy"
+          value={draft.insurancePolicyNo ?? ""}
+          onChange={(event) =>
+            setDraft({ ...draft, insurancePolicyNo: event.target.value })
+          }
+        />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="health-notes">Nota</FieldLabel>
+        <Textarea
+          id="health-notes"
+          rows={3}
+          value={draft.notes ?? ""}
+          onChange={(event) => setDraft({ ...draft, notes: event.target.value })}
+        />
+      </Field>
+    </ResponsiveDialog>
   )
 }
 

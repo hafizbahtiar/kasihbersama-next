@@ -108,6 +108,8 @@ export type CirclePerson = {
   preferredName?: string
   sex?: string
   ageYears?: number
+  /** BAKI bulan selepas `ageYears`, bukan jumlah bulan. */
+  ageMonths?: number
   accessLevel: PersonAccessLevel
 }
 
@@ -119,6 +121,7 @@ export type CirclePersonDetail = {
   preferredName?: string
   sex?: string
   ageYears?: number
+  ageMonths?: number
   /** Full access only, and only when the field policy says `read`. */
   dateOfBirth?: string
   /** Full access only, and only when the field policy says `read`. */
@@ -164,4 +167,22 @@ export type CircleSettingsPatch = {
   type?: CircleType
   timezone?: string
   currency?: string
+}
+
+/**
+ * Umur untuk dipaparkan. Bulan disebut hanya apabila ia bermakna: "71 tahun 3
+ * bulan" ialah ketepatan yang tiada siapa minta, tetapi "0 tahun" untuk seorang
+ * bayi lapan bulan menyembunyikan satu-satunya nombor yang penting.
+ */
+export function ageLabel(years?: number, months?: number) {
+  if (typeof years !== "number") {
+    return "—"
+  }
+  if (years === 0) {
+    return `${months ?? 0} bulan`
+  }
+  if (years < 3 && months) {
+    return `${years} tahun ${months} bulan`
+  }
+  return `${years} tahun`
 }
