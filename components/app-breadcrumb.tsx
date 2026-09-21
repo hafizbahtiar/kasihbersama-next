@@ -31,17 +31,20 @@ export function AppBreadcrumb() {
   }
 
   return (
-    <Breadcrumb>
-      <BreadcrumbList items={crumbs}>
+    <Breadcrumb className="min-w-0">
+      <BreadcrumbList
+        className="flex-nowrap"
+        items={crumbs}
+      >
         {(crumb) => (
-          <BreadcrumbItem className="min-w-0">
+          <BreadcrumbItem className="min-w-0 overflow-hidden">
             {({ isCurrent }) =>
               isCurrent || !crumb.href ? (
-                <BreadcrumbPage className="truncate">
+                <BreadcrumbPage className="block min-w-0 truncate">
                   {crumb.label}
                 </BreadcrumbPage>
               ) : (
-                <BreadcrumbLink href={crumb.href} className="truncate">
+                <BreadcrumbLink href={crumb.href} className="block min-w-0 truncate">
                   {crumb.label}
                 </BreadcrumbLink>
               )
