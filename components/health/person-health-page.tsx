@@ -1,10 +1,8 @@
 "use client"
 
-import { IconArrowLeft } from "@tabler/icons-react"
-
+import { BackButton } from "@/components/back-button"
 import { PersonHealth } from "@/components/health/person-health"
 import { usePlatform } from "@/components/platform/platform-provider"
-import { LinkButton } from "@/components/ui/button"
 
 /** Permission yang skrin ini sembunyikan di belakangnya (docs/04 §8). */
 const PERM_WRITE = "health.condition.create"
@@ -25,20 +23,7 @@ export function PersonHealthPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="font-heading text-2xl tracking-tight">
-            Rekod kesihatan
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Kad kecemasan, keadaan dan alahan.
-          </p>
-        </div>
-        <LinkButton href={`/circles/${circleId}`} variant="outline" size="sm">
-          <IconArrowLeft />
-          Kembali ke circle
-        </LinkButton>
-      </div>
+      <BackButton href={`/circles/${circleId}`} />
 
       <PersonHealth
         circleId={circleId}

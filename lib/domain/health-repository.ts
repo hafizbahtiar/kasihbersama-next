@@ -1,7 +1,9 @@
 import type {
   HealthAllergy,
+  HealthAppointment,
   HealthCondition,
   HealthProfile,
+  HealthVisit,
 } from "@/lib/domain/health"
 
 export interface HealthRepository {
@@ -61,5 +63,53 @@ export interface HealthRepository {
     circleId: string,
     personId: string,
     allergyId: string
+  ): Promise<void>
+
+  listAppointments(
+    circleId: string,
+    personId: string
+  ): Promise<HealthAppointment[]>
+  createAppointment(
+    circleId: string,
+    personId: string,
+    input: {
+      purpose: string
+      startsAt: string
+      endsAt?: string
+      locationNote?: string
+      status?: HealthAppointment["status"]
+      notes?: string
+    }
+  ): Promise<void>
+  updateAppointment(
+    circleId: string,
+    personId: string,
+    appointmentId: string,
+    patch: { status?: HealthAppointment["status"] }
+  ): Promise<void>
+  deleteAppointment(
+    circleId: string,
+    personId: string,
+    appointmentId: string
+  ): Promise<void>
+
+  listVisits(circleId: string, personId: string): Promise<HealthVisit[]>
+  createVisit(
+    circleId: string,
+    personId: string,
+    input: {
+      visitedOn: string
+      reason?: string
+      diagnosis?: string
+      notes?: string
+      costAmount?: string
+      costCurrency?: string
+      followUpOn?: string
+    }
+  ): Promise<void>
+  deleteVisit(
+    circleId: string,
+    personId: string,
+    visitId: string
   ): Promise<void>
 }

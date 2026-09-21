@@ -36,6 +36,16 @@ export function BackButton({
       return
     }
 
+    // Kembali bermakna halaman SEBELUMNYA, bukan satu laluan tetap ke atas: pengguna
+    // yang datang dari senarai orang mahu balik ke senarai itu, bukan ke tab lain.
+    // Next menyimpan indeks history pada state; 0 bermakna tab ini dibuka terus ke
+    // sini, jadi tiada "belakang" wujud dan `href` menjadi jalan naik.
+    const entry = window.history.state as { idx?: number } | null
+    if ((entry?.idx ?? 0) > 0) {
+      router.back()
+      return
+    }
+
     if (href) {
       router.push(href)
       return

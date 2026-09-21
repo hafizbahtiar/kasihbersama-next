@@ -3,7 +3,9 @@
 import { useState } from "react"
 import {
   IconAlertTriangle,
+  IconCalendarEvent,
   IconHeartbeat,
+  IconStethoscope,
   IconTrash,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
@@ -34,20 +36,26 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { usePersonHealth } from "@/hooks/use-person-health"
 import { useDisplayFormat } from "@/lib/application/display-preferences"
 import { getHealthRepository } from "@/lib/composition/health-repository"
 import {
   ALLERGY_SEVERITIES,
+  APPOINTMENT_STATUS_LABELS,
+  APPOINTMENT_STATUSES,
   BLOOD_TYPES,
   CONDITION_STATUS_LABELS,
   SEVERITY_LABELS,
   type AllergySeverity,
+  type AppointmentStatus,
   type BloodType,
   type ConditionStatus,
   type HealthAllergy,
+  type HealthAppointment,
   type HealthCondition,
+  type HealthVisit,
 } from "@/lib/domain/health"
 import { isApiError, messageForApiError } from "@/lib/infrastructure/api/errors"
 
@@ -56,6 +64,15 @@ const STATUS_TONE: Record<ConditionStatus, StatusTone> = {
   active: "attention",
   managed: "positive",
   resolved: "neutral",
+}
+
+/** Terlepas janji temu ialah perkara yang perlu ditindaklanjuti, bukan sekadar fakta. */
+const APPOINTMENT_TONE: Record<AppointmentStatus, StatusTone> = {
+  scheduled: "neutral",
+  attended: "positive",
+  missed: "critical",
+  cancelled: "neutral",
+  rescheduled: "attention",
 }
 
 /** Anafilaksis membunuh; ringan tidak. Nada mesti menunjukkan perbezaan itu. */
@@ -77,7 +94,7 @@ export function PersonHealth({
   canWrite: boolean
 }) {
   const health = usePersonHealth(circleId, personId)
-  const { date } = useDisplayFormat()
+  const { date, dateTime } = useDisplayFormat()
   const repo = getHealthRepository()
 
   const [busy, setBusy] = useState(false)
@@ -86,6 +103,11 @@ export function PersonHealth({
   const [conditionTarget, setConditionTarget] =
     useState<HealthCondition | null>(null)
   const [allergyTarget, setAllergyTarget] = useState<HealthAllergy | null>(null)
+  const [isAppointmentOpen, setIsAppointmentOpen] = useState(false)
+  const [isVisitOpen, setIsVisitOpen] = useState(false)
+  const [appointmentTarget, setAppointmentTarget] =
+    useState<HealthAppointment | null>(null)
+  const [visitTarget, setVisitTarget] = useState<HealthVisit | null>(null)
 
   async function run(action: Promise<unknown>, done: string) {
     setBusy(true)
@@ -230,70 +252,291 @@ export function PersonHealth({
     }),
   ])
 
-  return (
-    <div className="flex flex-col gap-5">
-      <AsyncStateBanner
-        error={health.error}
-        onRetry={() => {
-          void health.reload()
-        }}
-        label="Gagal memuatkan rekod kesihatan."
-      />
-
-      {health.isLoading ? (
-        <Skeleton className="h-48 w-full" />
-      ) : (
-        <EmergencyCard
-          circleId={circleId}
-          personId={personId}
-          canWrite={canWrite}
-          profile={health.profile}
-          onSaved={() => health.reload()}
+  const apptHelper = createDataTableColumnHelper<HealthAppointment>()
+  const appointmentColumns = apptHelper.columns([
+    apptHelper.accessor("startsAt", {
+      header: "Bila",
+      cell: ({ row }) => (
+        <div className="min-w-0 space-y-0.5">
+          <p className="font-medium">{dateTime(row.original.startsAt)}</p>
+          {row.original.locationNote ? (
+            <p className="text-xs text-muted-foreground">
+              {row.original.locationNote}
+            </p>
+          ) : null}
+        </div>
+      ),
+    }),
+    apptHelper.accessor("purpose", {
+      header: "Tujuan",
+      cell: ({ row }) => (
+        <div className="min-w-0 space-y-0.5">
+          <p>{row.original.purpose}</p>
+          {row.original.notes ? (
+            <p className="line-clamp-2 text-xs text-muted-foreground">
+              {row.original.notes}
+            </p>
+          ) : null}
+        </div>
+      ),
+    }),
+    apptHelper.accessor("status", {
+      header: "Status",
+      filterFn: "equalsString",
+      cell: ({ getValue }) => (
+        <StatusChip
+          tone={APPOINTMENT_TONE[getValue()]}
+          label={APPOINTMENT_STATUS_LABELS[getValue()]}
         />
-      )}
+      ),
+    }),
+    apptHelper.display({
+      id: "action",
+      header: () => <span className="flex justify-end">Tindakan</span>,
+      enableSorting: false,
+      cell: ({ row }) =>
+        canWrite ? (
+          <TableActions>
+            {row.original.status === "scheduled" ? (
+              <>
+                <TableActionButton
+                  isDisabled={busy}
+                  onPress={() => {
+                    void run(
+                      repo.updateAppointment(
+                        circleId,
+                        personId,
+                        row.original.id,
+                        { status: "attended" }
+                      ),
+                      "Ditanda hadir."
+                    )
+                  }}
+                >
+                  Hadir
+                </TableActionButton>
+                <TableActionButton
+                  isDisabled={busy}
+                  onPress={() => {
+                    void run(
+                      repo.updateAppointment(
+                        circleId,
+                        personId,
+                        row.original.id,
+                        { status: "missed" }
+                      ),
+                      "Ditanda tidak hadir."
+                    )
+                  }}
+                >
+                  Tidak hadir
+                </TableActionButton>
+              </>
+            ) : null}
+            <TableActionButton
+              aria-label={`Padam janji temu ${row.original.purpose}`}
+              isDisabled={busy}
+              onPress={() => setAppointmentTarget(row.original)}
+            >
+              <IconTrash />
+              Padam
+            </TableActionButton>
+          </TableActions>
+        ) : null,
+    }),
+  ])
 
-      <DataTable
-        columns={conditionColumns}
-        data={health.conditions}
-        getRowId={(row) => row.id}
-        isLoading={health.isLoading}
-        pageSize={5}
-        addLabel="Rekod keadaan"
-        onAdd={canWrite ? () => setIsConditionOpen(true) : undefined}
-        toolbarStart={
-          <div className="space-y-1">
-            <h2 className="font-heading text-lg tracking-tight">Keadaan</h2>
-            <p className="text-sm text-muted-foreground">
-              Apa yang dia ada sekarang. Yang sembuh turun ke bawah senarai.
+  const visitHelper = createDataTableColumnHelper<HealthVisit>()
+  const visitColumns = visitHelper.columns([
+    visitHelper.accessor("visitedOn", {
+      header: "Tarikh",
+      cell: ({ getValue }) => <p className="font-medium">{date(getValue())}</p>,
+    }),
+    visitHelper.accessor((row) => row.reason ?? "", {
+      id: "reason",
+      header: "Sebab",
+      cell: ({ row }) => (
+        <div className="min-w-0 space-y-0.5">
+          <p>{row.original.reason || "-"}</p>
+          {row.original.diagnosis ? (
+            <p className="text-xs text-muted-foreground">
+              {row.original.diagnosis}
             </p>
-          </div>
-        }
-        emptyIcon={<IconHeartbeat />}
-        emptyTitle="Tiada keadaan direkodkan"
-        emptyDescription="Kencing manis, darah tinggi, asma - apa sahaja yang perlu diingat."
-      />
+          ) : null}
+        </div>
+      ),
+    }),
+    visitHelper.accessor((row) => (row.followUpOn ? "due" : "none"), {
+      id: "status",
+      header: "Status",
+      filterFn: "equalsString",
+      cell: ({ row }) =>
+        row.original.followUpOn ? (
+          <StatusChip
+            tone="attention"
+            label={`Susulan ${date(row.original.followUpOn)}`}
+          />
+        ) : (
+          <StatusChip tone="neutral" label="Selesai" />
+        ),
+    }),
+    visitHelper.accessor((row) => row.costAmount ?? "", {
+      id: "cost",
+      header: "Kos",
+      cell: ({ row }) =>
+        row.original.costAmount ? (
+          <span className="tabular-nums">
+            {row.original.costCurrency ?? "MYR"} {row.original.costAmount}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        ),
+    }),
+    visitHelper.display({
+      id: "action",
+      header: () => <span className="flex justify-end">Tindakan</span>,
+      enableSorting: false,
+      cell: ({ row }) =>
+        canWrite ? (
+          <TableActions>
+            <TableActionButton
+              aria-label={`Padam lawatan ${date(row.original.visitedOn)}`}
+              isDisabled={busy}
+              onPress={() => setVisitTarget(row.original)}
+            >
+              <IconTrash />
+              Padam
+            </TableActionButton>
+          </TableActions>
+        ) : null,
+    }),
+  ])
 
-      <DataTable
-        columns={allergyColumns}
-        data={health.allergies}
-        getRowId={(row) => row.id}
-        isLoading={health.isLoading}
-        pageSize={5}
-        addLabel="Rekod alahan"
-        onAdd={canWrite ? () => setIsAllergyOpen(true) : undefined}
-        toolbarStart={
-          <div className="space-y-1">
-            <h2 className="font-heading text-lg tracking-tight">Alahan</h2>
-            <p className="text-sm text-muted-foreground">
-              Paling teruk di baris pertama - senarai ini dibaca semasa tergesa.
-            </p>
-          </div>
-        }
-        emptyIcon={<IconAlertTriangle />}
-        emptyTitle="Tiada alahan direkodkan"
-        emptyDescription="Kosong bermakna belum direkod, bukan tiada alahan."
-      />
+  return (
+    <>
+      <Tabs defaultSelectedKey="emergency" className="gap-5">
+        <div className="space-y-1">
+          <h1 className="font-heading text-2xl tracking-tight">
+            Rekod kesihatan
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Kad kecemasan, keadaan dan alahan.
+          </p>
+        </div>
 
+        <AsyncStateBanner
+          error={health.error}
+          onRetry={() => {
+            void health.reload()
+          }}
+          label="Gagal memuatkan rekod kesihatan."
+        />
+
+        <TabsList variant="line" aria-label="Bahagian rekod kesihatan">
+          <TabsTrigger id="emergency">Kad kecemasan</TabsTrigger>
+          <TabsTrigger id="conditions">Keadaan</TabsTrigger>
+          <TabsTrigger id="allergies">Alahan</TabsTrigger>
+          <TabsTrigger id="appointments">Janji temu</TabsTrigger>
+          <TabsTrigger id="visits">Lawatan</TabsTrigger>
+        </TabsList>
+
+        <TabsContent id="emergency">
+          {health.isLoading ? (
+            <Skeleton className="h-48 w-full" />
+          ) : (
+            <EmergencyCard
+              circleId={circleId}
+              personId={personId}
+              canWrite={canWrite}
+              profile={health.profile}
+              onSaved={() => health.reload()}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent id="conditions">
+          <DataTable
+            columns={conditionColumns}
+            data={health.conditions}
+            getRowId={(row) => row.id}
+            isLoading={health.isLoading}
+            pageSize={5}
+            addLabel="Rekod keadaan"
+            onAdd={canWrite ? () => setIsConditionOpen(true) : undefined}
+            toolbarStart={
+              <p className="text-sm text-muted-foreground">
+                Apa yang dia ada sekarang. Yang sembuh turun ke bawah senarai.
+              </p>
+            }
+            emptyIcon={<IconHeartbeat />}
+            emptyTitle="Tiada keadaan direkodkan"
+            emptyDescription="Kencing manis, darah tinggi, asma - apa sahaja yang perlu diingat."
+          />
+        </TabsContent>
+
+        <TabsContent id="allergies">
+          <DataTable
+            columns={allergyColumns}
+            data={health.allergies}
+            getRowId={(row) => row.id}
+            isLoading={health.isLoading}
+            pageSize={5}
+            addLabel="Rekod alahan"
+            onAdd={canWrite ? () => setIsAllergyOpen(true) : undefined}
+            toolbarStart={
+              <p className="text-sm text-muted-foreground">
+                Paling teruk di baris pertama - senarai ini dibaca semasa tergesa.
+              </p>
+            }
+            emptyIcon={<IconAlertTriangle />}
+            emptyTitle="Tiada alahan direkodkan"
+            emptyDescription="Kosong bermakna belum direkod, bukan tiada alahan."
+          />
+        </TabsContent>
+        <TabsContent id="appointments">
+          <DataTable
+            columns={appointmentColumns}
+            data={health.appointments}
+            getRowId={(row) => row.id}
+            isLoading={health.isLoading}
+            pageSize={5}
+            addLabel="Tempah janji temu"
+            onAdd={canWrite ? () => setIsAppointmentOpen(true) : undefined}
+            toolbarStart={
+              <p className="text-sm text-muted-foreground">
+                Yang akan datang di atas, yang sudah berlalu di bawah.
+              </p>
+            }
+            emptyIcon={<IconCalendarEvent />}
+            emptyTitle="Tiada janji temu"
+            emptyDescription="Klinik, pakar, ambil darah - apa sahaja yang ada tarikhnya."
+          />
+        </TabsContent>
+
+        <TabsContent id="visits">
+          <DataTable
+            columns={visitColumns}
+            data={health.visits}
+            getRowId={(row) => row.id}
+            isLoading={health.isLoading}
+            pageSize={5}
+            addLabel="Rekod lawatan"
+            onAdd={canWrite ? () => setIsVisitOpen(true) : undefined}
+            toolbarStart={
+              <p className="text-sm text-muted-foreground">
+                Apa yang sudah berlaku, dan bila dia patut pergi semula.
+              </p>
+            }
+            emptyIcon={<IconStethoscope />}
+            emptyTitle="Tiada lawatan direkodkan"
+            emptyDescription="Rekod lawatan selepas ia berlaku - tarikh masa depan ialah janji temu."
+          />
+        </TabsContent>
+      </Tabs>
+
+      {/* Dialog kekal DI LUAR <Tabs>: RAC merender anak langsung Tabs sekali lagi
+          dalam laluan koleksi tersembunyi, dan portal yang terlepas daripadanya
+          menutup dirinya sebaik sahaja medan disentuh (AGENTS.md). */}
       <ConditionDialog
         isOpen={isConditionOpen}
         onOpenChange={setIsConditionOpen}
@@ -320,6 +563,80 @@ export function PersonHealth({
             "Alahan direkodkan."
           )
         }
+      />
+
+      <AppointmentDialog
+        isOpen={isAppointmentOpen}
+        onOpenChange={setIsAppointmentOpen}
+        isSaving={busy}
+        onSubmit={(input) =>
+          run(
+            repo
+              .createAppointment(circleId, personId, input)
+              .then(() => setIsAppointmentOpen(false)),
+            "Janji temu ditempah."
+          )
+        }
+      />
+
+      <VisitDialog
+        isOpen={isVisitOpen}
+        onOpenChange={setIsVisitOpen}
+        isSaving={busy}
+        onSubmit={(input) =>
+          run(
+            repo
+              .createVisit(circleId, personId, input)
+              .then(() => setIsVisitOpen(false)),
+            "Lawatan direkodkan."
+          )
+        }
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(appointmentTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAppointmentTarget(null)
+          }
+        }}
+        title="Padam janji temu ini?"
+        description={`${appointmentTarget?.purpose ?? "Janji temu"} dibuang. Untuk menyimpan sejarah, tandakan tidak hadir sebaliknya.`}
+        confirmLabel="Padam"
+        variant="destructive"
+        onConfirm={() => {
+          const target = appointmentTarget
+          setAppointmentTarget(null)
+          if (target) {
+            void run(
+              repo.deleteAppointment(circleId, personId, target.id),
+              "Janji temu dipadam."
+            )
+          }
+        }}
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(visitTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setVisitTarget(null)
+          }
+        }}
+        title="Padam lawatan ini?"
+        description="Rekod lawatan dan kosnya dibuang daripada sejarah."
+        confirmLabel="Padam"
+        variant="destructive"
+        onConfirm={() => {
+          const target = visitTarget
+          setVisitTarget(null)
+          if (target) {
+            void run(
+              repo.deleteVisit(circleId, personId, target.id),
+              "Lawatan dipadam."
+            )
+          }
+        }}
       />
 
       <ConfirmDialog
@@ -367,7 +684,7 @@ export function PersonHealth({
           }
         }}
       />
-    </div>
+    </>
   )
 }
 
@@ -714,6 +1031,261 @@ function AllergyDialog({
             ))}
           </SelectContent>
         </Select>
+      </Field>
+    </ResponsiveDialog>
+  )
+}
+
+function AppointmentDialog({
+  isOpen,
+  onOpenChange,
+  isSaving,
+  onSubmit,
+}: {
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+  isSaving: boolean
+  onSubmit: (input: {
+    purpose: string
+    startsAt: string
+    endsAt?: string
+    locationNote?: string
+    status?: AppointmentStatus
+    notes?: string
+  }) => void
+}) {
+  const [purpose, setPurpose] = useState("")
+  const [startsAt, setStartsAt] = useState("")
+  const [endsAt, setEndsAt] = useState("")
+  const [locationNote, setLocationNote] = useState("")
+  const [status, setStatus] = useState<AppointmentStatus>("scheduled")
+  const [notes, setNotes] = useState("")
+
+  return (
+    <ResponsiveDialog
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      title="Tempah janji temu"
+      description="Masa dalam zon waktu peranti anda."
+      footer={
+        <>
+          <Button variant="outline" onPress={() => onOpenChange(false)}>
+            Batal
+          </Button>
+          <Button
+            isDisabled={
+              isSaving || purpose.trim().length === 0 || startsAt.length === 0
+            }
+            onPress={() => {
+              onSubmit({
+                purpose: purpose.trim(),
+                startsAt,
+                endsAt: endsAt || undefined,
+                locationNote,
+                status,
+                notes,
+              })
+              setPurpose("")
+              setStartsAt("")
+              setEndsAt("")
+              setLocationNote("")
+              setNotes("")
+            }}
+          >
+            Simpan
+          </Button>
+        </>
+      }
+    >
+      <Field>
+        <FieldLabel htmlFor="appointment-purpose">Tujuan</FieldLabel>
+        <Input
+          id="appointment-purpose"
+          value={purpose}
+          placeholder="Contoh: klinik pakar jantung"
+          onChange={(event) => setPurpose(event.target.value)}
+        />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="appointment-starts">Masa mula</FieldLabel>
+        <Input
+          id="appointment-starts"
+          type="datetime-local"
+          value={startsAt}
+          onChange={(event) => setStartsAt(event.target.value)}
+        />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="appointment-ends">Masa tamat</FieldLabel>
+        <Input
+          id="appointment-ends"
+          type="datetime-local"
+          value={endsAt}
+          onChange={(event) => setEndsAt(event.target.value)}
+        />
+        <FieldDescription>Pilihan - biar kosong kalau tidak pasti.</FieldDescription>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="appointment-location">Tempat</FieldLabel>
+        <Input
+          id="appointment-location"
+          value={locationNote}
+          placeholder="Contoh: HKL Blok C, Klinik Kesihatan Seri Muda"
+          onChange={(event) => setLocationNote(event.target.value)}
+        />
+      </Field>
+      <Field>
+        <FieldLabel>Status</FieldLabel>
+        <Select
+          className="w-full"
+          aria-label="Status janji temu"
+          value={status}
+          onChange={(key) =>
+            setStatus(String(key ?? "scheduled") as AppointmentStatus)
+          }
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {APPOINTMENT_STATUSES.map((key) => (
+              <SelectItem key={key} id={key}>
+                {APPOINTMENT_STATUS_LABELS[key]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="appointment-notes">Nota</FieldLabel>
+        <Textarea
+          id="appointment-notes"
+          rows={2}
+          value={notes}
+          placeholder="Contoh: bawa keputusan ujian darah"
+          onChange={(event) => setNotes(event.target.value)}
+        />
+      </Field>
+    </ResponsiveDialog>
+  )
+}
+
+function VisitDialog({
+  isOpen,
+  onOpenChange,
+  isSaving,
+  onSubmit,
+}: {
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+  isSaving: boolean
+  onSubmit: (input: {
+    visitedOn: string
+    reason?: string
+    diagnosis?: string
+    notes?: string
+    costAmount?: string
+    costCurrency?: string
+    followUpOn?: string
+  }) => void
+}) {
+  const [visitedOn, setVisitedOn] = useState("")
+  const [reason, setReason] = useState("")
+  const [diagnosis, setDiagnosis] = useState("")
+  const [costAmount, setCostAmount] = useState("")
+  const [followUpOn, setFollowUpOn] = useState("")
+  const [notes, setNotes] = useState("")
+
+  return (
+    <ResponsiveDialog
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      title="Rekod lawatan"
+      description="Lawatan yang sudah berlaku - tarikh masa depan ialah janji temu."
+      footer={
+        <>
+          <Button variant="outline" onPress={() => onOpenChange(false)}>
+            Batal
+          </Button>
+          <Button
+            isDisabled={isSaving || visitedOn.length === 0}
+            onPress={() => {
+              onSubmit({
+                visitedOn,
+                reason,
+                diagnosis,
+                notes,
+                costAmount,
+                followUpOn: followUpOn || undefined,
+              })
+              setVisitedOn("")
+              setReason("")
+              setDiagnosis("")
+              setCostAmount("")
+              setFollowUpOn("")
+              setNotes("")
+            }}
+          >
+            Simpan
+          </Button>
+        </>
+      }
+    >
+      <Field>
+        <FieldLabel htmlFor="visit-date">Tarikh lawatan</FieldLabel>
+        <Input
+          id="visit-date"
+          type="date"
+          value={visitedOn}
+          onChange={(event) => setVisitedOn(event.target.value)}
+        />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="visit-reason">Sebab</FieldLabel>
+        <Input
+          id="visit-reason"
+          value={reason}
+          placeholder="Contoh: sakit dada"
+          onChange={(event) => setReason(event.target.value)}
+        />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="visit-diagnosis">Diagnosis</FieldLabel>
+        <Input
+          id="visit-diagnosis"
+          value={diagnosis}
+          placeholder="Apa yang doktor kata"
+          onChange={(event) => setDiagnosis(event.target.value)}
+        />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="visit-cost">Kos (MYR)</FieldLabel>
+        <Input
+          id="visit-cost"
+          inputMode="decimal"
+          value={costAmount}
+          placeholder="0.00"
+          onChange={(event) => setCostAmount(event.target.value)}
+        />
+        <FieldDescription>Maksimum dua tempat perpuluhan.</FieldDescription>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="visit-followup">Tarikh susulan</FieldLabel>
+        <Input
+          id="visit-followup"
+          type="date"
+          value={followUpOn}
+          onChange={(event) => setFollowUpOn(event.target.value)}
+        />
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="visit-notes">Nota</FieldLabel>
+        <Textarea
+          id="visit-notes"
+          rows={2}
+          value={notes}
+          onChange={(event) => setNotes(event.target.value)}
+        />
       </Field>
     </ResponsiveDialog>
   )

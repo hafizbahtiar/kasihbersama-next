@@ -50,7 +50,64 @@ export function isNavActive(pathname: string, href: string) {
   return matches[0] === href
 }
 
-export function getAppPageTitle(pathname: string) {
-  const match = allNavItems.find((item) => isNavActive(pathname, item.href))
-  return match?.title ?? "Laman utama"
+export type Crumb = { id: string; label: string; href?: string }
+
+/**
+ * Satu baris per SKRIN - cerminkan setiap `page.tsx` di bawah `app/(app)`.
+ * Segmen `:x` ialah segmen dinamik. Skrin bersarang baharu menambah satu baris di sini dan tidak
+ * pernah menulis breadcrumbnya sendiri: breadcrumb hidup dalam header, bukan
+ * dalam kandungan halaman.
+ */
+const SCREENS: { path: string; label: string }[] = [
+  { path: "/circles", label: "Circle" },
+  { path: "/circles/:circleId", label: "Circle ini" },
+  { path: "/circles/:circleId/persons/:personId", label: "Rekod kesihatan" },
+  { path: "/notifications", label: "Pemberitahuan" },
+  { path: "/settings", label: "Tetapan" },
+  { path: "/accept/invite", label: "Terima jemputan" },
+]
+
+function screenFor(segments: string[]) {
+  return SCREENS.find((screen) => {
+    const parts = screen.path.split("/").filter(Boolean)
+    return (
+      parts.length === segments.length &&
+      parts.every((part, i) => part.startsWith(":") || part === segments[i])
+    )
+  })
+}
+
+/**
+ * Jejak breadcrumb untuk mana-mana laluan. Ia dibina daripada setiap awalan laluan
+ * yang merupakan skrin sebenar, jadi segmen yang hanya menamakan koleksi (`persons`)
+ * tidak menjadi pautan ke 404. Nama circle datang daripada bootstrap yang sudah
+ * dimuatkan - sifar pengambilan tambahan, dan UUID tidak pernah dipaparkan.
+ *
+ * Laluan yang tiada dalam `SCREENS` langsung tidak memulangkan apa-apa: breadcrumb
+ * yang mereka-reka label lebih teruk daripada yang bersembunyi.
+ */
+export function buildCrumbs(
+  pathname: string,
+  circleName: (circleId: string) => string | undefined
+): Crumb[] {
+  const segments = pathname.split("/").filter(Boolean)
+  const crumbs: Crumb[] = []
+
+  for (let depth = 1; depth <= segments.length; depth += 1) {
+    const prefix = segments.slice(0, depth)
+    const screen = screenFor(prefix)
+    if (!screen) {
+      continue
+    }
+
+    const href = `/${prefix.join("/")}`
+    const isCircle = screen.path.endsWith("/:circleId")
+    crumbs.push({
+      id: href,
+      label: (isCircle ? circleName(prefix[depth - 1]) : undefined) ?? screen.label,
+      href,
+    })
+  }
+
+  return crumbs
 }

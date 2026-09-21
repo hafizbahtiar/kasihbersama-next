@@ -2,34 +2,52 @@
 
 import { usePathname } from "next/navigation"
 
-import { getAppPageTitle } from "@/lib/app-nav"
+import { usePlatform } from "@/components/platform/platform-provider"
+import { buildCrumbs } from "@/lib/app-nav"
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
 
 /**
- * Breadcrumb v0.2. Versi lama membawa 117 baris kes khas untuk laluan care - profil,
- * circle, rekod bersarang - yang setiap satunya kini 404. Ia akan tumbuh semula bila
- * skrin bersarang wujud semula; sehingga itu, tajuk halaman sudah memadai dan tidak
- * boleh menunjuk ke mana-mana yang tidak wujud.
+ * Breadcrumb v0.2. Versi lama membawa 117 baris kes khas untuk laluan yang kini
+ * 404; versi ini membina jejaknya daripada laluan sebenar, jadi setiap skrin
+ * bersarang baharu mewarisi jalan naik tanpa kes khasnya sendiri.
  */
 export function AppBreadcrumb() {
   const pathname = usePathname()
-  const title = getAppPageTitle(pathname)
+  const { circles } = usePlatform()
 
-  if (!title) {
+  const crumbs = buildCrumbs(
+    pathname,
+    (circleId) => circles.find((c) => c.id === circleId)?.name
+  )
+
+  if (crumbs.length === 0) {
     return null
   }
 
   return (
     <Breadcrumb>
-      <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbPage>{title}</BreadcrumbPage>
-        </BreadcrumbItem>
+      <BreadcrumbList items={crumbs}>
+        {(crumb) => (
+          <BreadcrumbItem className="min-w-0">
+            {({ isCurrent }) =>
+              isCurrent || !crumb.href ? (
+                <BreadcrumbPage className="truncate">
+                  {crumb.label}
+                </BreadcrumbPage>
+              ) : (
+                <BreadcrumbLink href={crumb.href} className="truncate">
+                  {crumb.label}
+                </BreadcrumbLink>
+              )
+            }
+          </BreadcrumbItem>
+        )}
       </BreadcrumbList>
     </Breadcrumb>
   )

@@ -1,6 +1,6 @@
 /**
- * Rekod kesihatan seorang person (docs/04). Hirisan pertama: kad kecemasan,
- * keadaan, alahan. Janji temu, ubat, vital dan imunisasi menyusul.
+ * Rekod kesihatan seorang person (docs/04): kad kecemasan, keadaan, alahan,
+ * janji temu, lawatan. Ubat, vital dan imunisasi menyusul.
  */
 export type BloodType = "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
 
@@ -74,4 +74,65 @@ export type HealthAllergy = {
   reaction?: string
   severity: AllergySeverity
   notedOn?: string
+}
+
+export type AppointmentStatus =
+  | "scheduled"
+  | "attended"
+  | "missed"
+  | "cancelled"
+  | "rescheduled"
+
+export const APPOINTMENT_STATUSES: AppointmentStatus[] = [
+  "scheduled",
+  "attended",
+  "missed",
+  "cancelled",
+  "rescheduled",
+]
+
+export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
+  scheduled: "Dijadualkan",
+  attended: "Hadir",
+  missed: "Tidak hadir",
+  cancelled: "Dibatalkan",
+  rescheduled: "Ditukar tarikh",
+}
+
+/**
+ * Janji temu. Fasiliti dan pengamal ialah direktori yang belum wujud, jadi
+ * `locationNote` menjawab "di mana" buat masa ini.
+ *
+ * Pada akses `summary` pelayan menggugurkan nota; tujuan, masa dan tempat kekal,
+ * kerana orang yang ada akses ringkasan selalunya orang yang memandu ke sana.
+ */
+export type HealthAppointment = {
+  id: string
+  purpose: string
+  startsAt: string
+  endsAt?: string
+  locationNote?: string
+  status: AppointmentStatus
+  notes?: string
+  createdAt: string
+}
+
+/**
+ * Lawatan yang SUDAH berlaku - pelayan menolak tarikh masa depan.
+ *
+ * `costAmount` ialah rentetan perpuluhan dari hujung ke hujung: JSON number
+ * ialah float64 pada kebanyakan klien, dan itu cara sen hilang.
+ *
+ * Pada akses `summary` pelayan menggugurkan diagnosis, nota DAN kos.
+ */
+export type HealthVisit = {
+  id: string
+  visitedOn: string
+  reason?: string
+  diagnosis?: string
+  notes?: string
+  costAmount?: string
+  costCurrency?: string
+  followUpOn?: string
+  createdAt: string
 }

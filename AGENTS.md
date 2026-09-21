@@ -153,3 +153,16 @@ menulisnya sendiri.
 
 `<div>`, `<p>`, `<span>`, `<ul>` untuk susun atur dan teks memang dibenarkan - yang
 dilarang ialah kawalan interaktif dan bekas yang sudah ada padanan shadcn.
+
+## 6. Skrin terperinci: jejak breadcrumb + `BackButton`
+
+Setiap skrin mesti boleh dinaiki semula. Tambah SATU baris pada `SCREENS` dalam
+`lib/app-nav.ts` untuk setiap `page.tsx` baharu di bawah `app/(app)` - jejaknya
+terbina sendiri daripada situ. Jangan tulis breadcrumb dalam halaman: ia hidup
+dalam header, bukan dalam kandungan. Laluan yang tiada dalam `SCREENS` tidak
+berbreadcrumb langsung, jadi baris yang terlupa kelihatan serta-merta.
+
+Butang kembali ialah `<BackButton href="<laluan naik>" />`. Ia pergi ke halaman
+SEBELUMNYA bila ada sejarah, dan `href` hanya dipakai bila tab dibuka terus ke
+laluan itu. Jangan `LinkButton` ke satu laluan tetap: pengguna yang datang dari
+senarai mahu balik ke senarai itu, bukan ke tab pertama.
