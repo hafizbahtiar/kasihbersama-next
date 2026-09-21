@@ -69,7 +69,7 @@ export function CaredPersonsPage() {
       cell: ({ row }) => (
         <div className="flex justify-end">
           <LinkButton
-            href={`/circles/${row.original.circleId}/persons/${row.original.id}`}
+            href={`/persons/${row.original.circleId}/${row.original.id}`}
             variant="outline"
             size="sm"
           >

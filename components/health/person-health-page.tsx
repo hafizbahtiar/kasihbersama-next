@@ -10,9 +10,12 @@ const PERM_WRITE = "health.condition.create"
 export function PersonHealthPage({
   circleId,
   personId,
+  backHref = `/circles/${circleId}`,
 }: {
   circleId: string
   personId: string
+  /** Laluan naik bila tab dibuka terus ke URL ini dan tiada sejarah untuk dikembali. */
+  backHref?: string
 }) {
   const { activeCircle, can } = usePlatform()
 
@@ -23,7 +26,7 @@ export function PersonHealthPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <BackButton href={`/circles/${circleId}`} />
+      <BackButton href={backHref} />
 
       <PersonHealth
         circleId={circleId}

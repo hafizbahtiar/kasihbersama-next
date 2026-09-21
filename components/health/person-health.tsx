@@ -4,10 +4,12 @@ import { useState, type ReactNode } from "react"
 import {
   IconAlertTriangle,
   IconCalendarEvent,
+  IconCheckCircle,
   IconDroplet,
   IconHeartbeat,
   IconPencil,
   IconPhone,
+  IconPill,
   IconRotate,
   IconStethoscope,
   IconTrash,
@@ -18,6 +20,8 @@ import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
+import { PersonDoses } from "@/components/health/person-doses"
+import { PersonMedications } from "@/components/health/person-medications"
 import { ResponsiveDialog } from "@/components/responsive-dialog"
 import { StatusChip, type StatusTone } from "@/components/status-chip"
 import { AsyncStateBanner } from "@/components/shared/async-state"
@@ -424,7 +428,7 @@ export function PersonHealth({
             Rekod kesihatan
           </h1>
           <p className="text-sm text-muted-foreground">
-            Kad kecemasan, keadaan, alahan, janji temu dan lawatan.
+            Kad kecemasan, keadaan, alahan, ubat, janji temu, dos dan lawatan.
           </p>
         </div>
 
@@ -440,6 +444,8 @@ export function PersonHealth({
           <TabsTrigger id="emergency">Kad kecemasan</TabsTrigger>
           <TabsTrigger id="conditions">Keadaan</TabsTrigger>
           <TabsTrigger id="allergies">Alahan</TabsTrigger>
+          <TabsTrigger id="medications">Ubat</TabsTrigger>
+          <TabsTrigger id="doses">Dos</TabsTrigger>
           <TabsTrigger id="appointments">Janji temu</TabsTrigger>
           <TabsTrigger id="visits">Lawatan</TabsTrigger>
         </TabsList>
@@ -512,6 +518,34 @@ export function PersonHealth({
             emptyDescription="Kosong bermakna belum direkod, bukan tiada alahan."
           />
         </TabsContent>
+        <TabsContent id="medications" className="flex flex-col gap-4">
+          <TabHint icon={<IconPill />}>
+            Preskripsi yang sedang berjalan. Setiap ubat membawa jadual dosnya
+            sendiri - tambah jadual dahulu, kemudian tandakan dos dalam tab Dos.
+          </TabHint>
+          <PersonMedications
+            circleId={circleId}
+            personId={personId}
+            canWrite={canWrite}
+            medications={health.medications}
+            error={health.error}
+            isLoading={health.isLoading}
+            onChanged={() => health.reload()}
+          />
+        </TabsContent>
+
+        <TabsContent id="doses" className="flex flex-col gap-4">
+          <TabHint icon={<IconCheckCircle />}>
+            Yang perlu diambil HARI INI. Dah makan atau langkau - ia dicatat
+            dan sejarahnya kekal.
+          </TabHint>
+          <PersonDoses
+            circleId={circleId}
+            personId={personId}
+            canWrite={canWrite}
+          />
+        </TabsContent>
+
         <TabsContent id="appointments" className="flex flex-col gap-4">
           <TabHint icon={<IconCalendarEvent />}>
             Yang BELUM berlaku: klinik, pakar, ambil darah. Selepas ia berlaku,

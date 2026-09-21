@@ -7,6 +7,7 @@ import type {
   HealthAllergy,
   HealthAppointment,
   HealthCondition,
+  HealthMedication,
   HealthProfile,
   HealthVisit,
 } from "@/lib/domain/health"
@@ -19,6 +20,7 @@ type State = {
   allergies: HealthAllergy[]
   appointments: HealthAppointment[]
   visits: HealthVisit[]
+  medications: HealthMedication[]
 }
 
 const EMPTY: State = {
@@ -28,6 +30,7 @@ const EMPTY: State = {
   allergies: [],
   appointments: [],
   visits: [],
+  medications: [],
 }
 
 /**
@@ -48,13 +51,14 @@ export function usePersonHealth(circleId: string, personId: string) {
     setError(null)
     try {
       const repo = getHealthRepository()
-      const [profile, conditions, allergies, appointments, visits] =
+      const [profile, conditions, allergies, appointments, visits, medications] =
         await Promise.all([
           repo.getProfile(circleId, personId),
           repo.listConditions(circleId, personId),
           repo.listAllergies(circleId, personId),
           repo.listAppointments(circleId, personId),
           repo.listVisits(circleId, personId),
+          repo.listMedications(circleId, personId),
         ])
       setData({
         profile: profile.profile,
@@ -63,6 +67,7 @@ export function usePersonHealth(circleId: string, personId: string) {
         allergies,
         appointments,
         visits,
+        medications,
       })
     } catch (cause) {
       setData(EMPTY)

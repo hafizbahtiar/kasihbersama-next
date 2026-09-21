@@ -69,6 +69,7 @@ export type Crumb = { id: string; label: string; href?: string }
 const SCREENS: { path: string; label: string }[] = [
   { path: "/circles", label: "Circle" },
   { path: "/persons", label: "Orang dijaga" },
+  { path: "/persons/:circleId/:personId", label: "Rekod kesihatan" },
   { path: "/circles/:circleId", label: "Circle ini" },
   { path: "/circles/:circleId/persons/:personId", label: "Rekod kesihatan" },
   { path: "/notifications", label: "Pemberitahuan" },

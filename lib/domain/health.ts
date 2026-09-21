@@ -136,3 +136,114 @@ export type HealthVisit = {
   followUpOn?: string
   createdAt: string
 }
+
+export type MedicationForm =
+  | "tablet"
+  | "capsule"
+  | "syrup"
+  | "injection"
+  | "topical"
+  | "inhaler"
+  | "drops"
+  | "other"
+
+export const MEDICATION_FORMS: MedicationForm[] = [
+  "tablet",
+  "capsule",
+  "syrup",
+  "injection",
+  "topical",
+  "inhaler",
+  "drops",
+  "other",
+]
+
+export const MEDICATION_FORM_LABELS: Record<MedicationForm, string> = {
+  tablet: "Biji",
+  capsule: "Kapsul",
+  syrup: "Sirap",
+  injection: "Suntikan",
+  topical: "Sapuan",
+  inhaler: "Sedutan",
+  drops: "Titis",
+  other: "Lain-lain",
+}
+
+/**
+ * Satu preskripsi. `quantityLeft` ditulis tangan - menolaknya automatik setiap dos
+ * memerlukan kiraan yang betul merentas dos yang terlepas, dan itu Fasa 2.
+ */
+export type HealthMedication = {
+  id: string
+  name: string
+  form: MedicationForm
+  strength?: string
+  instructions?: string
+  startedOn: string
+  endedOn?: string
+  isActive: boolean
+  quantityLeft?: string
+  refillDueOn?: string
+  notes?: string
+}
+
+/** 1=Isnin ... 7=Ahad, sama seperti ISO. Kosong bermakna setiap hari. */
+export const WEEKDAYS: { value: number; short: string }[] = [
+  { value: 1, short: "Isn" },
+  { value: 2, short: "Sel" },
+  { value: 3, short: "Rab" },
+  { value: 4, short: "Kha" },
+  { value: 5, short: "Jum" },
+  { value: 6, short: "Sab" },
+  { value: 7, short: "Ahd" },
+]
+
+export type HealthSchedule = {
+  id: string
+  /** "HH:MM" waktu TEMPATAN circle, bukan masa mutlak. */
+  timeOfDay: string
+  daysOfWeek?: number[]
+  doseAmount: string
+  doseUnit: string
+  withFood?: boolean
+  startsOn: string
+  endsOn?: string
+  isActive: boolean
+}
+
+export type DoseStatus = "pending" | "taken" | "missed" | "skipped" | "refused"
+
+export const DOSE_STATUS_LABELS: Record<DoseStatus, string> = {
+  pending: "Menunggu",
+  taken: "Dah makan",
+  missed: "Terlepas",
+  skipped: "Dilangkau",
+  refused: "Enggan",
+}
+
+/**
+ * Satu dos pada satu hari. DITERBITKAN daripada jadual, bukan disimpan: tiada rekod
+ * wujud sehingga seseorang menandakannya, jadi `status` kosong bermakna "belum".
+ */
+export type HealthDose = {
+  scheduleId: string
+  medicationId: string
+  name: string
+  form?: MedicationForm
+  strength?: string
+  instructions?: string
+  timeOfDay: string
+  scheduledAt: string
+  doseAmount: string
+  doseUnit: string
+  withFood?: boolean
+  status?: DoseStatus
+  recordedAt?: string
+  note?: string
+}
+
+/** Hari ini sebagai "YYYY-MM-DD" waktu tempatan pelayar, bukan UTC. */
+export function todayISO(now = new Date()) {
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+}

@@ -1,6 +1,11 @@
 import type {
   AllergySeverity,
   AppointmentStatus,
+  DoseStatus,
+  HealthDose,
+  HealthMedication,
+  HealthSchedule,
+  MedicationForm,
   BloodType,
   ConditionStatus,
   HealthAllergy,
@@ -62,6 +67,98 @@ type ApiVisit = {
   cost_currency?: string
   follow_up_on?: string
   created_at: string
+}
+
+type ApiMedication = {
+  id: string
+  name: string
+  form: string
+  strength?: string
+  instructions?: string
+  started_on: string
+  ended_on?: string
+  is_active: boolean
+  quantity_left?: string
+  refill_due_on?: string
+  notes?: string
+}
+
+type ApiSchedule = {
+  id: string
+  time_of_day: string
+  days_of_week?: number[]
+  dose_amount: string
+  dose_unit: string
+  with_food?: boolean
+  starts_on: string
+  ends_on?: string
+  is_active: boolean
+}
+
+type ApiDose = {
+  schedule_id: string
+  medication_id: string
+  name: string
+  form?: string
+  strength?: string
+  instructions?: string
+  time_of_day: string
+  scheduled_at: string
+  dose_amount: string
+  dose_unit: string
+  with_food?: boolean
+  status?: string
+  recorded_at?: string
+  note?: string
+}
+
+function mapMedication(api: ApiMedication): HealthMedication {
+  return {
+    id: api.id,
+    name: api.name,
+    form: api.form as MedicationForm,
+    strength: api.strength,
+    instructions: api.instructions,
+    startedOn: api.started_on,
+    endedOn: api.ended_on,
+    isActive: api.is_active,
+    quantityLeft: api.quantity_left,
+    refillDueOn: api.refill_due_on,
+    notes: api.notes,
+  }
+}
+
+function mapSchedule(api: ApiSchedule): HealthSchedule {
+  return {
+    id: api.id,
+    timeOfDay: api.time_of_day,
+    daysOfWeek: api.days_of_week,
+    doseAmount: api.dose_amount,
+    doseUnit: api.dose_unit,
+    withFood: api.with_food,
+    startsOn: api.starts_on,
+    endsOn: api.ends_on,
+    isActive: api.is_active,
+  }
+}
+
+function mapDose(api: ApiDose): HealthDose {
+  return {
+    scheduleId: api.schedule_id,
+    medicationId: api.medication_id,
+    name: api.name,
+    form: api.form as MedicationForm | undefined,
+    strength: api.strength,
+    instructions: api.instructions,
+    timeOfDay: api.time_of_day,
+    scheduledAt: api.scheduled_at,
+    doseAmount: api.dose_amount,
+    doseUnit: api.dose_unit,
+    withFood: api.with_food,
+    status: api.status as DoseStatus | undefined,
+    recordedAt: api.recorded_at,
+    note: api.note,
+  }
 }
 
 function mapProfile(api: ApiProfile): HealthProfile {
@@ -359,5 +456,146 @@ export class ApiHealthRepository implements HealthRepository {
       `${this.base(circleId, personId)}/visits/${visitId}`,
       { method: "DELETE" }
     )
+  }
+
+  listMedications(circleId: string, personId: string) {
+    return this.client
+      .request<{ data: ApiMedication[] }>(
+        `${this.base(circleId, personId)}/medications`
+      )
+      .then((body) => (body.data ?? []).map(mapMedication))
+  }
+
+  createMedication(
+    circleId: string,
+    personId: string,
+    input: {
+      name: string
+      form?: MedicationForm
+      strength?: string
+      instructions?: string
+      startedOn: string
+      endedOn?: string
+      quantityLeft?: string
+      refillDueOn?: string
+      notes?: string
+    }
+  ) {
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/medications`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          name: input.name,
+          form: input.form,
+          strength: input.strength || undefined,
+          instructions: input.instructions || undefined,
+          started_on: input.startedOn,
+          ended_on: input.endedOn || undefined,
+          quantity_left: input.quantityLeft || undefined,
+          refill_due_on: input.refillDueOn || undefined,
+          notes: input.notes || undefined,
+        }),
+      }
+    )
+  }
+
+  updateMedication(
+    circleId: string,
+    personId: string,
+    medicationId: string,
+    patch: { isActive?: boolean; endedOn?: string; quantityLeft?: string }
+  ) {
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/medications/${medicationId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          is_active: patch.isActive,
+          ended_on: patch.endedOn,
+          quantity_left: patch.quantityLeft,
+        }),
+      }
+    )
+  }
+
+  deleteMedication(circleId: string, personId: string, medicationId: string) {
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/medications/${medicationId}`,
+      { method: "DELETE" }
+    )
+  }
+
+  listSchedules(circleId: string, personId: string, medicationId: string) {
+    return this.client
+      .request<{ data: ApiSchedule[] }>(
+        `${this.base(circleId, personId)}/medications/${medicationId}/schedules`
+      )
+      .then((body) => (body.data ?? []).map(mapSchedule))
+  }
+
+  createSchedule(
+    circleId: string,
+    personId: string,
+    medicationId: string,
+    input: {
+      timeOfDay: string
+      daysOfWeek?: number[]
+      doseAmount: string
+      doseUnit?: string
+      withFood?: boolean
+    }
+  ) {
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/medications/${medicationId}/schedules`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          time_of_day: input.timeOfDay,
+          // Tujuh hari dan senarai kosong bermakna perkara yang sama; pelayan
+          // menormalkannya, jadi klien tidak perlu.
+          days_of_week: input.daysOfWeek?.length ? input.daysOfWeek : undefined,
+          dose_amount: input.doseAmount,
+          dose_unit: input.doseUnit || undefined,
+          with_food: input.withFood,
+        }),
+      }
+    )
+  }
+
+  deleteSchedule(circleId: string, personId: string, scheduleId: string) {
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/schedules/${scheduleId}`,
+      { method: "DELETE" }
+    )
+  }
+
+  listDoses(circleId: string, personId: string, date: string) {
+    return this.client
+      .request<{ date: string; data: ApiDose[] }>(
+        `${this.base(circleId, personId)}/doses?date=${date}`
+      )
+      .then((body) => (body.data ?? []).map(mapDose))
+  }
+
+  recordDose(
+    circleId: string,
+    personId: string,
+    input: {
+      scheduleId: string
+      scheduledAt: string
+      status: DoseStatus
+      note?: string
+    }
+  ) {
+    return this.client.request<void>(`${this.base(circleId, personId)}/doses`, {
+      method: "POST",
+      body: JSON.stringify({
+        schedule_id: input.scheduleId,
+        scheduled_at: input.scheduledAt,
+        status: input.status,
+        note: input.note || undefined,
+      }),
+    })
   }
 }

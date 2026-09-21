@@ -36,7 +36,22 @@ test("modul lain juga berjejak, bukan circle sahaja", () => {
   expect(crumbs("/persons")).toEqual([["Orang dijaga", "/persons"]])
 })
 
+test("pintasan membawa jejaknya sendiri, bukan jejak circle", () => {
+  // Skrin yang sama, dua laluan. Yang masuk melalui pintasan naik semula ke
+  // pintasan itu - bukan ke circle yang kebetulan memiliki orang itu.
+  expect(crumbs("/persons/c-1/p-1")).toEqual([
+    ["Orang dijaga", "/persons"],
+    ["Rekod kesihatan", "/persons/c-1/p-1"],
+  ])
+  expect(crumbs("/circles/c-1/persons/p-1")).toEqual([
+    ["Circle", "/circles"],
+    ["Keluarga Amin", "/circles/c-1"],
+    ["Rekod kesihatan", "/circles/c-1/persons/p-1"],
+  ])
+})
+
 test("pintasan /persons tidak dikelirukan dengan person dalam circle", () => {
+  expect(isNavActive("/persons/c-1/p-1", "/persons")).toBe(true)
   // Dua laluan berkongsi perkataan "persons" tetapi bukan awalan yang sama.
   expect(isNavActive("/circles/c-1/persons/p-1", "/persons")).toBe(false)
   expect(isNavActive("/circles/c-1/persons/p-1", "/circles")).toBe(true)
