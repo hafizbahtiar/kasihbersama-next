@@ -1,6 +1,6 @@
 /**
  * Rekod kesihatan seorang person (docs/04): kad kecemasan, keadaan, alahan,
- * janji temu, lawatan. Ubat, vital dan imunisasi menyusul.
+ * janji temu, lawatan, ubat, vital, imunisasi.
  */
 export type BloodType = "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
 
@@ -246,4 +246,53 @@ export type HealthDose = {
 export function todayISO(now = new Date()) {
   const pad = (n: number) => String(n).padStart(2, "0")
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+}
+
+/**
+ * Jenis vital dari katalog global pelayan (7 dimuat turun sekali): tekanan darah,
+ * nadi, suhu, berat, tinggi, gula darah, oksigen. Ia bukan rekod person, jadi tiada
+ * di sini - hanya rujukan untuk borang dan paparan.
+ */
+export type VitalType = {
+  id: string
+  /** Kuncinya stabil antarabangsa ("blood_pressure"), bukan label tempatan. */
+  key: string
+  name: string
+  unit: string
+  /** Tekanan darah memakai dua nilai (sistolik/diastolik); lain-lain satu. */
+  hasSecondary: boolean
+  secondaryUnit?: string
+}
+
+/**
+ * Satu bacaan vital = satu SNAPSHOT pada satu masa. Tiada kemas kini: salah catat
+ * bermakna padam dan catat semula. Pelayan menolak masa hadapan.
+ *
+ * Unit ialah hak milik jenis; perpuluhan ialah rentetan ("140.500") supaya tiga
+ * titik perpuluhan kekal, sama seperti `costAmount`.
+ */
+export type VitalReading = {
+  id: string
+  vitalTypeId: string
+  valuePrimary: string
+  valueSecondary?: string
+  measuredAt: string
+  note?: string
+  createdAt: string
+}
+
+/**
+ * Satu imunisasi. `givenOn` KOSONG bermakna "belum diberi" - ia satu suntikan
+ * berjadual. `nextDueOn` ialah bila suntikan berikutnya (kadang-kadang ada,
+ * kadang-kadang tiada).
+ */
+export type Immunisation = {
+  id: string
+  vaccine: string
+  doseNumber?: number
+  givenOn?: string
+  batchNo?: string
+  nextDueOn?: string
+  notes?: string
+  createdAt: string
 }

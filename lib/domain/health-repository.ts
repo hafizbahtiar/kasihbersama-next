@@ -8,6 +8,9 @@ import type {
   HealthProfile,
   HealthSchedule,
   HealthVisit,
+  Immunisation,
+  VitalReading,
+  VitalType,
 } from "@/lib/domain/health"
 
 export interface HealthRepository {
@@ -187,5 +190,62 @@ export interface HealthRepository {
       status: DoseStatus
       note?: string
     }
+  ): Promise<void>
+
+  /** Katalog global, bukan rekod person. Muat sekali dan guna untuk semua borang. */
+  listVitalTypes(circleId: string, personId: string): Promise<VitalType[]>
+  /** Bacaan diisih paling baru di atas. */
+  listVitalReadings(
+    circleId: string,
+    personId: string
+  ): Promise<VitalReading[]>
+  recordVitalReading(
+    circleId: string,
+    personId: string,
+    input: {
+      vitalTypeId: string
+      valuePrimary: string
+      valueSecondary?: string
+      measuredAt: string
+      note?: string
+    }
+  ): Promise<void>
+  deleteVitalReading(
+    circleId: string,
+    personId: string,
+    readingId: string
+  ): Promise<void>
+
+  listImmunisations(circleId: string, personId: string): Promise<Immunisation[]>
+  createImmunisation(
+    circleId: string,
+    personId: string,
+    input: {
+      vaccine: string
+      doseNumber?: number
+      givenOn?: string
+      batchNo?: string
+      nextDueOn?: string
+      notes?: string
+    }
+  ): Promise<void>
+  /** PATCH: medan tak dihantar kekal. Kosongkan tarikh dengan menghantar "". */
+  updateImmunisation(
+    circleId: string,
+    personId: string,
+    immunisationId: string,
+    patch: {
+      vaccine?: string
+      doseNumber?: number
+      givenOn?: string
+      batchNo?: string
+      nextDueOn?: string
+      notes?: string
+    }
+  ): Promise<void>
+  deleteImmunisation(
+    circleId: string,
+    personId: string,
+    immunisationId: string
   ): Promise<void>
 }

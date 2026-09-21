@@ -10,6 +10,9 @@ import type {
   HealthMedication,
   HealthProfile,
   HealthVisit,
+  Immunisation,
+  VitalReading,
+  VitalType,
 } from "@/lib/domain/health"
 import { ApiError, isApiError } from "@/lib/infrastructure/api/errors"
 
@@ -21,6 +24,9 @@ type State = {
   appointments: HealthAppointment[]
   visits: HealthVisit[]
   medications: HealthMedication[]
+  vitalTypes: VitalType[]
+  vitalReadings: VitalReading[]
+  immunisations: Immunisation[]
 }
 
 const EMPTY: State = {
@@ -31,6 +37,9 @@ const EMPTY: State = {
   appointments: [],
   visits: [],
   medications: [],
+  vitalTypes: [],
+  vitalReadings: [],
+  immunisations: [],
 }
 
 /**
@@ -51,15 +60,27 @@ export function usePersonHealth(circleId: string, personId: string) {
     setError(null)
     try {
       const repo = getHealthRepository()
-      const [profile, conditions, allergies, appointments, visits, medications] =
-        await Promise.all([
-          repo.getProfile(circleId, personId),
-          repo.listConditions(circleId, personId),
-          repo.listAllergies(circleId, personId),
-          repo.listAppointments(circleId, personId),
-          repo.listVisits(circleId, personId),
-          repo.listMedications(circleId, personId),
-        ])
+      const [
+        profile,
+        conditions,
+        allergies,
+        appointments,
+        visits,
+        medications,
+        vitalTypes,
+        vitalReadings,
+        immunisations,
+      ] = await Promise.all([
+        repo.getProfile(circleId, personId),
+        repo.listConditions(circleId, personId),
+        repo.listAllergies(circleId, personId),
+        repo.listAppointments(circleId, personId),
+        repo.listVisits(circleId, personId),
+        repo.listMedications(circleId, personId),
+        repo.listVitalTypes(circleId, personId),
+        repo.listVitalReadings(circleId, personId),
+        repo.listImmunisations(circleId, personId),
+      ])
       setData({
         profile: profile.profile,
         profileExists: profile.exists,
@@ -68,6 +89,9 @@ export function usePersonHealth(circleId: string, personId: string) {
         appointments,
         visits,
         medications,
+        vitalTypes,
+        vitalReadings,
+        immunisations,
       })
     } catch (cause) {
       setData(EMPTY)

@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react"
 import {
+  IconActivity,
   IconAlertTriangle,
   IconCalendarEvent,
   IconCircleCheck,
@@ -12,6 +13,7 @@ import {
   IconPill,
   IconRotate,
   IconStethoscope,
+  IconVaccine,
   IconTrash,
   IconUrgent,
 } from "@tabler/icons-react"
@@ -21,7 +23,9 @@ import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { PersonDoses } from "@/components/health/person-doses"
+import { PersonImmunisations } from "@/components/health/person-immunisations"
 import { PersonMedications } from "@/components/health/person-medications"
+import { PersonVitals } from "@/components/health/person-vitals"
 import { ResponsiveDialog } from "@/components/responsive-dialog"
 import { StatusChip, type StatusTone } from "@/components/status-chip"
 import { AsyncStateBanner } from "@/components/shared/async-state"
@@ -446,6 +450,8 @@ export function PersonHealth({
           <TabsTrigger id="allergies">Alahan</TabsTrigger>
           <TabsTrigger id="medications">Ubat</TabsTrigger>
           <TabsTrigger id="doses">Dos</TabsTrigger>
+          <TabsTrigger id="vitals">Vital</TabsTrigger>
+          <TabsTrigger id="immunisations">Imunisasi</TabsTrigger>
           <TabsTrigger id="appointments">Janji temu</TabsTrigger>
           <TabsTrigger id="visits">Lawatan</TabsTrigger>
         </TabsList>
@@ -543,6 +549,39 @@ export function PersonHealth({
             circleId={circleId}
             personId={personId}
             canWrite={canWrite}
+          />
+        </TabsContent>
+
+        <TabsContent id="vitals" className="flex flex-col gap-4">
+          <TabHint icon={<IconActivity />}>
+            Tekanan darah, nadi, berat, suhu - apa yang diukur, bila ia diukur.
+            Bacaan ialah snapshot, bukan sejarah yang disunting.
+          </TabHint>
+          <PersonVitals
+            circleId={circleId}
+            personId={personId}
+            canWrite={canWrite}
+            vitalTypes={health.vitalTypes}
+            vitalReadings={health.vitalReadings}
+            error={health.error}
+            isLoading={health.isLoading}
+            onChanged={() => health.reload()}
+          />
+        </TabsContent>
+
+        <TabsContent id="immunisations" className="flex flex-col gap-4">
+          <TabHint icon={<IconVaccine />}>
+            Jadual vaksinasi - terutama kanak-kanak. Tarikh Diberi kosong
+            bermakna berjadual, belum disuntik.
+          </TabHint>
+          <PersonImmunisations
+            circleId={circleId}
+            personId={personId}
+            canWrite={canWrite}
+            immunisations={health.immunisations}
+            error={health.error}
+            isLoading={health.isLoading}
+            onChanged={() => health.reload()}
           />
         </TabsContent>
 

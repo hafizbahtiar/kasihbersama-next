@@ -5,6 +5,7 @@ import type {
   HealthDose,
   HealthMedication,
   HealthSchedule,
+  Immunisation,
   MedicationForm,
   BloodType,
   ConditionStatus,
@@ -13,6 +14,8 @@ import type {
   HealthCondition,
   HealthProfile,
   HealthVisit,
+  VitalReading,
+  VitalType,
 } from "@/lib/domain/health"
 import type { HealthRepository } from "@/lib/domain/health-repository"
 import type { ApiClient } from "@/lib/infrastructure/api/client"
@@ -112,6 +115,36 @@ type ApiDose = {
   note?: string
 }
 
+type ApiVitalType = {
+  id: string
+  key: string
+  name: string
+  unit: string
+  has_secondary: boolean
+  secondary_unit?: string
+}
+
+type ApiVitalReading = {
+  id: string
+  vital_type_id: string
+  value_primary: string
+  value_secondary?: string
+  measured_at: string
+  note?: string
+  created_at: string
+}
+
+type ApiImmunisation = {
+  id: string
+  vaccine: string
+  dose_number?: number
+  given_on?: string
+  batch_no?: string
+  next_due_on?: string
+  notes?: string
+  created_at: string
+}
+
 function mapMedication(api: ApiMedication): HealthMedication {
   return {
     id: api.id,
@@ -158,6 +191,42 @@ function mapDose(api: ApiDose): HealthDose {
     status: api.status as DoseStatus | undefined,
     recordedAt: api.recorded_at,
     note: api.note,
+  }
+}
+
+function mapVitalType(api: ApiVitalType): VitalType {
+  return {
+    id: api.id,
+    key: api.key,
+    name: api.name,
+    unit: api.unit,
+    hasSecondary: api.has_secondary,
+    secondaryUnit: api.secondary_unit,
+  }
+}
+
+function mapVitalReading(api: ApiVitalReading): VitalReading {
+  return {
+    id: api.id,
+    vitalTypeId: api.vital_type_id,
+    valuePrimary: api.value_primary,
+    valueSecondary: api.value_secondary,
+    measuredAt: api.measured_at,
+    note: api.note,
+    createdAt: api.created_at,
+  }
+}
+
+function mapImmunisation(api: ApiImmunisation): Immunisation {
+  return {
+    id: api.id,
+    vaccine: api.vaccine,
+    doseNumber: api.dose_number,
+    givenOn: api.given_on,
+    batchNo: api.batch_no,
+    nextDueOn: api.next_due_on,
+    notes: api.notes,
+    createdAt: api.created_at,
   }
 }
 
@@ -597,5 +666,136 @@ export class ApiHealthRepository implements HealthRepository {
         note: input.note || undefined,
       }),
     })
+  }
+
+  listVitalTypes(circleId: string, personId: string) {
+    return this.client
+      .request<{ data: ApiVitalType[] }>(
+        `${this.base(circleId, personId)}/vitals/types`
+      )
+      .then((body) => (body.data ?? []).map(mapVitalType))
+  }
+
+  listVitalReadings(circleId: string, personId: string) {
+    return this.client
+      .request<{ data: ApiVitalReading[] }>(
+        `${this.base(circleId, personId)}/vitals`
+      )
+      .then((body) => (body.data ?? []).map(mapVitalReading))
+  }
+
+  recordVitalReading(
+    circleId: string,
+    personId: string,
+    input: {
+      vitalTypeId: string
+      valuePrimary: string
+      valueSecondary?: string
+      measuredAt: string
+      note?: string
+    }
+  ) {
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/vitals`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          vital_type_id: input.vitalTypeId,
+          value_primary: input.valuePrimary,
+          value_secondary: input.valueSecondary || undefined,
+          measured_at: toUtc(input.measuredAt),
+          note: input.note || undefined,
+        }),
+      }
+    )
+  }
+
+  deleteVitalReading(
+    circleId: string,
+    personId: string,
+    readingId: string
+  ) {
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/vitals/${readingId}`,
+      { method: "DELETE" }
+    )
+  }
+
+  listImmunisations(circleId: string, personId: string) {
+    return this.client
+      .request<{ data: ApiImmunisation[] }>(
+        `${this.base(circleId, personId)}/immunisations`
+      )
+      .then((body) => (body.data ?? []).map(mapImmunisation))
+  }
+
+  createImmunisation(
+    circleId: string,
+    personId: string,
+    input: {
+      vaccine: string
+      doseNumber?: number
+      givenOn?: string
+      batchNo?: string
+      nextDueOn?: string
+      notes?: string
+    }
+  ) {
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/immunisations`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          vaccine: input.vaccine,
+          dose_number: input.doseNumber,
+          given_on: input.givenOn || undefined,
+          batch_no: input.batchNo || undefined,
+          next_due_on: input.nextDueOn || undefined,
+          notes: input.notes || undefined,
+        }),
+      }
+    )
+  }
+
+  updateImmunisation(
+    circleId: string,
+    personId: string,
+    immunisationId: string,
+    patch: {
+      vaccine?: string
+      doseNumber?: number
+      givenOn?: string
+      batchNo?: string
+      nextDueOn?: string
+      notes?: string
+    }
+  ) {
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/immunisations/${immunisationId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          // Kosongkan makna "buang" di sini: pelayan membezakannya daripada medan
+          // yang tak dihantar (PATCH), kecuali dose_number yang tiada nilai sen.
+          vaccine: patch.vaccine,
+          dose_number: patch.doseNumber,
+          given_on: patch.givenOn,
+          batch_no: patch.batchNo,
+          next_due_on: patch.nextDueOn,
+          notes: patch.notes,
+        }),
+      }
+    )
+  }
+
+  deleteImmunisation(
+    circleId: string,
+    personId: string,
+    immunisationId: string
+  ) {
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/immunisations/${immunisationId}`,
+      { method: "DELETE" }
+    )
   }
 }
