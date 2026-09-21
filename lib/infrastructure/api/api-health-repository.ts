@@ -339,6 +339,33 @@ export class ApiHealthRepository implements HealthRepository {
       .then((body) => mapProfile(body.profile))
   }
 
+  getSelfProfile() {
+    // Skop /v1/me: identiti sendiri ialah laluannya (persons.linked_user_id).
+    return this.client
+      .request<{ exists: boolean; profile: ApiProfile }>("/me/health-profile")
+      .then((body) => ({
+        exists: body.exists,
+        profile: mapProfile(body.profile ?? {}),
+      }))
+  }
+
+  saveSelfProfile(profile: HealthProfile) {
+    return this.client
+      .request<{ profile: ApiProfile }>("/me/health-profile", {
+        method: "PUT",
+        body: JSON.stringify({
+          blood_type: profile.bloodType ?? "",
+          is_organ_donor: profile.isOrganDonor,
+          emergency_contact_name: profile.emergencyContactName ?? "",
+          emergency_contact_phone: profile.emergencyContactPhone ?? "",
+          insurance_provider: profile.insuranceProvider ?? "",
+          insurance_policy_no: profile.insurancePolicyNo ?? "",
+          notes: profile.notes ?? "",
+        }),
+      })
+      .then((body) => mapProfile(body.profile))
+  }
+
   listConditions(circleId: string, personId: string) {
     return this.client
       .request<{ data: ApiCondition[] }>(

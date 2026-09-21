@@ -28,6 +28,9 @@ export interface HealthRepository {
     personId: string,
     profile: HealthProfile
   ): Promise<HealthProfile>
+  /** Kad kecemasan SAYA, dibuka melalui pengikatan akaun - tiada circle/person. */
+  getSelfProfile(): Promise<{ exists: boolean; profile: HealthProfile }>
+  saveSelfProfile(profile: HealthProfile): Promise<HealthProfile>
 
   listConditions(
     circleId: string,

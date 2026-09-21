@@ -150,8 +150,11 @@ Checked against the RUNNING backend (OpenAPI + real flows), not a code read.
 - [ ] `/me/export` - no backend route and no spec in docs. The UI already reports it as
       unavailable through `notYetAvailable`, but the export button cannot work until the
       format, scope, and sync-vs-link question is decided
-- [ ] `/me/usage` and `/me/health-profile` - no backend route yet (billing phase 3, health
-      phase 1). The UI degrades to "not available yet" on purpose; nothing to do until then
+- [x] `/me/health-profile` - backend `GET/PUT /v1/me/health-profile` siap (2026-09-21).
+      UI: skrin "Kad kecemasan" (sidebar Akaun → /self-health) memanggilnya. Akaun tanpa
+      pengikatan: GET `{exists:false}` (borang kosong), PUT ditolak 409 dengan mesej pelayan
+- [ ] `/me/usage` - no backend route yet (billing phase 3). The UI degrades to "not available
+      yet" on purpose; nothing to do until then
 
 Local dev note: the backend does NOT send email (log mailer). The verification link is in the
 API log: `grep -o '"pautan":"[^"]*"' <api log> | tail -1`. `PUBLIC_WEB_BASE_URL=http://localhost:3000`

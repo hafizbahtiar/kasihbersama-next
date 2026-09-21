@@ -30,6 +30,9 @@ test("modul lain juga berjejak, bukan circle sahaja", () => {
   expect(crumbs("/notifications")).toEqual([
     ["Pemberitahuan", "/notifications"],
   ])
+  expect(crumbs("/self-health")).toEqual([
+    ["Kad kecemasan", "/self-health"],
+  ])
   expect(crumbs("/accept/invite")).toEqual([
     ["Terima jemputan", "/accept/invite"],
   ])

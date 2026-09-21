@@ -2,6 +2,7 @@ import type { ComponentType, SVGProps } from "react"
 import {
   IconBell,
   IconHeartHandshake,
+  IconHeartPlus,
   IconSettings,
   IconUsersGroup,
 } from "@tabler/icons-react"
@@ -36,6 +37,9 @@ export const primaryNav: AppNavItem[] = [
 // di sini dan bukan di puncak senarai jagaan.
 export const secondaryNav: AppNavItem[] = [
   { href: "/notifications", title: "Pemberitahuan", icon: IconBell },
+  // Kad kecemasan ialah hal AKAUN, bukan hal circle: ia kad SAYA sendiri, dibuka
+  // melalui pengikatan akaun di pelayan (tiada circle/person dalam laluan).
+  { href: "/self-health", title: "Kad kecemasan", icon: IconHeartPlus },
   { href: "/settings", title: "Tetapan", icon: IconSettings },
 ]
 
@@ -73,6 +77,7 @@ const SCREENS: { path: string; label: string }[] = [
   { path: "/circles/:circleId", label: "Circle ini" },
   { path: "/circles/:circleId/persons/:personId", label: "Rekod kesihatan" },
   { path: "/notifications", label: "Pemberitahuan" },
+  { path: "/self-health", label: "Kad kecemasan" },
   { path: "/settings", label: "Tetapan" },
   { path: "/accept/invite", label: "Terima jemputan" },
 ]
