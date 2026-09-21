@@ -20,7 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <LogoutProvider>
               <SidebarProvider>
                 <AppSidebar />
-                <SidebarInset className="min-w-0 overflow-x-hidden">
+                <SidebarInset className="min-w-0 h-svh overflow-hidden md:h-[calc(100svh-1rem)]">
                   <AppHeader />
                   <AppMain>{children}</AppMain>
                 </SidebarInset>

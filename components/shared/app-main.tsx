@@ -10,7 +10,7 @@ import type { ReactNode } from "react"
  */
 export function AppMain({ children }: { children: ReactNode }) {
   return (
-    <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 md:gap-6 md:p-6">
+    <main className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto p-4 md:gap-6 md:p-6">
       {children}
     </main>
   )
