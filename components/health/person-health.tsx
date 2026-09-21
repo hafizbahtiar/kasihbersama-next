@@ -8,6 +8,7 @@ import {
   IconCircleCheck,
   IconDroplet,
   IconHeartbeat,
+  IconHeartHandshake,
   IconPencil,
   IconPhone,
   IconPill,
@@ -19,6 +20,7 @@ import {
 } from "@tabler/icons-react"
 import { toast } from "sonner"
 
+import { PersonNeeds } from "@/components/care/person-needs"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
@@ -97,12 +99,15 @@ export function PersonHealth({
   circleId,
   personId,
   canWrite,
+  canWriteCare,
   canUpdatePerson,
 }: {
   circleId: string
   personId: string
   /** Akses ringkasan membaca sahaja - pelayan menolaknya, jadi UI tidak menawarkannya. */
   canWrite: boolean
+  /** `care.need.create` - arahan tetap ialah module berasingan (docs/15 §7). */
+  canWriteCare: boolean
   /** `core.person.update` - alamat dan hubungan milik rekod person, bukan health. */
   canUpdatePerson: boolean
 }) {
@@ -459,6 +464,7 @@ export function PersonHealth({
           <TabsTrigger id="immunisations">Imunisasi</TabsTrigger>
           <TabsTrigger id="appointments">Janji temu</TabsTrigger>
           <TabsTrigger id="visits">Lawatan</TabsTrigger>
+          <TabsTrigger id="care">Penjagaan</TabsTrigger>
           <TabsTrigger id="addresses">Alamat</TabsTrigger>
           <TabsTrigger id="relationships">Hubungan</TabsTrigger>
         </TabsList>
@@ -639,6 +645,18 @@ export function PersonHealth({
             emptyIcon={<IconStethoscope />}
             emptyTitle="Tiada lawatan direkodkan"
             emptyDescription="Rekod lawatan selepas ia berlaku - tarikh masa depan ialah janji temu."
+          />
+        </TabsContent>
+
+        <TabsContent id="care" className="flex flex-col gap-4">
+          <TabHint icon={<IconHeartHandshake />}>
+            Arahan tetap untuk penjaga ganti - apa yang perlu diketahui sebelum
+            mengambil alih. Catatan harian dan giliran jaga menyusul.
+          </TabHint>
+          <PersonNeeds
+            circleId={circleId}
+            personId={personId}
+            canWrite={canWriteCare}
           />
         </TabsContent>
 

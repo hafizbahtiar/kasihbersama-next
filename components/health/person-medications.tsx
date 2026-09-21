@@ -401,10 +401,10 @@ function ScheduleDialog({
   }, [circleId, medication.id, personId, repo])
 
   // Dipasang hanya bila satu ubat dipilih, jadi muat-on-mount ialah satu
-  // `useEffect` - sama seperti `usePersonHealth`. Tiada setState segerak dalam
-  // badan kesan (isLoading bermula `true` dan hanya ditetapkan selepas await),
-  // jadi peraturan eslint tidak berkenaan di sini.
+  // `useEffect` - sama seperti `usePersonHealth`. `load` menetapkan `error`
+  // segerak, jadi rule perlukan arahan ini (corak yang sama di use-person-health).
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load()
   }, [load])
 

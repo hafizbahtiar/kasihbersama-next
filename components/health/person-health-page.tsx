@@ -24,6 +24,7 @@ export function PersonHealthPage({
   // baca sahaja, dan pelayan kekal menjadi pihak yang memutuskan.
   const isActive = activeCircle?.id === circleId
   const canWrite = isActive && can(PERM_WRITE)
+  const canWriteCare = isActive && can("care.need.create")
   const canUpdatePerson = isActive && can("core.person.update")
 
   return (
@@ -34,6 +35,7 @@ export function PersonHealthPage({
         circleId={circleId}
         personId={personId}
         canWrite={canWrite}
+        canWriteCare={canWriteCare}
         canUpdatePerson={canUpdatePerson}
       />
     </div>
