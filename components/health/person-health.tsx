@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react"
 import {
   IconAlertTriangle,
   IconCalendarEvent,
-  IconCheckCircle,
+  IconCircleCheck,
   IconDroplet,
   IconHeartbeat,
   IconPencil,
@@ -535,7 +535,7 @@ export function PersonHealth({
         </TabsContent>
 
         <TabsContent id="doses" className="flex flex-col gap-4">
-          <TabHint icon={<IconCheckCircle />}>
+          <TabHint icon={<IconCircleCheck />}>
             Yang perlu diambil HARI INI. Dah makan atau langkau - ia dicatat
             dan sejarahnya kekal.
           </TabHint>
