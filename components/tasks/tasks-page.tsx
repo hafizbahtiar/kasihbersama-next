@@ -13,6 +13,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog"
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
 import { usePlatform } from "@/components/platform/platform-provider"
 import { ResponsiveDialog } from "@/components/responsive-dialog"
+import { RecurringTasks } from "@/components/tasks/recurring-tasks"
 import { StatusChip, type StatusTone } from "@/components/status-chip"
 import { AsyncStateBanner } from "@/components/shared/async-state"
 import { TableActionButton, TableActions } from "@/components/table-actions"
@@ -112,6 +113,7 @@ function CircleTasks({
   const canEditAny = canCreate || canUpdate
   const members = useCircleMembers(circleId)
   const persons = useCirclePersons(circleId, canEditAny)
+  const activeMembers = members.data.filter((m) => m.status === "active")
   const repo = getTaskRepository()
 
   const [busy, setBusy] = useState(false)
@@ -149,9 +151,14 @@ function CircleTasks({
       cell: ({ row }) => (
         <div className="min-w-0 space-y-0.5">
           <p className="font-medium">{row.original.title}</p>
-          {row.original.personName ? (
+          {row.original.personName || row.original.templateTaskId ? (
             <p className="text-xs text-muted-foreground">
-              untuk {row.original.personName}
+              {[
+                row.original.personName && `untuk ${row.original.personName}`,
+                row.original.templateTaskId && "berulang",
+              ]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
           ) : null}
           {row.original.description ? (
@@ -324,12 +331,21 @@ function CircleTasks({
         emptyDescription="Hantar mak ke klinik, bayar bil air - siapa buat apa, dan bila."
       />
 
+      <RecurringTasks
+        circleId={circleId}
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        members={activeMembers}
+        persons={persons.data}
+        onChanged={() => void reload()}
+      />
+
       <TaskDialog
         isOpen={isFormOpen}
         onOpenChange={setIsFormOpen}
         isSaving={busy}
         target={editTarget}
-        members={members.data.filter((m) => m.status === "active")}
+        members={activeMembers}
         persons={persons.data}
         onSubmit={(input) =>
           void run(

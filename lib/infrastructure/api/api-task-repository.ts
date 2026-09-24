@@ -1,4 +1,7 @@
 import type {
+  RecurrenceFreq,
+  RecurringInput,
+  RecurringTask,
   Task,
   TaskInput,
   TaskPriority,
@@ -22,6 +25,7 @@ type ApiTask = {
   person_name?: string
   checklist_total: number
   checklist_done: number
+  template_task_id?: string
   checklist?: { id: string; label: string; is_done: boolean }[]
 }
 
@@ -41,12 +45,62 @@ function mapTask(api: ApiTask): Task {
     personName: api.person_name,
     checklistTotal: api.checklist_total,
     checklistDone: api.checklist_done,
+    templateTaskId: api.template_task_id,
     checklist: api.checklist?.map((it) => ({
       id: it.id,
       label: it.label,
       isDone: it.is_done,
     })),
   }
+}
+
+type ApiRecurring = {
+  task: ApiTask
+  freq: string
+  interval: number
+  days_of_week: number[]
+  day_of_month?: number
+  lead_days: number
+  starts_on: string
+  until?: string
+  max_count?: number
+  is_active: boolean
+  spawned: number
+}
+
+function mapRecurring(api: ApiRecurring): RecurringTask {
+  return {
+    task: mapTask(api.task),
+    freq: api.freq as RecurrenceFreq,
+    interval: api.interval,
+    daysOfWeek: api.days_of_week ?? [],
+    dayOfMonth: api.day_of_month,
+    leadDays: api.lead_days,
+    startsOn: api.starts_on,
+    until: api.until,
+    maxCount: api.max_count,
+    isActive: api.is_active,
+    spawned: api.spawned,
+  }
+}
+
+function recurringBody(input: RecurringInput) {
+  // Ganti penuh: medan kosong bermakna "tiada" (bukan "jangan sentuh").
+  return JSON.stringify({
+    title: input.title,
+    description: input.description || undefined,
+    priority: input.priority,
+    assignee_member_id: input.assigneeMemberId || undefined,
+    person_id: input.personId || undefined,
+    freq: input.freq,
+    interval: input.interval,
+    days_of_week: input.freq === "weekly" ? input.daysOfWeek : undefined,
+    day_of_month: input.freq === "monthly" ? input.dayOfMonth : undefined,
+    starts_on: input.startsOn,
+    until: input.until || undefined,
+    max_count: input.maxCount || undefined,
+    is_active: input.isActive,
+  })
 }
 
 export class ApiTaskRepository implements TaskRepository {
@@ -147,5 +201,25 @@ export class ApiTaskRepository implements TaskRepository {
         { method: "DELETE" }
       )
       .then((body) => mapTask(body.task))
+  }
+
+  listRecurring(circleId: string) {
+    return this.client
+      .request<{ data: ApiRecurring[] }>(`${this.base(circleId)}/recurring`)
+      .then((body) => (body.data ?? []).map(mapRecurring))
+  }
+
+  createRecurring(circleId: string, input: RecurringInput) {
+    return this.client.request<void>(`${this.base(circleId)}/recurring`, {
+      method: "POST",
+      body: recurringBody(input),
+    })
+  }
+
+  replaceRecurring(circleId: string, taskId: string, input: RecurringInput) {
+    return this.client.request<void>(
+      `${this.base(circleId)}/recurring/${taskId}`,
+      { method: "PUT", body: recurringBody(input) }
+    )
   }
 }

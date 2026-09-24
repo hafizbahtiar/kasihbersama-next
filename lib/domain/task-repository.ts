@@ -1,4 +1,10 @@
-import type { Task, TaskInput, TaskStatus } from "@/lib/domain/task"
+import type {
+  RecurringInput,
+  RecurringTask,
+  Task,
+  TaskInput,
+  TaskStatus,
+} from "@/lib/domain/task"
 
 export interface TaskRepository {
   listTasks(
@@ -28,4 +34,13 @@ export interface TaskRepository {
     taskId: string,
     itemId: string
   ): Promise<Task>
+  listRecurring(circleId: string): Promise<RecurringTask[]>
+  /** Tugasan dalam ufuk dijana serta-merta oleh pelayan. */
+  createRecurring(circleId: string, input: RecurringInput): Promise<void>
+  /** Ganti penuh; tugasan yang sudah dijana tidak disentuh. */
+  replaceRecurring(
+    circleId: string,
+    taskId: string,
+    input: RecurringInput
+  ): Promise<void>
 }
