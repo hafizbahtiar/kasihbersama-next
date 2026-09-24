@@ -278,9 +278,13 @@ export function RolesSection({
             aria-invalid={!rankValid}
             onChange={(e) => setDraft({ ...draft, rank: e.target.value })}
           />
+          {/* 60 = rbac.RestrictedReadRank di backend: pangkat menentukan polisi
+              field restricted, jadi pengguna mesti tahu apa yang ia buka. */}
           <FieldDescription>
             0 hingga {actorRank}. Ahli hanya boleh memberi peranan yang
-            pangkatnya tidak melebihi pangkat sendiri.
+            pangkatnya tidak melebihi pangkat sendiri. Pangkat 60 ke atas boleh
+            membaca maklumat sulit (tarikh lahir, nota peribadi, isi catatan
+            penjagaan); di bawahnya disamarkan.
           </FieldDescription>
         </Field>
         <Field>
