@@ -3,6 +3,7 @@ import {
   IconBell,
   IconHeartHandshake,
   IconHeartPlus,
+  IconListCheck,
   IconSettings,
   IconUsersGroup,
 } from "@tabler/icons-react"
@@ -30,6 +31,13 @@ export const primaryNav: AppNavItem[] = [
   // Pintasan merentas circle. Ia tiada permission kerana senarainya ditapis oleh
   // `person_access` di pelayan: ahli tanpa geran nampak skrin kosong, bukan 403.
   { href: "/persons", title: "Orang dijaga", icon: IconHeartHandshake },
+  // Tugasan milik circle AKTIF: disembunyikan tanpa core.task.read di circle itu.
+  {
+    href: "/tasks",
+    title: "Tugasan",
+    icon: IconListCheck,
+    permission: "core.task.read",
+  },
 ]
 
 // Bahagian "Akaun" di bawah sidebar: pemberitahuan dan tetapan ialah hal AKAUN,
@@ -76,6 +84,7 @@ const SCREENS: { path: string; label: string }[] = [
   { path: "/persons/:circleId/:personId", label: "Rekod kesihatan" },
   { path: "/circles/:circleId", label: "Circle ini" },
   { path: "/circles/:circleId/persons/:personId", label: "Rekod kesihatan" },
+  { path: "/tasks", label: "Tugasan" },
   { path: "/notifications", label: "Pemberitahuan" },
   { path: "/self-health", label: "Kad kecemasan" },
   { path: "/settings", label: "Tetapan" },
@@ -119,7 +128,8 @@ export function buildCrumbs(
     const isCircle = screen.path.endsWith("/:circleId")
     crumbs.push({
       id: href,
-      label: (isCircle ? circleName(prefix[depth - 1]) : undefined) ?? screen.label,
+      label:
+        (isCircle ? circleName(prefix[depth - 1]) : undefined) ?? screen.label,
       href,
     })
   }
