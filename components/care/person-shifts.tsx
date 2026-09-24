@@ -194,6 +194,31 @@ export function PersonShifts({
             </TableActions>
           )
         }
+        if (shift.status === "terlepas") {
+          // Penjaga yang lewat tetap datang jaga: giliran terlepas masih boleh
+          // dimulakan, atau terus ditamatkan bila orang terlupa menekan Mula.
+          return (
+            <TableActions>
+              <TableActionButton
+                isDisabled={busy}
+                onPress={() =>
+                  void run(
+                    repo.startShift(circleId, personId, shift.id),
+                    "Giliran bermula."
+                  )
+                }
+              >
+                Mula
+              </TableActionButton>
+              <TableActionButton
+                isDisabled={busy}
+                onPress={() => setHandover({ shift, mode: "end" })}
+              >
+                Habis
+              </TableActionButton>
+            </TableActions>
+          )
+        }
         if (shift.status === "berjalan") {
           return (
             <TableActions>
