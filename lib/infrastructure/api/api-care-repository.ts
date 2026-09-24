@@ -5,6 +5,8 @@ import type {
   CareLogKind,
   CareLogVisibility,
   CareNeed,
+  CareRota,
+  CareRotaInput,
   CareShift,
   CareShiftInput,
   CareShiftStatus,
@@ -91,6 +93,7 @@ type ApiShift = {
   handover_note?: string
   handover_at?: string
   replaced_shift_id?: string
+  rota_id?: string
   note?: string
 }
 
@@ -107,6 +110,7 @@ function mapShift(api: ApiShift): CareShift {
     handoverNote: api.handover_note,
     handoverAt: api.handover_at,
     replacedShiftId: api.replaced_shift_id,
+    rotaId: api.rota_id,
     note: api.note,
   }
 }
@@ -118,6 +122,34 @@ function shiftBody(input: CareShiftInput) {
     ends_at: input.endsAt,
     note: input.note,
   })
+}
+
+type ApiRota = {
+  id: string
+  caregiver_person_id: string
+  caregiver_name: string
+  days_of_week: number[]
+  starts_time: string
+  ends_time: string
+  starts_on: string
+  ends_on?: string
+  is_active: boolean
+  note?: string
+}
+
+function mapRota(api: ApiRota): CareRota {
+  return {
+    id: api.id,
+    caregiverPersonId: api.caregiver_person_id,
+    caregiverName: api.caregiver_name,
+    daysOfWeek: api.days_of_week ?? [],
+    startsTime: api.starts_time,
+    endsTime: api.ends_time,
+    startsOn: api.starts_on,
+    endsOn: api.ends_on,
+    isActive: api.is_active,
+    note: api.note,
+  }
 }
 
 export class ApiCareRepository implements CareRepository {
@@ -314,5 +346,52 @@ export class ApiCareRepository implements CareRepository {
     return this.shiftAction(circleId, personId, shiftId, "replace", {
       caregiver_person_id: caregiverPersonId,
     })
+  }
+
+  listRotas(circleId: string, personId: string) {
+    return this.client
+      .request<{ data: ApiRota[] }>(`${this.base(circleId, personId)}/rotas`)
+      .then((body) => (body.data ?? []).map(mapRota))
+  }
+
+  createRota(circleId: string, personId: string, input: CareRotaInput) {
+    return this.client.request<void>(`${this.base(circleId, personId)}/rotas`, {
+      method: "POST",
+      body: JSON.stringify({
+        caregiver_person_id: input.caregiverPersonId,
+        days_of_week: input.daysOfWeek,
+        starts_time: input.startsTime,
+        ends_time: input.endsTime,
+        starts_on: input.startsOn,
+        // Tarikh tamat kosong semasa cipta = tiada tarikh tamat; pelayan menolak "".
+        ends_on: input.endsOn || undefined,
+        note: input.note || undefined,
+      }),
+    })
+  }
+
+  updateRota(
+    circleId: string,
+    personId: string,
+    rotaId: string,
+    patch: Partial<CareRotaInput> & { isActive?: boolean }
+  ) {
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/rotas/${rotaId}`,
+      {
+        method: "PATCH",
+        // `ends_on: ""` sengaja dihantar: ia membuang tarikh tamat di pelayan.
+        body: JSON.stringify({
+          caregiver_person_id: patch.caregiverPersonId,
+          days_of_week: patch.daysOfWeek,
+          starts_time: patch.startsTime,
+          ends_time: patch.endsTime,
+          starts_on: patch.startsOn,
+          ends_on: patch.endsOn,
+          note: patch.note,
+          is_active: patch.isActive,
+        }),
+      }
+    )
   }
 }

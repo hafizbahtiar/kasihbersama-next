@@ -190,6 +190,8 @@ export type CareShift = {
   handoverNote?: string
   handoverAt?: string
   replacedShiftId?: string
+  /** Ada bila giliran dijana daripada jadual berulang. */
+  rotaId?: string
   note?: string
 }
 
@@ -197,5 +199,47 @@ export type CareShiftInput = {
   caregiverPersonId: string
   startsAt: string
   endsAt: string
+  note: string
+}
+
+/** ISO: 1=Isnin ... 7=Ahad. */
+export const WEEKDAY_SHORT: Record<number, string> = {
+  1: "Isn",
+  2: "Sel",
+  3: "Rab",
+  4: "Kha",
+  5: "Jum",
+  6: "Sab",
+  7: "Aha",
+}
+
+/**
+ * Jadual berulang: "Adik jaga mak setiap Isnin-Rabu, 8 pagi-6 petang". Ia
+ * menjana giliran beberapa hari ke depan - giliran itulah yang dimula dan
+ * diambil alih. Masa ialah waktu tempatan circle ("HH:MM"); `endsTime` sama
+ * atau lebih awal daripada `startsTime` bermakna tamat esoknya. `daysOfWeek`
+ * kosong bermakna setiap hari.
+ */
+export type CareRota = {
+  id: string
+  caregiverPersonId: string
+  caregiverName: string
+  daysOfWeek: number[]
+  startsTime: string
+  endsTime: string
+  startsOn: string
+  endsOn?: string
+  isActive: boolean
+  note?: string
+}
+
+export type CareRotaInput = {
+  caregiverPersonId: string
+  daysOfWeek: number[]
+  startsTime: string
+  endsTime: string
+  startsOn: string
+  /** "" membuang tarikh tamat semasa sunting. */
+  endsOn: string
   note: string
 }

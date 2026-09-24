@@ -112,6 +112,8 @@ export function PersonShifts({
           <p className="font-medium">{row.original.caregiverName}</p>
           {row.original.replacedShiftId ? (
             <p className="text-xs text-muted-foreground">ambil alih giliran</p>
+          ) : row.original.rotaId ? (
+            <p className="text-xs text-muted-foreground">dari jadual tetap</p>
           ) : null}
           {row.original.note ? (
             <p className="line-clamp-2 text-xs text-muted-foreground">
@@ -342,7 +344,7 @@ export function PersonShifts({
   )
 }
 
-function CaregiverSelect({
+export function CaregiverSelect({
   caregivers,
   value,
   onChange,

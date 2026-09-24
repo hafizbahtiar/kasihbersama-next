@@ -2,6 +2,8 @@ import type {
   CareLog,
   CareLogInput,
   CareNeed,
+  CareRota,
+  CareRotaInput,
   CareShift,
   CareShiftInput,
   CareNeedCategory,
@@ -102,5 +104,19 @@ export interface CareRepository {
     personId: string,
     shiftId: string,
     caregiverPersonId: string
+  ): Promise<void>
+  listRotas(circleId: string, personId: string): Promise<CareRota[]>
+  /** Giliran dijana serta-merta oleh pelayan. */
+  createRota(
+    circleId: string,
+    personId: string,
+    input: CareRotaInput
+  ): Promise<void>
+  /** Giliran masa depan yang belum disentuh dijana semula. */
+  updateRota(
+    circleId: string,
+    personId: string,
+    rotaId: string,
+    patch: Partial<CareRotaInput> & { isActive?: boolean }
   ): Promise<void>
 }

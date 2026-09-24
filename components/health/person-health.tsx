@@ -22,6 +22,7 @@ import { toast } from "sonner"
 
 import { PersonLogs } from "@/components/care/person-logs"
 import { PersonNeeds } from "@/components/care/person-needs"
+import { PersonRotas } from "@/components/care/person-rotas"
 import { PersonShifts } from "@/components/care/person-shifts"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -105,6 +106,7 @@ export function PersonHealth({
   canWriteLog,
   canModerateLog,
   canWriteShift,
+  canWriteRota,
   canUpdatePerson,
 }: {
   circleId: string
@@ -118,10 +120,13 @@ export function PersonHealth({
   canModerateLog: boolean
   /** `care.shift.create` - tambah dan urus giliran menjaga. */
   canWriteShift: boolean
+  /** `care.rota.create` - jadual giliran berulang. */
+  canWriteRota: boolean
   /** `core.person.update` - alamat dan hubungan milik rekod person, bukan health. */
   canUpdatePerson: boolean
 }) {
   const health = usePersonHealth(circleId, personId)
+  const [shiftsVersion, setShiftsVersion] = useState(0)
   const { date, dateTime } = useDisplayFormat()
   const repo = getHealthRepository()
 
@@ -660,15 +665,23 @@ export function PersonHealth({
 
         <TabsContent id="care" className="flex flex-col gap-4">
           <TabHint icon={<IconHeartHandshake />}>
-            Arahan tetap untuk penjaga ganti, giliran siapa jaga bila, dan
-            catatan harian tentang apa yang berlaku.
+            Arahan tetap untuk penjaga ganti, jadual dan giliran siapa jaga
+            bila, dan catatan harian tentang apa yang berlaku.
           </TabHint>
           <PersonNeeds
             circleId={circleId}
             personId={personId}
             canWrite={canWriteCare}
           />
+          <PersonRotas
+            circleId={circleId}
+            personId={personId}
+            canWrite={canWriteRota}
+            onChanged={() => setShiftsVersion((v) => v + 1)}
+          />
+          {/* key: jadual yang berubah menjana/membuang giliran di pelayan. */}
           <PersonShifts
+            key={shiftsVersion}
             circleId={circleId}
             personId={personId}
             canWrite={canWriteShift}
