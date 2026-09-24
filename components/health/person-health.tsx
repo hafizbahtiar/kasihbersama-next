@@ -20,6 +20,7 @@ import {
 } from "@tabler/icons-react"
 import { toast } from "sonner"
 
+import { PersonLogs } from "@/components/care/person-logs"
 import { PersonNeeds } from "@/components/care/person-needs"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -100,6 +101,8 @@ export function PersonHealth({
   personId,
   canWrite,
   canWriteCare,
+  canWriteLog,
+  canModerateLog,
   canUpdatePerson,
 }: {
   circleId: string
@@ -108,6 +111,9 @@ export function PersonHealth({
   canWrite: boolean
   /** `care.need.create` - arahan tetap ialah module berasingan (docs/15 §7). */
   canWriteCare: boolean
+  /** `care.log.create` / `care.log.manage` - tulis catatan, dan padam catatan orang lain. */
+  canWriteLog: boolean
+  canModerateLog: boolean
   /** `core.person.update` - alamat dan hubungan milik rekod person, bukan health. */
   canUpdatePerson: boolean
 }) {
@@ -650,13 +656,19 @@ export function PersonHealth({
 
         <TabsContent id="care" className="flex flex-col gap-4">
           <TabHint icon={<IconHeartHandshake />}>
-            Arahan tetap untuk penjaga ganti - apa yang perlu diketahui sebelum
-            mengambil alih. Catatan harian dan giliran jaga menyusul.
+            Arahan tetap untuk penjaga ganti, dan catatan harian tentang apa
+            yang berlaku. Giliran jaga menyusul.
           </TabHint>
           <PersonNeeds
             circleId={circleId}
             personId={personId}
             canWrite={canWriteCare}
+          />
+          <PersonLogs
+            circleId={circleId}
+            personId={personId}
+            canCreate={canWriteLog}
+            canModerate={canModerateLog}
           />
         </TabsContent>
 

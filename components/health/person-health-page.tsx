@@ -25,6 +25,8 @@ export function PersonHealthPage({
   const isActive = activeCircle?.id === circleId
   const canWrite = isActive && can(PERM_WRITE)
   const canWriteCare = isActive && can("care.need.create")
+  const canWriteLog = isActive && can("care.log.create")
+  const canModerateLog = isActive && can("care.log.manage")
   const canUpdatePerson = isActive && can("core.person.update")
 
   return (
@@ -36,6 +38,8 @@ export function PersonHealthPage({
         personId={personId}
         canWrite={canWrite}
         canWriteCare={canWriteCare}
+        canWriteLog={canWriteLog}
+        canModerateLog={canModerateLog}
         canUpdatePerson={canUpdatePerson}
       />
     </div>

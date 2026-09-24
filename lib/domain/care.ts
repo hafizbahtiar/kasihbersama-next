@@ -71,3 +71,86 @@ export type CareNeed = {
   createdAt: string
   updatedAt: string
 }
+export type CareLogKind =
+  | "makan"
+  | "minum"
+  | "tidur"
+  | "ubat"
+  | "mood"
+  | "aktiviti"
+  | "kebersihan"
+  | "gejala"
+  | "kejadian"
+  | "lawatan"
+  | "nota"
+
+export const CARE_LOG_KIND_LABELS: Record<CareLogKind, string> = {
+  nota: "Nota",
+  makan: "Makan",
+  minum: "Minum",
+  tidur: "Tidur",
+  ubat: "Ubat",
+  mood: "Mood",
+  aktiviti: "Aktiviti",
+  kebersihan: "Kebersihan",
+  gejala: "Gejala",
+  kejadian: "Kejadian",
+  lawatan: "Lawatan",
+}
+
+export const CARE_LOG_KINDS = Object.keys(CARE_LOG_KIND_LABELS) as CareLogKind[]
+
+export type CareLogFlag = "biasa" | "perlu_perhatian" | "kecemasan"
+
+export const CARE_LOG_FLAG_LABELS: Record<CareLogFlag, string> = {
+  biasa: "Biasa",
+  perlu_perhatian: "Perlu perhatian",
+  kecemasan: "Kecemasan",
+}
+
+export const CARE_LOG_FLAGS = Object.keys(CARE_LOG_FLAG_LABELS) as CareLogFlag[]
+
+/**
+ * `circle` sesiapa yang boleh membaca person itu, `penjaga` akses penuh sahaja,
+ * `penulis` penulisnya sahaja - untuk pemerhatian yang belum pasti.
+ */
+export type CareLogVisibility = "circle" | "penjaga" | "penulis"
+
+export const CARE_LOG_VISIBILITY_LABELS: Record<CareLogVisibility, string> = {
+  circle: "Semua dalam circle",
+  penjaga: "Penjaga sahaja",
+  penulis: "Saya sahaja",
+}
+
+export const CARE_LOG_VISIBILITIES = Object.keys(
+  CARE_LOG_VISIBILITY_LABELS
+) as CareLogVisibility[]
+
+/**
+ * SATU catatan penjagaan: apa yang berlaku, bila ia BERLAKU (bukan bila
+ * ditaip), dan siapa memerhati. Pelayan menggugurkan tajuk/isi pada akses
+ * `summary`, dan isi sahaja bila polisi field `care.log.body` tidak membenarkan
+ * baca - kosong di sini bermakna disembunyikan, bukan tiada.
+ */
+export type CareLog = {
+  id: string
+  kind: CareLogKind
+  title?: string
+  body?: string
+  flag: CareLogFlag
+  visibility: CareLogVisibility
+  occurredAt: string
+  recordedBy?: string
+  recordedByLabel?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type CareLogInput = {
+  kind: CareLogKind
+  title: string
+  body: string
+  flag: CareLogFlag
+  visibility: CareLogVisibility
+  occurredAt: string
+}

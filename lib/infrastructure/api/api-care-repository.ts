@@ -1,4 +1,9 @@
 import type {
+  CareLog,
+  CareLogFlag,
+  CareLogInput,
+  CareLogKind,
+  CareLogVisibility,
   CareNeed,
   CareNeedCategory,
   CareNeedPriority,
@@ -28,6 +33,47 @@ function mapNeed(api: ApiNeed): CareNeed {
     createdAt: api.created_at,
     updatedAt: api.updated_at,
   }
+}
+
+type ApiLog = {
+  id: string
+  kind: string
+  title?: string
+  body?: string
+  flag: string
+  visibility: string
+  occurred_at: string
+  recorded_by?: string
+  recorded_by_label?: string
+  created_at: string
+  updated_at: string
+}
+
+function mapLog(api: ApiLog): CareLog {
+  return {
+    id: api.id,
+    kind: api.kind as CareLogKind,
+    title: api.title,
+    body: api.body,
+    flag: api.flag as CareLogFlag,
+    visibility: api.visibility as CareLogVisibility,
+    occurredAt: api.occurred_at,
+    recordedBy: api.recorded_by,
+    recordedByLabel: api.recorded_by_label,
+    createdAt: api.created_at,
+    updatedAt: api.updated_at,
+  }
+}
+
+function logBody(input: CareLogInput) {
+  return JSON.stringify({
+    kind: input.kind,
+    title: input.title,
+    body: input.body,
+    flag: input.flag,
+    visibility: input.visibility,
+    occurred_at: input.occurredAt,
+  })
 }
 
 export class ApiCareRepository implements CareRepository {
@@ -97,6 +143,44 @@ export class ApiCareRepository implements CareRepository {
   deleteNeed(circleId: string, personId: string, needId: string) {
     return this.client.request<void>(
       `${this.base(circleId, personId)}/needs/${needId}`,
+      { method: "DELETE" }
+    )
+  }
+
+  listLogs(circleId: string, personId: string, before?: CareLog) {
+    const query = before
+      ? `?${new URLSearchParams({ before: before.occurredAt, before_id: before.id })}`
+      : ""
+    return this.client
+      .request<{ data: ApiLog[] }>(
+        `${this.base(circleId, personId)}/logs${query}`
+      )
+      .then((body) => (body.data ?? []).map(mapLog))
+  }
+
+  createLog(circleId: string, personId: string, input: CareLogInput) {
+    return this.client.request<void>(`${this.base(circleId, personId)}/logs`, {
+      method: "POST",
+      body: logBody(input),
+    })
+  }
+
+  updateLog(
+    circleId: string,
+    personId: string,
+    logId: string,
+    input: CareLogInput
+  ) {
+    // Borang menghantar setiap medan: "" pada tajuk/isi MEMBUANGNYA di pelayan.
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/logs/${logId}`,
+      { method: "PATCH", body: logBody(input) }
+    )
+  }
+
+  deleteLog(circleId: string, personId: string, logId: string) {
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/logs/${logId}`,
       { method: "DELETE" }
     )
   }
