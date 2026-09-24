@@ -154,3 +154,48 @@ export type CareLogInput = {
   visibility: CareLogVisibility
   occurredAt: string
 }
+
+export type CareShiftStatus =
+  | "dijadualkan"
+  | "berjalan"
+  | "selesai"
+  | "terlepas"
+  | "dibatalkan"
+  | "digantikan"
+
+export const CARE_SHIFT_STATUS_LABELS: Record<CareShiftStatus, string> = {
+  dijadualkan: "Dijadualkan",
+  berjalan: "Sedang jaga",
+  selesai: "Selesai",
+  terlepas: "Terlepas",
+  dibatalkan: "Dibatalkan",
+  digantikan: "Diganti",
+}
+
+/**
+ * SATU giliran menjaga: "Along jaga mak Sabtu 8 pagi-6 petang". Penjaga ialah
+ * person, bukan ahli - orang yang menjaga tidak semestinya ada akaun, jadi
+ * sesiapa dalam keluarga boleh menandakan mula/habis untuknya.
+ * `replacedShiftId` menunjuk giliran asal bila seseorang mengambil alih.
+ */
+export type CareShift = {
+  id: string
+  caregiverPersonId: string
+  caregiverName: string
+  startsAt: string
+  endsAt: string
+  status: CareShiftStatus
+  startedAt?: string
+  endedAt?: string
+  handoverNote?: string
+  handoverAt?: string
+  replacedShiftId?: string
+  note?: string
+}
+
+export type CareShiftInput = {
+  caregiverPersonId: string
+  startsAt: string
+  endsAt: string
+  note: string
+}

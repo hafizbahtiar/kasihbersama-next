@@ -27,6 +27,7 @@ export function PersonHealthPage({
   const canWriteCare = isActive && can("care.need.create")
   const canWriteLog = isActive && can("care.log.create")
   const canModerateLog = isActive && can("care.log.manage")
+  const canWriteShift = isActive && can("care.shift.create")
   const canUpdatePerson = isActive && can("core.person.update")
 
   return (
@@ -40,6 +41,7 @@ export function PersonHealthPage({
         canWriteCare={canWriteCare}
         canWriteLog={canWriteLog}
         canModerateLog={canModerateLog}
+        canWriteShift={canWriteShift}
         canUpdatePerson={canUpdatePerson}
       />
     </div>

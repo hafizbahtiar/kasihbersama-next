@@ -5,6 +5,9 @@ import type {
   CareLogKind,
   CareLogVisibility,
   CareNeed,
+  CareShift,
+  CareShiftInput,
+  CareShiftStatus,
   CareNeedCategory,
   CareNeedPriority,
 } from "@/lib/domain/care"
@@ -73,6 +76,47 @@ function logBody(input: CareLogInput) {
     flag: input.flag,
     visibility: input.visibility,
     occurred_at: input.occurredAt,
+  })
+}
+
+type ApiShift = {
+  id: string
+  caregiver_person_id: string
+  caregiver_name: string
+  starts_at: string
+  ends_at: string
+  status: string
+  started_at?: string
+  ended_at?: string
+  handover_note?: string
+  handover_at?: string
+  replaced_shift_id?: string
+  note?: string
+}
+
+function mapShift(api: ApiShift): CareShift {
+  return {
+    id: api.id,
+    caregiverPersonId: api.caregiver_person_id,
+    caregiverName: api.caregiver_name,
+    startsAt: api.starts_at,
+    endsAt: api.ends_at,
+    status: api.status as CareShiftStatus,
+    startedAt: api.started_at,
+    endedAt: api.ended_at,
+    handoverNote: api.handover_note,
+    handoverAt: api.handover_at,
+    replacedShiftId: api.replaced_shift_id,
+    note: api.note,
+  }
+}
+
+function shiftBody(input: CareShiftInput) {
+  return JSON.stringify({
+    caregiver_person_id: input.caregiverPersonId,
+    starts_at: input.startsAt,
+    ends_at: input.endsAt,
+    note: input.note,
   })
 }
 
@@ -183,5 +227,92 @@ export class ApiCareRepository implements CareRepository {
       `${this.base(circleId, personId)}/logs/${logId}`,
       { method: "DELETE" }
     )
+  }
+
+  listShifts(circleId: string, personId: string, before?: CareShift) {
+    const query = before
+      ? `?${new URLSearchParams({ before: before.startsAt, before_id: before.id })}`
+      : ""
+    return this.client
+      .request<{ data: ApiShift[] }>(
+        `${this.base(circleId, personId)}/shifts${query}`
+      )
+      .then((body) => (body.data ?? []).map(mapShift))
+  }
+
+  createShift(circleId: string, personId: string, input: CareShiftInput) {
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/shifts`,
+      {
+        method: "POST",
+        body: shiftBody(input),
+      }
+    )
+  }
+
+  updateShift(
+    circleId: string,
+    personId: string,
+    shiftId: string,
+    input: CareShiftInput
+  ) {
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/shifts/${shiftId}`,
+      { method: "PATCH", body: shiftBody(input) }
+    )
+  }
+
+  private shiftAction(
+    circleId: string,
+    personId: string,
+    shiftId: string,
+    action: string,
+    body: object = {}
+  ) {
+    return this.client.request<void>(
+      `${this.base(circleId, personId)}/shifts/${shiftId}/${action}`,
+      { method: "POST", body: JSON.stringify(body) }
+    )
+  }
+
+  startShift(circleId: string, personId: string, shiftId: string) {
+    return this.shiftAction(circleId, personId, shiftId, "start")
+  }
+
+  endShift(
+    circleId: string,
+    personId: string,
+    shiftId: string,
+    handoverNote: string
+  ) {
+    return this.shiftAction(circleId, personId, shiftId, "end", {
+      handover_note: handoverNote,
+    })
+  }
+
+  recordHandover(
+    circleId: string,
+    personId: string,
+    shiftId: string,
+    handoverNote: string
+  ) {
+    return this.shiftAction(circleId, personId, shiftId, "handover", {
+      handover_note: handoverNote,
+    })
+  }
+
+  cancelShift(circleId: string, personId: string, shiftId: string) {
+    return this.shiftAction(circleId, personId, shiftId, "cancel")
+  }
+
+  replaceShift(
+    circleId: string,
+    personId: string,
+    shiftId: string,
+    caregiverPersonId: string
+  ) {
+    return this.shiftAction(circleId, personId, shiftId, "replace", {
+      caregiver_person_id: caregiverPersonId,
+    })
   }
 }

@@ -22,6 +22,7 @@ import { toast } from "sonner"
 
 import { PersonLogs } from "@/components/care/person-logs"
 import { PersonNeeds } from "@/components/care/person-needs"
+import { PersonShifts } from "@/components/care/person-shifts"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { createDataTableColumnHelper, DataTable } from "@/components/data-table"
@@ -103,6 +104,7 @@ export function PersonHealth({
   canWriteCare,
   canWriteLog,
   canModerateLog,
+  canWriteShift,
   canUpdatePerson,
 }: {
   circleId: string
@@ -114,6 +116,8 @@ export function PersonHealth({
   /** `care.log.create` / `care.log.manage` - tulis catatan, dan padam catatan orang lain. */
   canWriteLog: boolean
   canModerateLog: boolean
+  /** `care.shift.create` - tambah dan urus giliran menjaga. */
+  canWriteShift: boolean
   /** `core.person.update` - alamat dan hubungan milik rekod person, bukan health. */
   canUpdatePerson: boolean
 }) {
@@ -656,13 +660,18 @@ export function PersonHealth({
 
         <TabsContent id="care" className="flex flex-col gap-4">
           <TabHint icon={<IconHeartHandshake />}>
-            Arahan tetap untuk penjaga ganti, dan catatan harian tentang apa
-            yang berlaku. Giliran jaga menyusul.
+            Arahan tetap untuk penjaga ganti, giliran siapa jaga bila, dan
+            catatan harian tentang apa yang berlaku.
           </TabHint>
           <PersonNeeds
             circleId={circleId}
             personId={personId}
             canWrite={canWriteCare}
+          />
+          <PersonShifts
+            circleId={circleId}
+            personId={personId}
+            canWrite={canWriteShift}
           />
           <PersonLogs
             circleId={circleId}

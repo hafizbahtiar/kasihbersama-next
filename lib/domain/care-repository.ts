@@ -2,6 +2,8 @@ import type {
   CareLog,
   CareLogInput,
   CareNeed,
+  CareShift,
+  CareShiftInput,
   CareNeedCategory,
   CareNeedPriority,
 } from "@/lib/domain/care"
@@ -56,4 +58,49 @@ export interface CareRepository {
   ): Promise<void>
   /** Penulis, atau pemegang `care.log.manage`. Padam lembut. */
   deleteLog(circleId: string, personId: string, logId: string): Promise<void>
+  /** Terkini dahulu, 50 sehalaman; `before` ialah row terakhir halaman sebelumnya. */
+  listShifts(
+    circleId: string,
+    personId: string,
+    before?: CareShift
+  ): Promise<CareShift[]>
+  createShift(
+    circleId: string,
+    personId: string,
+    input: CareShiftInput
+  ): Promise<void>
+  /** Giliran yang belum bermula sahaja. */
+  updateShift(
+    circleId: string,
+    personId: string,
+    shiftId: string,
+    input: CareShiftInput
+  ): Promise<void>
+  startShift(circleId: string, personId: string, shiftId: string): Promise<void>
+  /** Nota serah tugas pilihan. */
+  endShift(
+    circleId: string,
+    personId: string,
+    shiftId: string,
+    handoverNote: string
+  ): Promise<void>
+  /** Serah tugas untuk giliran yang sudah tamat. */
+  recordHandover(
+    circleId: string,
+    personId: string,
+    shiftId: string,
+    handoverNote: string
+  ): Promise<void>
+  cancelShift(
+    circleId: string,
+    personId: string,
+    shiftId: string
+  ): Promise<void>
+  /** Orang lain mengambil alih; asal kekal sebagai "diganti". */
+  replaceShift(
+    circleId: string,
+    personId: string,
+    shiftId: string,
+    caregiverPersonId: string
+  ): Promise<void>
 }
